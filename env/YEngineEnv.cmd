@@ -1,0 +1,2 @@
+@ECHO off
+SET PYTHONPATH=%PYTHONPATH%;%~dp0../YPythonLib
