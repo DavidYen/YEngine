@@ -1,3 +1,4 @@
 
 # Ignore the Visual Studio configuration file
-VSConfig.json
+environment.x86
+environment.x64
