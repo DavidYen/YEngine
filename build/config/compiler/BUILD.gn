@@ -1,0 +1,36 @@
+
+#####
+# Everything includes from the root #
+#####
+config("default_include_dirs") {
+  include_dirs = [
+    "//"
+  ]
+}
+
+#####
+# Standard Defines for each configuration
+#####
+config("debug") {
+  defines = [
+    "_DEBUG",
+  ]
+}
+
+config("release") {
+  defines = [
+    "_RELEASE",
+  ]
+}
+
+config("gold") {
+  defines = [
+    "_GOLD",
+  ]
+}
+
+config("platinum") {
+  defines = [
+    "_PLATINUM",
+  ]
+}

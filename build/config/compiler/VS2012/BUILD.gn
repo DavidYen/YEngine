@@ -1,0 +1,24 @@
+
+config("compiler") {
+  direct_dependent_configs = [ "../VisualStudio:compiler" ]
+
+  defines = [
+    "VS2012"
+  ]
+}
+
+config("debug") {
+  direct_dependent_configs = [ "../VisualStudio:debug" ]
+}
+
+config("release") {
+  direct_dependent_configs = [ "../VisualStudio:release" ]
+}
+
+config("gold") {
+  direct_dependent_configs = [ "../VisualStudio:gold" ]
+}
+
+config("platinum") {
+  direct_dependent_configs = [ "../VisualStudio:platinum" ]
+}

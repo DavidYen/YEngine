@@ -1,0 +1,2 @@
+
+visual_studio_path = exec_script("//build/visual_studio_paths.py", ["output", "--name", compiler], "string")

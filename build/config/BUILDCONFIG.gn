@@ -1,0 +1,155 @@
+
+###############
+# BUILD FLAGS #
+###############
+
+#
+# Input Arguments to the build, along with their default values.
+#
+
+declare_args() {
+  # Configuration, default to debug, release, gold, platinum
+  config = "debug"
+
+  # Architecture to target, one of "x86_64", "x86_32".
+  target_arch = "x86_64"
+
+  # Compiler
+  compiler = "VS2012e"
+}
+
+#################
+# Compiler Type #
+#################
+is_visual_studio = false
+
+if (compiler == "VS2012e") {
+  is_visual_studio = true
+}
+
+##################
+# OS DEFINITIONS #
+##################
+
+is_win = false
+is_mac = false
+is_linux = false
+is_android = false
+is_ios = false
+
+if (os =="win") {
+  is_win = true
+} else if (os == "mac") {
+  is_mac = true
+} else if (os == "linux") {
+  is_linux = true
+} else if (os == "android") {
+  is_android = true
+} else if (os == "ios") {
+  is_ios = true
+}
+
+##################
+# Source Filters #
+##################
+
+#
+# These patterns filter out platform specific files.
+#
+source_assignment_filter = []
+
+if (!is_win) {
+  source_assignment_filter += [
+    "*_win.*",
+  ]
+}
+
+if (!is_mac) {
+  source_assignment_filter += [
+    "*_mac.*",
+  ]
+}
+
+if (!is_linux) {
+  source_assignment_filter += [
+    "*_linux.*",
+  ]
+}
+
+if (!is_android) {
+  source_assignment_filter += [
+    "*_android.*",
+  ]
+}
+
+if (!is_ios) {
+  source_assignment_filter += [
+    "*_ios.*",
+  ]
+}
+
+set_sources_assignment_filter(source_assignment_filter)
+
+
+##################
+# Configurations #
+##################
+
+_compiler_configs = [
+  "//build/config/compiler/${compiler}:compiler",
+  "//build/config/compiler:default_include_dirs",
+]
+_linker_configs = []
+
+# Optimization and Debug Settings
+_compiler_configs += [
+  "//build/config/compiler:${config}",
+  "//build/config/compiler/${compiler}:${config}",
+]
+
+###################
+# Default Targets #
+###################
+
+set_defaults("executable") {
+  configs = _compiler_configs + _linker_configs + [
+    "//build/config:default_libs",
+  ]
+}
+
+set_defaults("static_library") {
+  configs = _compiler_configs
+}
+
+set_defaults("shared_library") {
+  configs = _compiler_configs + _linker_configs + [
+    "//build/config:default_libs",
+  ]
+}
+
+set_defaults("source_set") {
+  configs = _compiler_configs
+}
+
+#############
+# Toolchain #
+#############
+
+host_toolchain = false
+if (is_win) {
+  if (is_visual_studio) {
+    if (build_cpu_arch == "x64") {
+      host_toolchain = "//build/toolchain/VisualStudio:64"
+    } else if (build_cpu_arch == "x86") {
+      host_toolchain = "//build/toolchain/VisualStudio:32"
+    }
+
+    if (target_arch == "x86_64") {
+      set_default_toolchain("//build/toolchain/VisualStudio:64")
+    } else if (target_arch == "x86_32") {
+      set_default_toolchain("//build/toolchain/VisualStudio:32")
+    }
+  }
+}
+
+assert(host_toolchain != false, "Host Toolchain was not setup correctly!")
