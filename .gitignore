@@ -1,0 +1,6 @@
+
+# Ignore Dependency Repos
+buildtools/
+
+# Ignore Output Directory
+out/
