@@ -5,8 +5,8 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(__file__)
 
-ENVIRON32_FILE = os.path.join(SCRIPT_DIR, 'environment.x86')
-ENVIRON64_FILE = os.path.join(SCRIPT_DIR, 'environment.x64')
+ENVIRON32_FILE = 'environment.x86'
+ENVIRON64_FILE = 'environment.x64'
 
 def WriteWindowEnvFile(env_dict, env_file):
   with open(env_file, 'wb') as f:
@@ -24,8 +24,8 @@ def DoMain(argv):
     path32 = [os.path.join(vs_path, 'bin', 'x86')]
     path64 = [os.path.join(vs_path, 'bin', 'x64')]
   elif vs_name.startswith('VS'):
-    path32 = [os.path.join(vs_path, 'VC', 'BIN')]
-    path64 = [os.path.join(vs_path, 'VC', 'BIN', 'amd64')]
+    path32 = [os.path.join(vs_path, 'VC', 'bin')]
+    path64 = [os.path.join(vs_path, 'VC', 'bin', 'x86_amd64')]
 
   env_dict32 = os.environ.copy()
   env_dict64 = os.environ.copy()
