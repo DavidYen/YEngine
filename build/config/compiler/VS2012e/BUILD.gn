@@ -1,20 +1,23 @@
 
-config("compiler") {
-  direct_dependent_configs = [ "../VS1012:compiler" ]
+import("config.gni")
+
+vs2012e_config("compiler") {
+  cflags = []
+  defines = [ "VS2012E" ]
 }
 
-config("debug") {
-  direct_dependent_configs = [ "../VS1012:debug" ]
+vs2012e_debug("debug") {
+  cflags = []
 }
 
-config("release") {
-  direct_dependent_configs = [ "../VS1012:release" ]
+vs2012e_release("release") {
+  cflags = []
 }
 
-config("gold") {
-  direct_dependent_configs = [ "../VS1012:gold" ]
+vs2012e_gold("gold") {
+  cflags = []
 }
 
-config("platinum") {
-  direct_dependent_configs = [ "../VS1012:platinum" ]
+vs2012e_platinum("platinum") {
+  cflags = []
 }

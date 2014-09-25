@@ -1,5 +1,6 @@
-executable("hello_world") {
+
+executable("test") {
   sources = [
-    "hello_world.cc",
+    "test.cpp",
   ]
 }

@@ -1,0 +1,177 @@
+
+template("visual_studio_config") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    cflags += [
+      "/GS",  # Security Check: Buffer overruns, hackable loopholes...etc.
+      "/Wall", # Enable all warnings
+      "/Gy", # Function level linking
+      "/Oi", # Enable Intrinsic Functions
+      "/Zi", # Program Debug Database
+      "/fp:precise", # Floating point model: Precise
+      "/Zc:forScope", # Force conformance in for Loop Scope
+      "/WX", # Treat warnings as errors
+      "/errorReport:prompt", # Prompt errors immediately
+      "/GR-", # No rtti
+    ]
+
+    defines += [
+      "WIN32_LEAN_AND_MEAN", # May move to a separate config for 3rd party.
+    ]
+
+    # Incremental Linking based on configuration
+    if (config != "platinum") {
+      ldflags += [
+        "/INCREMENTAL"
+      ]
+    } else {
+      ldflags += [
+        "/INCREMENTAL:NO"
+      ]
+    }
+  }
+}
+
+#########################
+# Optimization Settings #
+#########################
+template("visual_studio_debug") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    # Compile Configurations
+    cflags += [
+      "/Od",  # Disable optimization.
+      "/Ob0",  # Disable all inlining (on by default).
+      "/RTC1",  # Runtime checks for stack frame and uninitialized variables.
+    ]
+
+    # Produce PDB File
+    cflags += [
+      "/Zi"
+    ]
+    ldflags += [
+      "/DEBUG"
+    ]
+  }
+}
+
+template("visual_studio_release") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    # Compile Configurations
+    cflags += [
+      "/Ot",  # Favor speed over size.
+    ]
+
+    # Produce PDB File
+    cflags += [
+      "/Zi"
+    ]
+    ldflags += [
+      "/DEBUG"
+    ]
+  }
+}
+
+template("visual_studio_gold") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    # Compile Configurations
+    cflags += [
+      "/Ot",  # Favor speed over size.
+    ]
+
+    # Produce PDB File
+    cflags += [
+      "/Zi"
+    ]
+    ldflags += [
+      "/DEBUG"
+    ]
+  }
+}
+
+template("visual_studio_platinum") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    cflags += [
+      "/Ot",  # Favor speed over size.
+      "/GL",  # Whole program optimization.
+    ]
+  }
+}

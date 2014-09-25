@@ -1,0 +1,85 @@
+
+import("../VisualStudio/visual_studio_config.gni")
+
+template("vs2012_config") {
+  visual_studio_config(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+#########################
+# Optimization Settings #
+#########################
+template("vs2012_debug") {
+  visual_studio_debug(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2012_release") {
+  visual_studio_release(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2012_gold") {
+  visual_studio_config(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2012_platinum") {
+  visual_studio_config(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}

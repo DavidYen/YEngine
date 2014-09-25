@@ -1,24 +1,22 @@
 
-config("compiler") {
-  direct_dependent_configs = [ "../VisualStudio:compiler" ]
+import("config.gni")
 
-  defines = [
-    "VS2012"
-  ]
+vs2012_config("compiler") {
+  cflags = []
 }
 
-config("debug") {
-  direct_dependent_configs = [ "../VisualStudio:debug" ]
+vs2012_debug("debug") {
+  cflags = []
 }
 
-config("release") {
-  direct_dependent_configs = [ "../VisualStudio:release" ]
+vs2012_release("release") {
+  cflags = []
 }
 
-config("gold") {
-  direct_dependent_configs = [ "../VisualStudio:gold" ]
+vs2012_gold("gold") {
+  cflags = []
 }
 
-config("platinum") {
-  direct_dependent_configs = [ "../VisualStudio:platinum" ]
+vs2012_platinum("platinum") {
+  cflags = []
 }
