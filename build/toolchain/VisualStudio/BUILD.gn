@@ -13,6 +13,7 @@ exec_script("setup_environment.py", [compiler, visual_studio_path])
 #  force_win64 (optional): value for this build arg.
 template("vc_toolchain") {
   env = invoker.environment
+  win_cmd_wrap = rebase_path("//tools/WinCmdWrap.exe", root_build_dir)
 
   toolchain(target_name) {
     # Make these apply to all tools below.
@@ -45,24 +46,16 @@ template("vc_toolchain") {
     }
 
     tool("rc") {
-      command = "$python_path gyp-win-tool rc-wrapper $env rc.exe {{defines}} {{include_dirs}} /fo{{output}} {{source}}"
+      command = "$win_cmd_wrap -e $env -- rc.exe {{defines}} {{include_dirs}} /fo{{output}} {{source}}"
       outputs = [
         "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.res",
       ]
       description = "RC {{output}}"
     }
 
-    tool("asm") {
-      command = "$python_path gyp-win-tool asm-wrapper $env ml.exe {{defines}} {{include_dirs}} /c /Fo {{output}} {{source}}"
-      description = "ASM {{output}}"
-      outputs = [
-        "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.obj",
-      ]
-    }
-
     tool("alink") {
       rspfile = "{{output}}.rsp"
-      command = "$python_path gyp-win-tool link-wrapper $env False lib.exe /nologo /ignore:4221 /OUT:{{output}} @$rspfile"
+      command = "$win_cmd_wrap -e $env -- lib.exe /nologo /ignore:4221 /OUT:{{output}} @$rspfile"
       description = "LIB {{output}}"
       outputs = [
         # Ignore {{output_extension}} and always use .lib, there's no reason to
@@ -80,12 +73,7 @@ template("vc_toolchain") {
       libname = "{{target_output_name}}{{output_extension}}.lib"  # e.g. foo.dll.lib
       rspfile = "${dllname}.rsp"
 
-      link_command = "$python_path gyp-win-tool link-wrapper $env False link.exe /nologo /IMPLIB:$libname /DLL /OUT:$dllname /PDB:${dllname}.pdb @$rspfile"
-
-      # TODO(brettw) support manifests
-      #manifest_command = "$python_path gyp-win-tool manifest-wrapper $env mt.exe -nologo -manifest $manifests -out:${dllname}.manifest"
-      #command = "cmd /c $link_command && $manifest_command"
-      command = link_command
+      command = "$win_cmd_wrap -e $env -- link.exe /nologo /IMPLIB:$libname /DLL /OUT:$dllname /PDB:${dllname}.pdb @$rspfile"
 
       # default_output_extension = ".dll"
       description = "LINK(DLL) {{output}}"
@@ -101,12 +89,7 @@ template("vc_toolchain") {
     tool("link") {
       rspfile = "{{output}}.rsp"
 
-      link_command = "$python_path gyp-win-tool link-wrapper $env False link.exe /nologo /OUT:{{output}} /PDB:{{output}}.pdb @$rspfile"
-
-      # TODO(brettw) support manifests
-      #manifest_command = "$python_path gyp-win-tool manifest-wrapper $env mt.exe -nologo -manifest $manifests -out:{{output}}.manifest"
-      #command = "cmd /c $link_command && $manifest_command"
-      command = link_command
+      command = "$win_cmd_wrap -e $env -- link.exe /NOLOGO /OUT:{{output}}.exe /PDB:{{output}}.pdb @$rspfile"
 
       # default_output_extension = ".exe"
       description = "LINK {{output}}"
@@ -119,12 +102,12 @@ template("vc_toolchain") {
     }
 
     tool("stamp") {
-      command = "$python_path gyp-win-tool stamp {{output}}"
+      command = "touch {{output}}"
       description = "STAMP {{output}}"
     }
 
     tool("copy") {
-      command =  "$python_path gyp-win-tool recursive-mirror {{source}} {{output}}"
+      command =  "copy {{source}} {{output}}"
       description = "COPY {{source}} {{output}}"
     }
 

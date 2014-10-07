@@ -38,6 +38,9 @@ def WriteWindowEnvFile(env_dict, env_file):
     for key, value in env_dict.iteritems():
       f.write(key + '=' + value + '\0')
     f.write('\0')
+  with open(env_file + '.txt', 'wt') as f:
+    for key, value in env_dict.iteritems():
+      f.write(key + '=' + value + '\n')
 
 def DoMain(argv):
   if len(argv) != 2 or '--h' in argv or '--help' in argv or '\?' in argv:
