@@ -1,0 +1,10 @@
+
+executable("TestDialog") {
+  sources = [
+    "Win/main.cpp",
+  ]
+
+  deps = [
+    "//YEngine/YFramework",
+  ]
+}

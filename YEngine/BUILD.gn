@@ -1,6 +1,15 @@
 
-executable("test") {
-  sources = [
-    "test.cpp",
+group("yengine_all") {
+  deps = [
+    "TestDialog",
+    "YCore",
+    "YFramework",
+  ]
+}
+
+static_library("YEngine") {
+  deps = [
+    "YCore",
+    "YFramework",
   ]
 }

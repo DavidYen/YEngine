@@ -1,0 +1,12 @@
+
+static_library("YFramework") {
+  sources = [
+    "YFramework.cpp",
+  ]
+
+  if (is_win) {
+    sources += [
+      "PlatformHandle_Win.cpp",
+    ]
+  }
+}

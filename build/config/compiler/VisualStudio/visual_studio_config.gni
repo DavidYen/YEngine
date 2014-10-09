@@ -19,7 +19,7 @@ template("visual_studio_config") {
 
     cflags += [
       "/GS",  # Security Check: Buffer overruns, hackable loopholes...etc.
-      "/Wall", # Enable all warnings
+      "/W4", # Enable warnings level 4
       "/Gy", # Function level linking
       "/Oi", # Enable Intrinsic Functions
       "/Zi", # Program Debug Database

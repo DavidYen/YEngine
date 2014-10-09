@@ -1,6 +1,3 @@
 
-# Everything builds from the YEngine folder
-root = "//YEngine"
-
 # The location of the build configuration file.
 buildconfig = "//build/config/BUILDCONFIG.gn"
