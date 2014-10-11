@@ -1,7 +1,7 @@
 
 #include "Windows.h"
 
-namespace ycore { namespace atomic {
+namespace YEngine { namespace YCore {
 
 /* Memory Barrier. */
 inline void MemoryBarrier() {
@@ -17,21 +17,21 @@ inline int64_t AtomicSet64(volatile int64_t* dest, int64_t value) {
   return InterlockedExchange64(dest, value);
 }
 
-inline void* AtomicSetPtr(volatile void* dest, int64_t value) {
+inline void* AtomicSetPtr(volatile void* dest, intptr_t value) {
   return InterlockedExchangePointer(dest, value);
 }
 
 /* Compares dest with expected and sets to value if they match. */
-inline bool AtomicCmpSet(volatile int32_t* dest, int32_t expected,
-                         int32_t value) {
+inline bool AtomicCmpSet32(volatile int32_t* dest, int32_t expected,
+                           int32_t value) {
   return InterlockedCompareExchange(dest, value, expected) == expected;
 }
-inline bool AtomicCmpSet(volatile int64_t* dest, int64_t expected,
-                         int64_t value) {
+inline bool AtomicCmpSet64(volatile int64_t* dest, int64_t expected,
+                           int64_t value) {
   return InterlockedCompareExchange64(dest, value, expected) == expected;
 }
-inline bool AtomicCmpSet(volatile void* dest, void* expected,
-                         void* value) {
+inline bool AtomicCmpSetPtr(volatile void* dest, void* expected,
+                            void* value) {
   return InterlockedCompareExchangePointer(dest, value, expected) == expected;
 }
 
@@ -40,7 +40,7 @@ inline int32_t AtomicAdd32(volatile int32_t* sum, int32_t value) {
   return InterlockedAdd(dest, value) - value;
 }
 
-inline int64_t AtomicAdd64(volatile int64_t* sum, int32_t value) {
+inline int64_t AtomicAdd64(volatile int64_t* sum, int64_t value) {
   return InterlockedAdd64(dest, value) - value;
 }
 

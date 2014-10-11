@@ -1,4 +1,12 @@
 
 static_library("YCore") {
-  
+  sources = [
+    "AtomicQueue.cpp",
+  ]
+
+  if (is_win) {
+    sources += [
+      "YThread_Win.cpp",
+    ]
+  }
 }

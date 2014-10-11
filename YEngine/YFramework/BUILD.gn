@@ -9,4 +9,8 @@ static_library("YFramework") {
       "PlatformHandle_Win.cpp",
     ]
   }
+
+  deps = [
+    "//YEngine/YCore",
+  ]
 }
