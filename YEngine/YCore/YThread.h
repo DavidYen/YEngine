@@ -32,7 +32,7 @@ class YThread {
   int ReturnValue() const;
 
  private:
-  char mPimpl[512-32];
+  char mPimpl[128-32];
   char mName[32];
 };
 
