@@ -2,10 +2,12 @@
 static_library("YCore") {
   sources = [
     "AtomicQueue.cpp",
+    "ThreadPool.cpp",
   ]
 
   if (is_win) {
     sources += [
+      "YSemaphore_Win.cpp",
       "YThread_Win.cpp",
     ]
   }

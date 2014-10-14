@@ -14,23 +14,24 @@ config("default_include_dirs") {
 config("debug") {
   defines = [
     "_DEBUG",
+    "DEBUG",
   ]
 }
 
 config("release") {
   defines = [
-    "_RELEASE",
+    "RELEASE"
   ]
 }
 
 config("gold") {
   defines = [
-    "_GOLD",
+    "GOLD",
   ]
 }
 
 config("platinum") {
   defines = [
-    "_PLATINUM",
+    "PLATINUM",
   ]
 }

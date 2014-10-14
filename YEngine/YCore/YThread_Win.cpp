@@ -27,7 +27,7 @@ static DWORD ThreadBeginProc(LPVOID lpParam)
 }
 
 YThread::YThread() {
-  static_assert(sizeof(WindowsPimpl) < sizeof(YThread::mPimpl),
+  static_assert(sizeof(WindowsPimpl) < sizeof(mPimpl),
                 "Windows Thread Pimpl larger than YThread Pimpl!");
 
   memset(mName, 0, sizeof(mName));

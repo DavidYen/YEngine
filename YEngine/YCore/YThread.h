@@ -1,5 +1,5 @@
-#ifndef YFRAMEWORK_YTHREAD_H
-#define YFRAMEWORK_YTHREAD_H
+#ifndef YCORE_YTHREAD_H
+#define YCORE_YTHREAD_H
 
 #include <string>
 
@@ -38,4 +38,4 @@ class YThread {
 
 }} // namespace YEngine { namespace YCore {
 
-#endif // YFRAMEWORK_YTHREAD_H
+#endif // YCORE_YTHREAD_H
