@@ -1,24 +1,3 @@
 
 static_library("YCore") {
-  sources = [
-    "AtomicArray.cpp",
-    "AtomicArray.h",
-    "AtomicQueue.cpp",
-    "AtomicQueue.h",
-    "Atomics.h",
-    "ThreadPool.cpp",
-    "ThreadPool.h",
-    "YAssert.h",
-    "YSemaphore.h",
-    "YThread.h",
-  ]
-
-  if (is_win) {
-    sources += [
-      "Atomics_Win.h",
-      "YSemaphore_Win.cpp",
-      "YThread_Win.cpp",
-      "YAssert_WinMsgBox.cpp",
-    ]
-  }
 }

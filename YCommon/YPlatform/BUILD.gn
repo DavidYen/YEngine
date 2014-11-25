@@ -3,6 +3,8 @@ static_library("YPlatform") {
   sources = [
     "Platform.h",
     "PlatformHandle.h",
+    "Semaphore.h",
+    "Thread.h",
   ]
 
   if (is_win) {
@@ -11,6 +13,8 @@ static_library("YPlatform") {
       "Platform_Win.h",
       "PlatformHandle_Win.cpp",
       "PlatformHandle_Win.h",
+      "Semaphore_Win.cpp",
+      "Thread_Win.cpp",
     ]
   }
 }
