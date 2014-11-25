@@ -1,0 +1,16 @@
+
+static_library("YPlatform") {
+  sources = [
+    "Platform.h",
+    "PlatformHandle.h",
+  ]
+
+  if (is_win) {
+    sources += [
+      "Platform_Win.cpp",
+      "Platform_Win.h",
+      "PlatformHandle_Win.cpp",
+      "PlatformHandle_Win.h",
+    ]
+  }
+}

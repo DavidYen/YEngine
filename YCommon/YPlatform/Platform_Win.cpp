@@ -1,7 +1,6 @@
-#include <YEngine/stdincludes.h>
-#include "PlatformHandle_Win.h"
-
-#include "YFramework.h"
+#include <YCommon/Headers/stdincludes.h>
+#include "Platform.h"
+#include "Platform_Win.h"
 
 #ifndef HID_USAGE_PAGE_GENERIC
   #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
@@ -10,14 +9,10 @@
   #define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
 #endif
 
-namespace YEngine { namespace YFramework {
+namespace YCommon { namespace YPlatform {
 
-static_assert(sizeof(WinPlatformHandle) <= sizeof(PlatformHandle),
-              "WinPlatformHandle must be smaller than PlatformHandle");
-
-void InitializePlatformHandle(PlatformHandle& handle, const HWND hwnd) {
-  WinPlatformHandle& winHandle = reinterpret_cast<WinPlatformHandle&>(handle);
-  winHandle.mHwnd = hwnd;
+namespace {
+  OnCloseFunc gOnCloseFunc = NULL;
 }
 
 LRESULT WINAPI WinMsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -25,7 +20,7 @@ LRESULT WINAPI WinMsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     case WM_KEYDOWN:
       switch (wparam) {
       case VK_ESCAPE:
-        YFramework::EndFramework();
+        gOnCloseFunc();
         PostMessage( hwnd, WM_CLOSE, 0, 0);
         return 0;
       }
@@ -41,24 +36,21 @@ LRESULT WINAPI WinMsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       {
         UINT dwSize = 40;
         static BYTE lpb[40];
-        
         GetRawInputData((HRAWINPUT)lparam, RID_INPUT, 
-                lpb, &dwSize, sizeof(RAWINPUTHEADER));
+                        lpb, &dwSize, sizeof(RAWINPUTHEADER));
 
         RAWINPUT* raw = (RAWINPUT*)lpb;
         
-        if (raw->header.dwType == RIM_TYPEMOUSE) 
-        {
-          if ( raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE )
-          {
+        if (raw->header.dwType == RIM_TYPEMOUSE) {
+          if ( raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE ) {
             // g_pInput->GetMouseInput()->ProcessDeltaMouse( raw->data.mouse.lLastX, raw->data.mouse.lLastY );
           }
-        } 
+        }
       }
       break;
 
     case WM_DESTROY:
-      YFramework::EndFramework();
+      gOnCloseFunc();
       PostQuitMessage(0);
       return 1;
   }
@@ -66,27 +58,32 @@ LRESULT WINAPI WinMsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
   return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-/***********************
- * PlatformHandle Function Definitions for Windows
- ***********************/
-void PlatformHandle::InitializePlatform() {
-  WinPlatformHandle* winHandle = reinterpret_cast<WinPlatformHandle*>(mBuffer);
+void Platform::Init(const PlatformHandle& platform_handle,
+                    const OnCloseFunc on_close_func) {
+  gOnCloseFunc = on_close_func;
+
+  const WinPlatformHandle* win_handle =
+      reinterpret_cast<const WinPlatformHandle*>(&platform_handle);
 
   RAWINPUTDEVICE Rid;
   Rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
   Rid.usUsage = HID_USAGE_GENERIC_MOUSE; 
   Rid.dwFlags = RIDEV_INPUTSINK;
-  Rid.hwndTarget = winHandle->mHwnd;
+  Rid.hwndTarget = win_handle->mHwnd;
   RegisterRawInputDevices(&Rid, 1, sizeof(Rid));
 }
 
-void PlatformHandle::ProcessPlatform() {
-    // Process Window Message Pumps
-    MSG msg;
-    while ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) ) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
+void Platform::Release() {
+  gOnCloseFunc = NULL;
 }
 
-}} // namespace YEngine { namespace YFramework {
+void Platform::Update() {
+  // Process Window Message Pumps
+  MSG msg;
+  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+}
+
+}} // namespace YCommon { namespace YPlatform {

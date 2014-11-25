@@ -5,13 +5,6 @@ static_library("YFramework") {
     "YFramework.cpp",
   ]
 
-  if (is_win) {
-    sources += [
-      "PlatformHandle_Win.h",
-      "PlatformHandle_Win.cpp",
-    ]
-  }
-
   deps = [
     "//YEngine/YCore",
   ]
