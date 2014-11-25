@@ -1,9 +1,9 @@
-#include <YEngine/stdincludes.h>
-#include "YThread.h"
+#include <YCommon/Headers/stdincludes.h>
+#include "Thread.h"
 
 #include <Windows.h>
 
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YPlatform {
 
 struct WindowsPimpl {
   bool valid;
@@ -60,15 +60,15 @@ static DWORD ThreadBeginProc(LPVOID lpParam)
   ExitThread(0);
 }
 
-YThread::YThread() {
+Thread::Thread() {
   static_assert(sizeof(WindowsPimpl) < sizeof(mPimpl),
-                "Windows Thread Pimpl larger than YThread Pimpl!");
+                "Windows Thread Pimpl larger than Thread Pimpl!");
 
   memset(mName, 0, sizeof(mName));
   memset(mPimpl, 0, sizeof(mPimpl));
 }
 
-YThread::YThread(ThreadRoutine thread_func, void* thread_arg,
+Thread::Thread(ThreadRoutine thread_func, void* thread_arg,
                  const char* name) {
   memset(mName, 0, sizeof(mName));
   memset(mPimpl, 0, sizeof(mPimpl));
@@ -78,14 +78,14 @@ YThread::YThread(ThreadRoutine thread_func, void* thread_arg,
     SetName(name);
 }
 
-YThread::~YThread() {
+Thread::~Thread() {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (thread_pimpl->valid) {
     CloseHandle(thread_pimpl->thread_handle);
   }
 }
 
-bool YThread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
+bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (thread_pimpl->valid) {
     return false;
@@ -114,7 +114,7 @@ bool YThread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   return false;
 }
 
-bool YThread::Run() {
+bool Thread::Run() {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (!thread_pimpl->valid)
     return false;
@@ -127,7 +127,7 @@ bool YThread::Run() {
   return true;
 }
 
-bool YThread::join(size_t milliseconds) {
+bool Thread::join(size_t milliseconds) {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (!thread_pimpl->started)
     return false;
@@ -140,7 +140,7 @@ bool YThread::join(size_t milliseconds) {
   return (WAIT_OBJECT_0 == ret);
 }
 
-bool YThread::IsRunning() const {
+bool Thread::IsRunning() const {
   const WindowsPimpl* thread_pimpl =
     reinterpret_cast<const WindowsPimpl*>(mPimpl);
   DWORD exit_code = static_cast<DWORD>(-1);
@@ -149,7 +149,7 @@ bool YThread::IsRunning() const {
           exit_code == 0);
 }
 
-int YThread::ReturnValue() const {
+int Thread::ReturnValue() const {
   if (IsRunning())
     return -1;
 
@@ -159,4 +159,4 @@ int YThread::ReturnValue() const {
   return thread_pimpl->ret_code;
 }
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YPlatform {

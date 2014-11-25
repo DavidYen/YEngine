@@ -2,7 +2,6 @@
 #include "ThreadPool.h"
 
 #include <YCommon/Headers/Atomics.h>
-#include <YCommon/YUtils/Assert.h>
 
 namespace YCommon { namespace YContainers {
 
@@ -24,11 +23,13 @@ ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
       mBufferSize(buffer_size),
       mThreadData(num_threads, buffer, buffer_size) {
   const size_t thread_size = sizeof(YThread) * num_threads;
-  assert(buffer_size > thread_size);
+  YASSERT(buffer_size > thread_size,
+          "Buffer size is not big enough to contain ThreadPool");
 
   const size_t num_run_args = (buffer_size - thread_size) /
                               sizeof(ThreadPool::ThreadData::RunArgs);
-  assert(num_run_args > 0);
+  YASSERT(num_run_args > 0,
+          "Number of run arguments must be greater than 0");
 
   uint8_t* thread_loc = static_cast<uint8_t*>(buffer) + num_run_args;
   mThreads = new (thread_loc) YThread[num_threads];

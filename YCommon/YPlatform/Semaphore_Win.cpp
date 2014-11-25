@@ -1,18 +1,17 @@
-#include <YEngine/stdincludes.h>
-#include "YSemaphore.h"
+#include <YCommon/Headers/stdincludes.h>
+#include "Semaphore.h"
 
-#include <Assert.h>
 #include <Windows.h>
 
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YPlatform {
 
 struct WindowsPimpl {
   HANDLE semaphore_handle;
 };
 
-YSemaphore::YSemaphore(int initial_count, int maximum_count) {
+Semaphore::Semaphore(int initial_count, int maximum_count) {
   static_assert(sizeof(WindowsPimpl) < sizeof(mPimpl),
-                "Windows Semaphore Pimpl larger than YSemaphore Pimpl!");
+                "Windows Semaphore Pimpl larger than Semaphore Pimpl!");
 
   memset(mPimpl, 0, sizeof(mPimpl));
   HANDLE semaphore_handle = CreateSemaphore(NULL,
@@ -20,17 +19,17 @@ YSemaphore::YSemaphore(int initial_count, int maximum_count) {
                                             static_cast<LONG>(maximum_count),
                                             NULL);
 
-  assert(semaphore_handle == NULL);
+  YASSERT(semaphore_handle == NULL, "Semaphore Handle was NULL.");
   WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   win_data->semaphore_handle = semaphore_handle;
 }
 
-YSemaphore::~YSemaphore() {
+Semaphore::~Semaphore() {
   WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   CloseHandle(win_data->semaphore_handle);
 }
 
-bool YSemaphore::Wait(size_t milliseconds) {
+bool Semaphore::Wait(size_t milliseconds) {
   const WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   DWORD result = 0;
   
@@ -44,9 +43,9 @@ bool YSemaphore::Wait(size_t milliseconds) {
   return (result == WAIT_OBJECT_0);
 }
 
-bool YSemaphore::Release() {
+bool Semaphore::Release() {
   const WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   return ReleaseSemaphore(win_data->semaphore_handle, 1, NULL) == TRUE;
 }
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YPlatform {

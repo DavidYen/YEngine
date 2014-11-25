@@ -1,17 +1,17 @@
-#ifndef YCORE_YTHREAD_H
-#define YCORE_YTHREAD_H
+#ifndef YCOMMON_YPLATFORM_THREAD_H
+#define YCOMMON_YPLATFORM_THREAD_H
 
 #include <string>
 
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YPlatform {
 
 typedef int (*ThreadRoutine)(void* arg);
 
-class YThread {
+class Thread {
  public:
-  YThread();
-  YThread(ThreadRoutine thread_func, void* thread_arg, const char* name = NULL);
-  ~YThread();
+  Thread();
+  Thread(ThreadRoutine thread_func, void* thread_arg, const char* name = NULL);
+  ~Thread();
 
   bool Initialize(ThreadRoutine thread_func, void* thread_arg);
   bool Run();
@@ -36,6 +36,6 @@ class YThread {
   char mName[32];
 };
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YPlatform {
 
-#endif // YCORE_YTHREAD_H
+#endif // YCOMMON_YPLATFORM_THREAD_H
