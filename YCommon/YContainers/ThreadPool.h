@@ -1,11 +1,12 @@
-#ifndef YCORE_THREADPOOL_H
-#define YCORE_THREADPOOL_H
+#ifndef YCOMMON_YCONTAINERS_THREADPOOL_H
+#define YCOMMON_YCONTAINERS_THREADPOOL_H
+
+#include <YCommon/YPlatform/Semaphore.h>
+#include <YCommon/YPlatform/Thread.h>
 
 #include "AtomicQueue.h"
-#include "YSemaphore.h"
-#include "YThread.h"
 
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YContainers {
 
 class ThreadPool {
  public:
@@ -60,6 +61,6 @@ class ThreadPool {
   } mThreadData;
 };
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YContainers {
 
-#endif // YCORE_THREADPOOL_H
+#endif // YCOMMON_YCONTAINERS_THREADPOOL_H

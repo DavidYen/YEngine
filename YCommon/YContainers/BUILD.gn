@@ -5,5 +5,7 @@ static_library("YContainers") {
     "AtomicArray.h",
     "AtomicQueue.cpp",
     "AtomicQueue.h",
+    "ThreadPool.cpp",
+    "ThreadPool.h",
   ]
 }

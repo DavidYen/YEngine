@@ -1,11 +1,10 @@
-#include <YEngine/stdincludes.h>
+#include <YCommon/Headers/stdincludes.h>
 #include "ThreadPool.h"
 
-#include <Assert.h>
+#include <YCommon/Headers/Atomics.h>
+#include <YCommon/YUtils/Assert.h>
 
-#include "Atomics.h"
-
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YContainers {
 
 ThreadPool::ThreadData::ThreadData(size_t num_threads, void* buffer,
                                    size_t buffer_size)
@@ -114,4 +113,4 @@ int ThreadPool::ThreadPoolThread(void* arg) {
   return 0;
 }
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YContainers {
