@@ -1,0 +1,9 @@
+
+static_library("YContainers") {
+  sources = [
+    "AtomicArray.cpp",
+    "AtomicArray.h",
+    "AtomicQueue.cpp",
+    "AtomicQueue.h",
+  ]
+}

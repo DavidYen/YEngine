@@ -1,0 +1,12 @@
+
+static_library("YUtils") {
+  sources = [
+    "YAssert.h",
+  ]
+
+  if (is_win) {
+    sources += [
+      "YAssert_WinMsgBox.cpp",
+    ]
+  }
+}

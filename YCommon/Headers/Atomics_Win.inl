@@ -1,7 +1,7 @@
 
 #include "Windows.h"
 
-namespace YEngine { namespace YCore {
+namespace YCommon {
 
 /* Memory Barrier. */
 inline void MemoryBarrier() {
@@ -68,4 +68,5 @@ inline int64_t AtomicXor64(volatile int64_t* result, int64_t value) {
   return InterlockedXor64(result, value);
 }
 
-}}
+}} //namespace YCommon {
+

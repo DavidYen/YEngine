@@ -1,0 +1,21 @@
+
+static_library("YRenderDevice") {
+  sources = [
+    "DrawPrimitive.h",
+    "PixelFormat.h",
+    "RenderDevice.h",
+    "VertexDeclElement.h",
+    "VertexFormat.h",
+  ]
+
+  if (is_win) {
+    sources += [
+      "RenderDevice_DX9.cpp",
+    ]
+  }
+
+  deps = [
+    "//YCommon/YContainers",
+    "//YCommon/YUtils",
+  ]
+}

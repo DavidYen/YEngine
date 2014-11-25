@@ -1,12 +1,12 @@
-#ifndef YFRAMEWORK_ATOMICQUEUE_H
-#define YFRAMEWORK_ATOMICQUEUE_H
+#ifndef YCOMMON_YCONTAINERS_ATOMICQUEUE_H
+#define YCOMMON_YCONTAINERS_ATOMICQUEUE_H
 
 /*******
 * Atomic Queue with fixed size elements.
 *  - Single producer (Only 1 thread can Enqueue at a time)
 *  - Multiple consumers (Multiple threads can dequeue)
 ********/
-namespace YEngine { namespace YCore {
+namespace YCommon { namespace YContainers {
 
 class AtomicQueue {
  public:
@@ -49,6 +49,6 @@ class TypedAtomicQueue : public AtomicQueue {
   }
 };
 
-}} // namespace YEngine { namespace YCore {
+}} // namespace YCommon { namespace YContainers {
 
-#endif // YFRAMEWORK_ATOMICQUEUE_H
+#endif // YCOMMON_YCONTAINERS_ATOMICQUEUE_H

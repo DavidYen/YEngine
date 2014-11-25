@@ -13,13 +13,47 @@ struct WindowsPimpl {
 
   ThreadRoutine thread_routine;
   void* thread_arg;
+  const char* thread_name;
   int ret_code;
 };
+
+// How to set thread names in windows
+#ifndef GOLD
+#define MS_VC_EXCEPTION 0x406D1388
+
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO {
+   DWORD dwType; // Must be 0x1000.
+   LPCSTR szName; // Pointer to name (in user addr space).
+   DWORD dwThreadID; // Thread ID (-1=caller thread).
+   DWORD dwFlags; // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+
+static void SetThreadName(DWORD dwThreadID, const char* threadName) {
+   THREADNAME_INFO info;
+   info.dwType = 0x1000;
+   info.szName = threadName;
+   info.dwThreadID = dwThreadID;
+   info.dwFlags = 0;
+
+   __try {
+      RaiseException(MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR),
+                     (ULONG_PTR*)&info);
+   } __except(EXCEPTION_EXECUTE_HANDLER) {
+   }
+}
+#endif GOLD
 
 // System Windows Thread functions
 static DWORD ThreadBeginProc(LPVOID lpParam)
 {
   WindowsPimpl* thread_pimpl = static_cast<WindowsPimpl*>(lpParam);
+
+#ifndef GOLD
+  SetThreadName(static_cast<DWORD>(-1), thread_pimpl->thread_name);
+#endif // GOLD
+
   const int ret = thread_pimpl->thread_routine(thread_pimpl->thread_arg);
   thread_pimpl->ret_code = ret;
 
@@ -59,6 +93,7 @@ bool YThread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
 
   thread_pimpl->thread_routine = thread_func;
   thread_pimpl->thread_arg = thread_arg;
+  thread_pimpl->thread_name = mName;
 
   DWORD thread_id = 0;
   HANDLE thread_handle = CreateThread(
