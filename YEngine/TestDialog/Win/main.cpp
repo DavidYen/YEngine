@@ -1,6 +1,7 @@
 #include <YCommon/Headers/stdincludes.h>
 #include <Windows.h>
 
+#include <YCommon/YPlatform/Platform_Win.h>
 #include <YCommon/YPlatform/PlatformHandle.h>
 #include <YCommon/YPlatform/PlatformHandle_Win.h>
 #include <YEngine/YFramework/YFramework.h>
@@ -19,7 +20,7 @@ int WINAPI WinMain(HINSTANCE hInst,
   wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
   wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
   wndclass.cbSize = sizeof(wndclass);
-  wndclass.lpfnWndProc = YCommon::YPlatform::WinMsgProc;
+  wndclass.lpfnWndProc = YCommon::YPlatform::Platform::WinMsgProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = hInst;
@@ -55,7 +56,7 @@ int WINAPI WinMain(HINSTANCE hInst,
   YCommon::YPlatform::PlatformHandle platform_handle;
   YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd);
 
-  YEngine::YFramework::YFramework framework(&platform_handle);
+  YEngine::YFramework::YFramework framework(platform_handle);
   framework.Run();
   return 0;
 }

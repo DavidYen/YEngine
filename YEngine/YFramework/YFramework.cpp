@@ -2,17 +2,16 @@
 #include "YFramework.h"
 
 #include <YCommon/YPlatform/Platform.h>
-#include "PlatformHandle.h"
 
 namespace YEngine { namespace YFramework {
 
 static volatile bool g_bDone = false;
 
-YFramework::YFramework(PlatformHandle* platform_handle,
+YFramework::YFramework(const YCommon::YPlatform::PlatformHandle& handle,
                        uint32_t global_heap_size)
-    : mPlatformHandle(platform_handle),
+    : mPlatformHandle(handle),
       mGlobalHeapSize(global_heap_size) {
-  YCommon::YPlatform::Platform::Init(*mPlatformHandle,
+  YCommon::YPlatform::Platform::Init(handle,
                                      YFramework::EndFramework);
 }
 

@@ -2,6 +2,8 @@
 #include "Platform.h"
 #include "Platform_Win.h"
 
+#include "PlatformHandle_Win.h"
+
 #ifndef HID_USAGE_PAGE_GENERIC
   #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
 #endif
@@ -15,7 +17,8 @@ namespace {
   OnCloseFunc gOnCloseFunc = NULL;
 }
 
-LRESULT WINAPI WinMsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT WINAPI Platform::WinMsgProc(HWND hwnd, UINT msg,
+                                    WPARAM wparam, LPARAM lparam) {
   switch (msg) {
     case WM_KEYDOWN:
       switch (wparam) {

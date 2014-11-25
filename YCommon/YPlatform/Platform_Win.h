@@ -5,7 +5,9 @@
 
 namespace YCommon { namespace YPlatform {
 
-LRESULT WINAPI WinMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lparam);
+namespace Platform {
+  LRESULT WINAPI WinMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lparam);
+}
 
 }} // namespace YCommon { namespace YPlatform {
 

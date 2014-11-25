@@ -1,14 +1,15 @@
 #ifndef YFRAMEWORK_YFRAMEWORK_H
 #define YFRAMEWORK_YFRAMEWORK_H
 
+#include <YCommon/YPlatform/PlatformHandle.h>
+
 namespace YEngine { namespace YFramework {
 
-struct PlatformHandle;
 class GameObject;
 
 class YFramework {
 public:
-  YFramework(PlatformHandle* platform_handle,
+  YFramework(const YCommon::YPlatform::PlatformHandle& handle,
              uint32_t global_heap_size = 128 * 1024 * 1024);
   ~YFramework();
 
@@ -19,7 +20,7 @@ public:
 
 private:
   // Platform Variables
-  PlatformHandle* mPlatformHandle;
+  YCommon::YPlatform::PlatformHandle mPlatformHandle;
 
   // Game Variables
   uint32_t mGlobalHeapSize;
