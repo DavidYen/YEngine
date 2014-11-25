@@ -1,6 +1,7 @@
-#include <YEngine/stdincludes.h>
+#include <YCommon/Headers/stdincludes.h>
 #include "YFramework.h"
 
+#include <YCommon/YPlatform/Platform.h>
 #include "PlatformHandle.h"
 
 namespace YEngine { namespace YFramework {
@@ -11,10 +12,12 @@ YFramework::YFramework(PlatformHandle* platform_handle,
                        uint32_t global_heap_size)
     : mPlatformHandle(platform_handle),
       mGlobalHeapSize(global_heap_size) {
-  mPlatformHandle->InitializePlatform();
+  YCommon::YPlatform::Platform::Init(*mPlatformHandle,
+                                     YFramework::EndFramework);
 }
 
 YFramework::~YFramework() {
+  YCommon::YPlatform::Platform::Release();
 }
 
 void YFramework::RegisterGameObject(GameObject* game_object) {
@@ -23,7 +26,7 @@ void YFramework::RegisterGameObject(GameObject* game_object) {
 
 void YFramework::Run() {
   while( !g_bDone ) {
-    mPlatformHandle->ProcessPlatform();
+    YCommon::YPlatform::Platform::Update();
 
     // m_pTaskManager->InitializeTaskManager();
     // m_pGameUpdateTask->UpdateFrame( m_FrameTimer.MeasureDeltaTime() );

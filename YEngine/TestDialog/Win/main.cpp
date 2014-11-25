@@ -1,7 +1,8 @@
-#include <YEngine/stdincludes.h>
+#include <YCommon/Headers/stdincludes.h>
 #include <Windows.h>
 
-#include <YEngine/YFramework/PlatformHandle_Win.h>
+#include <YCommon/YPlatform/PlatformHandle.h>
+#include <YCommon/YPlatform/PlatformHandle_Win.h>
 #include <YEngine/YFramework/YFramework.h>
 
 // Windows Entry Point
@@ -15,14 +16,14 @@ int WINAPI WinMain(HINSTANCE hInst,
   WNDCLASSEX wndclass;
 
   // Setup Windows Class
-  wndclass.hIconSm = LoadIcon( NULL, IDI_APPLICATION );
-  wndclass.hIcon = LoadIcon( NULL, IDI_APPLICATION );
+  wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+  wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
   wndclass.cbSize = sizeof(wndclass);
-  wndclass.lpfnWndProc = YEngine::YFramework::WinMsgProc;
+  wndclass.lpfnWndProc = YCommon::YPlatform::WinMsgProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = hInst;
-  wndclass.hCursor = LoadCursor( NULL, IDC_ARROW );
+  wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW);
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName =  TEXT("Test Dialog");
@@ -30,7 +31,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 
   ShowCursor(false);
 
-  if ( RegisterClassEx( &wndclass ) == 0 ) {
+  if (RegisterClassEx( &wndclass ) == 0) {
     return 0;
   }
 
@@ -47,12 +48,12 @@ int WINAPI WinMain(HINSTANCE hInst,
                              hInst,
                              NULL);
 
-  if ( !hWnd ) {
+  if (!hWnd) {
     return 1;
   }
 
-  YEngine::YFramework::PlatformHandle platform_handle;
-  YEngine::YFramework::InitializePlatformHandle(platform_handle, hWnd);
+  YCommon::YPlatform::PlatformHandle platform_handle;
+  YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd);
 
   YEngine::YFramework::YFramework framework(&platform_handle);
   framework.Run();

@@ -11,7 +11,7 @@ struct WinPlatformHandle {
   HWND mHwnd;
 };
 
-void InitializePlatformHandle(PlatformHandle& handle, const HWND hwnd);
+void InitWinPlatformHandle(PlatformHandle& handle, const HWND hwnd);
 
 }} // namespace YCommon { namespace YPlatform {
 

@@ -6,5 +6,6 @@ executable("TestDialog") {
 
   deps = [
     "//YEngine/YFramework",
+    "//YCommon/YPlatform",
   ]
 }
