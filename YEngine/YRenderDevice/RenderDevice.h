@@ -13,6 +13,8 @@ namespace YEngine { namespace YRenderDevice {
 
 typedef uint8_t RenderTargetID;
 typedef uint8_t VertexDeclID;
+typedef uint8_t VertexShaderID;
+typedef uint8_t PixelShaderID;
 typedef uint16_t TextureID;
 typedef uint16_t VertexBufferID;
 typedef uint16_t IndexBufferID;
@@ -46,6 +48,9 @@ namespace RenderDevice {
                                     PixelFormat format);
   VertexDeclID CreateVertexDeclaration(VertexDeclElement* elements,
                                        size_t num_elements);
+  VertexShaderID CreateVertexShader(const void* shader_data,
+                                    size_t shader_size);
+  PixelShaderID CreatePixelShader(const void* shader_data, size_t shader_size);
   TextureID CreateTexture(UsageType type, uint32_t width, uint32_t height,
                           uint32_t mips, PixelFormat format,
                           void* buffer = NULL, size_t buffer_size = 0);
@@ -87,6 +92,8 @@ namespace RenderDevice {
   // Releases
   void ReleaseRenderTarget(RenderTargetID render_target);
   void ReleaseVertexDeclaration(VertexDeclID vertex_decl);
+  void ReleaseVertexShader(VertexShaderID shader);
+  void ReleasePixelShader(PixelShaderID shader);
   void ReleaseTexture(TextureID texture);
   void ReleaseVertexBuffer(VertexBufferID vertex_buffer);
   void ReleaseIndexBuffer(IndexBufferID index_buffer);
@@ -98,6 +105,8 @@ namespace RenderDevice {
                         float min_z, float max_z);
   void ActivateRenderTarget(int target, RenderTargetID render_target);
   void ActivateVertexDeclaration(VertexDeclID vertex_decl);
+  void ActivateVertexShader(VertexShaderID shader);
+  void ActivatePixelShader(PixelShaderID shader);
   void ActivateTexture(int sampler, TextureID texture);
   void ActivateVertexStream(uint32_t stream, VertexBufferID vertex_buffer);
   void ActivateIndexStream(IndexBufferID index_buffer);

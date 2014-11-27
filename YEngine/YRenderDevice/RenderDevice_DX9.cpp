@@ -17,6 +17,7 @@
 #define MAX_STREAM_SOURCES 2
 #define MAX_NUM_SURFACES 12
 #define MAX_NUM_VERT_DECLS 32
+#define MAX_NUM_SHADERS 256
 #define MAX_NUM_TEXTURES 512
 #define MAX_NUM_VERT_BUFFS 512
 #define MAX_NUM_INDEX_BUFFS 512
@@ -200,6 +201,36 @@ namespace {
     }
   };
   DataArray<VertexDeclData, VertexDeclID, MAX_NUM_VERT_DECLS> gVertDecls;
+
+  // Vertex Shader Data
+  struct VertexShaderData {
+    IDirect3DVertexShader9* shader;
+    void Init() {
+      shader = NULL;
+    }
+    void Release() {
+      if (shader) {
+        shader->Release();
+        Init();
+      }
+    }
+  };
+  DataArray<VertexShaderData, VertexShaderID, MAX_NUM_SHADERS> gVertShaders;
+
+  // Pixel Shader Data
+  struct PixelShaderData {
+    IDirect3DPixelShader9* shader;
+    void Init() {
+      shader = NULL;
+    }
+    void Release() {
+      if (shader) {
+        shader->Release();
+        Init();
+      }
+    }
+  };
+  DataArray<PixelShaderData, PixelShaderID, MAX_NUM_SHADERS> gPixelShaders;
 
   // Vertex Buffer Data
   struct VertBuffData {
@@ -470,6 +501,44 @@ VertexDeclID RenderDevice::CreateVertexDeclaration(VertexDeclElement* elements,
   (void) hr;
 
   return vert_decl_id;
+}
+
+VertexShaderID RenderDevice::CreateVertexShader(const void* shader_data,
+                                                size_t shader_size) {
+  (void) shader_size;
+  const VertexShaderID shader_id = gVertShaders.AllocateID();
+  YASSERT(shader_id != static_cast<VertexShaderID>(-1),
+          "Maximum number of Vertex Shaders reached.");
+
+  VertexShaderData& vertex_shader = gVertShaders.data[shader_id];
+
+  HRESULT hr = gD3DDevice->CreateVertexShader(
+      static_cast<const DWORD*>(shader_data), // [in]  const DWORD *pFunction,
+      &vertex_shader.shader // [out, retval]  IDirect3DVertexShader9 **ppShader
+  );
+  YASSERT(hr == D3D_OK, "Could not create vertex shader.");
+  (void) hr;
+
+  return shader_id;
+}
+
+PixelShaderID RenderDevice::CreatePixelShader(const void* shader_data,
+                                              size_t shader_size) {
+  (void) shader_size;
+  const PixelShaderID shader_id = gPixelShaders.AllocateID();
+  YASSERT(shader_id != static_cast<PixelShaderID>(-1),
+          "Maximum number of Pixel Shaders reached.");
+
+  PixelShaderData& pixel_shader = gPixelShaders.data[shader_id];
+
+  HRESULT hr = gD3DDevice->CreatePixelShader(
+      static_cast<const DWORD*>(shader_data), // [in]  const DWORD *pFunction,
+      &pixel_shader.shader // [out, retval]  IDirect3DPixelShader9 **ppShader
+  );
+  YASSERT(hr == D3D_OK, "Could not create pixel shader.");
+  (void) hr;
+
+  return shader_id;
 }
 
 TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
@@ -1005,6 +1074,22 @@ void RenderDevice::ReleaseVertexDeclaration(VertexDeclID vertex_decl) {
   gVertDecls.ReleaseID(vertex_decl);
 }
 
+void RenderDevice::ReleaseVertexShader(VertexShaderID shader) {
+  YASSERT(shader < ARRAY_SIZE(gVertShaders.data) &&
+          gVertShaders.used[shader],
+          "Releasing Invalid Vertex Shader ID: %d",
+          static_cast<int>(shader));
+  gVertShaders.ReleaseID(shader);
+}
+
+void RenderDevice::ReleasePixelShader(PixelShaderID shader) {
+  YASSERT(shader < ARRAY_SIZE(gPixelShaders.data) &&
+          gPixelShaders.used[shader],
+          "Releasing Invalid Pixel Shader ID: %d",
+          static_cast<int>(shader));
+  gPixelShaders.ReleaseID(shader);
+}
+
 void RenderDevice::ReleaseTexture(TextureID texture) {
   YASSERT(texture < ARRAY_SIZE(gTextures.data) && gTextures.used[texture],
           "Releasing Invalid Texture ID: %d", static_cast<int>(texture));
@@ -1113,6 +1198,28 @@ void RenderDevice::ActivateVertexDeclaration(VertexDeclID vertex_decl) {
   }
 }
 
+void RenderDevice::ActivateVertexShader(VertexShaderID shader) {
+  YASSERT(shader < ARRAY_SIZE(gVertShaders.data) && gVertShaders.used[shader],
+          "Activating Invalid Vertex Shader ID: %d", static_cast<int>(shader));
+
+  HRESULT hr = gD3DDevice->SetVertexShader(gVertShaders.data[shader].shader);
+  YASSERT(hr == D3D_OK,
+          "Could not activate vertex shader ID %d.",
+          static_cast<int>(shader));
+  (void) hr;
+}
+
+void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
+  YASSERT(shader < ARRAY_SIZE(gPixelShaders.data) && gPixelShaders.used[shader],
+          "Activating Invalid Pixel Shader ID: %d", static_cast<int>(shader));
+
+  HRESULT hr = gD3DDevice->SetPixelShader(gPixelShaders.data[shader].shader);
+  YASSERT(hr == D3D_OK,
+          "Could not activate pixel shader ID %d.",
+          static_cast<int>(shader));
+  (void) hr;
+}
+
 void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
   YASSERT(texture < ARRAY_SIZE(gTextures.data) && gTextures.used[texture],
           "Activating Invalid Texture ID: %d", static_cast<int>(texture));
@@ -1122,6 +1229,7 @@ void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
   YASSERT(hr == D3D_OK,
           "Could not set texture ID (%d) to sampler %d.",
           static_cast<int>(texture), sampler);
+  (void) hr;
 }
 
 void RenderDevice::ActivateVertexStream(uint32_t stream,
