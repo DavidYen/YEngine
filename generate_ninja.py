@@ -12,10 +12,13 @@ def do_main(argv):
   for config in CONFIGS:
     print 'GN: Generating Ninja Files (%s)...' % config
     sys.stdout.flush()
+    arg_dict = { 'config': config.lower() }
+    arg_strings = ['%s="%s"' % (key, value)
+                   for key, value in arg_dict.iteritems()]
     subprocess.check_call(['gn',
                            'gen',
                            '//out/%s' % config,
-                           '--args=config="%s"' % config.lower()],
+                           '--args=' + ' '.join(arg_strings)],
                           shell=True,
                           cwd=SCRIPT_DIR)
   return 0
