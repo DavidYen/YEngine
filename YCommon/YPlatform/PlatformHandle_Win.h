@@ -9,9 +9,11 @@ struct PlatformHandle;
 
 struct WinPlatformHandle {
   HWND mHwnd;
+  bool mWindowedMode;
 };
 
-void InitWinPlatformHandle(PlatformHandle& handle, const HWND hwnd);
+void InitWinPlatformHandle(PlatformHandle& handle, const HWND hwnd,
+                           bool windowed);
 
 }} // namespace YCommon { namespace YPlatform {
 

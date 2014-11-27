@@ -13,7 +13,7 @@ class ThreadPool {
   ThreadPool(size_t num_threads, void* buffer, size_t buffer_size);
   ~ThreadPool();
 
-  bool EnqueueRun(ThreadRoutine thread_routine, void* thread_args);
+  bool EnqueueRun(YPlatform::ThreadRoutine thread_routine, void* thread_args);
 
   bool Start();
   bool Pause();
@@ -27,7 +27,7 @@ class ThreadPool {
   }
 
   size_t GetQueueSize() const {
-    return (mBufferSize - sizeof(YThread) * mNumThreads) /
+    return (mBufferSize - sizeof(YPlatform::Thread) * mNumThreads) /
            sizeof(ThreadData::RunArgs);
   }
 
@@ -35,7 +35,7 @@ class ThreadPool {
   static int ThreadPoolThread(void* arg);
 
  private:
-  YThread* mThreads;
+  YPlatform::Thread* mThreads;
   size_t mNumThreads;
 
   void* mBuffer;
@@ -51,10 +51,10 @@ class ThreadPool {
       kRunState_Stopped,
     } mRunState;
 
-    YSemaphore mSemaphore;
+    YPlatform::Semaphore mSemaphore;
 
     struct RunArgs {
-      ThreadRoutine thread_routine;
+      YPlatform::ThreadRoutine thread_routine;
       void* thread_args;
     };
     TypedAtomicQueue<RunArgs> mRunQueue;

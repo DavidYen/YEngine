@@ -54,7 +54,7 @@ int WINAPI WinMain(HINSTANCE hInst,
   }
 
   YCommon::YPlatform::PlatformHandle platform_handle;
-  YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd);
+  YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd, true);
 
   YEngine::YFramework::YFramework framework(platform_handle);
   framework.Run();

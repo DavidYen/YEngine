@@ -31,7 +31,7 @@ enum UsageType {
 };
 
 namespace RenderDevice {
-  void Initialize(const YEngine::YFramework::PlatformHandle& platform_handle,
+  void Initialize(const YEngine::YFramework::PlatformHandle& handle,
                   uint32_t width, uint32_t height,
                   void* buffer, size_t buffer_size);
   void Terminate();

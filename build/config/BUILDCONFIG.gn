@@ -15,6 +15,9 @@ declare_args() {
 
   # Compiler
   compiler = "VS2012e"
+
+  # Gfx
+  gfx = "dx9"
 }
 
 #################
@@ -93,6 +96,7 @@ set_sources_assignment_filter(source_assignment_filter)
 ##################
 _compiler_configs = [
   "//build/config/compiler/${compiler}:compiler",
+  "//build/config/gfx/${gfx}:gfx",
   "//build/config/compiler:default_include_dirs",
 ]
 _linker_configs = []

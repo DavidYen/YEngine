@@ -3,7 +3,7 @@
 
 /*******
 * Atomic Array able to store and remove fixed size elements.
-*   - buffer size requirement: item_size + sizeof(uint32_t) * num_items
+*   - buffer size requirement: (item_size + sizeof(uint32_t)) * num_items
 ********/
 namespace YCommon { namespace YContainers {
 
@@ -37,11 +37,11 @@ class AtomicArray {
 template<typename T>
 class TypedAtomicArray : public AtomicArray {
  public:
-  TypedAtomicQueue() : AtomicQueue() {}
-  TypedAtomicQueue(T* buffer, size_t buffer_size, uint32_t num_items)
-      : AtomicQueue(static_cast<void*>(buffer), buffer_size,
+  TypedAtomicArray() : AtomicArray() {}
+  TypedAtomicArray(T* buffer, size_t buffer_size, uint32_t num_items)
+      : AtomicArray(static_cast<void*>(buffer), buffer_size,
                     sizeof(T), num_items) {}
-  ~TypedAtomicQueue() {}
+  ~TypedAtomicArray() {}
 
   void Init(T* buffer, size_t buffer_size, uint32_t num_items) {
     return AtomicArray::Init(static_cast<void*>(buffer), buffer_size,

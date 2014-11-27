@@ -11,6 +11,12 @@
 #endif
 
 #ifndef PLATINUM
+# define YFATAL(...) \
+  { \
+    char buffer[512]; \
+    snprintf(buffer, sizeof(buffer)-1, __VA_ARGS__); \
+    YCommon::YUtils::Assert::Assert(__FILE__, __LINE__, buffer); \
+  }
 # define YASSERT(cond, ...) \
   if (!(cond)) { \
     char buffer[512]; \
@@ -24,7 +30,9 @@
     YCommon::YUtils::Assert::Warn(__FILE__, __LINE__, buffer); \
   }
 #else
+# define YFATAL(...)
 # define YASSERT(cond, ...)
+# define YWARN(cond, ...)
 #endif // PLATINUM
 
 #ifdef DEBUG

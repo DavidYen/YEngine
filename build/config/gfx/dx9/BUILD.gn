@@ -1,0 +1,13 @@
+
+dx9_path = exec_script("//build/system_paths.py",
+                       ["output", "--name", "dx9"],
+                       "trim string")
+
+config("gfx") {
+  libs = [
+  ]
+
+  include_dirs = [
+    "/\"${dx9_path}/Include\"",
+  ]
+}

@@ -13,8 +13,8 @@ namespace YCommon { namespace YUtils {
 
 void Assert::Initialize(
     const YCommon::YPlatform::PlatformHandle& platform_handle) {
-  const WinPlatformHandle& win_handle =
-    reinterpret_cast<const WinPlatformHandle&>(platform_handle);
+  const YPlatform::WinPlatformHandle& win_handle =
+      reinterpret_cast<const YPlatform::WinPlatformHandle&>(platform_handle);
   gMainWindowHandle = win_handle.mHwnd;
 }
 

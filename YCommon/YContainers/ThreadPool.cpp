@@ -12,7 +12,7 @@ ThreadPool::ThreadData::ThreadData(size_t num_threads, void* buffer,
                  static_cast<int>(num_threads)),
       mRunQueue(static_cast<ThreadPool::ThreadData::RunArgs*>(buffer),
                 sizeof(RunArgs),
-                ((buffer_size - sizeof(YThread)*num_threads) /
+                ((buffer_size - sizeof(YPlatform::Thread)*num_threads) /
                  sizeof(ThreadPool::ThreadData::RunArgs))) {
 }
 
@@ -22,7 +22,7 @@ ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
       mBuffer(buffer),
       mBufferSize(buffer_size),
       mThreadData(num_threads, buffer, buffer_size) {
-  const size_t thread_size = sizeof(YThread) * num_threads;
+  const size_t thread_size = sizeof(YPlatform::Thread) * num_threads;
   YASSERT(buffer_size > thread_size,
           "Buffer size is not big enough to contain ThreadPool");
 
@@ -32,7 +32,7 @@ ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
           "Number of run arguments must be greater than 0");
 
   uint8_t* thread_loc = static_cast<uint8_t*>(buffer) + num_run_args;
-  mThreads = new (thread_loc) YThread[num_threads];
+  mThreads = new (thread_loc) YPlatform::Thread[num_threads];
   mNumThreads = num_threads;
 
   for (size_t i = 0; i < num_threads; ++i) {
@@ -49,11 +49,12 @@ ThreadPool::~ThreadPool() {
     mThreads[i].join();
 
     // Explicitly call destructor for placement new.
-    mThreads[i].~YThread();
+    mThreads[i].~Thread();
   }
 }
 
-bool ThreadPool::EnqueueRun(ThreadRoutine thread_routine, void* thread_args) {
+bool ThreadPool::EnqueueRun(YPlatform::ThreadRoutine thread_routine,
+                            void* thread_args) {
   ThreadData::RunArgs run_args = {
     thread_routine,
     thread_args,
