@@ -11,14 +11,14 @@ inline void ReleaseFence();
 /* Sets and returns previous value. */
 inline int32_t AtomicSet32(volatile int32_t* dest, int32_t value);
 inline int64_t AtomicSet64(volatile int64_t* dest, int64_t value);
-inline void* AtomicSetPtr(volatile void* dest, intptr_t value);
+inline void* AtomicSetPtr(void* volatile* dest, void* value);
 
 /* Compares dest with expected and sets to value if they match. */
 inline bool AtomicCmpSet32(volatile int32_t* dest, int32_t expected,
                            int32_t value);
 inline bool AtomicCmpSet64(volatile int64_t* dest, int64_t expected,
                            int64_t value);
-inline bool AtomicCmpSetPtr(volatile void* dest, void* expected,
+inline bool AtomicCmpSetPtr(void* volatile* dest, void* expected,
                             void* value);
 
 /* Numeric Operations, returns the previous value of the destination. */
@@ -109,7 +109,7 @@ inline uint64_t AtomicXor64(volatile uint64_t* result, uint64_t value) {
 } // namespace YCommon {
 
 #ifdef WIN
-  #include "Atomics_Win.h"
+  #include "Atomics_Win.inl"
 #endif
 
 #endif // YCOMMON_HEADERS_ATOMICS_H

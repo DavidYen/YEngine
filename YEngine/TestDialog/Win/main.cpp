@@ -5,6 +5,7 @@
 #include <YCommon/YPlatform/PlatformHandle.h>
 #include <YCommon/YPlatform/PlatformHandle_Win.h>
 #include <YEngine/YFramework/YFramework.h>
+#include <YEngine/YRenderDevice/RenderDevice.h>
 
 // Windows Entry Point
 int WINAPI WinMain(HINSTANCE hInst,
@@ -56,7 +57,14 @@ int WINAPI WinMain(HINSTANCE hInst,
   YCommon::YPlatform::PlatformHandle platform_handle;
   YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd, true);
 
+  static char render_buffer[1024];
   YEngine::YFramework::YFramework framework(platform_handle);
+  YEngine::YRenderDevice::RenderDevice::Initialize(platform_handle,
+                                                   1280,
+                                                   720,
+                                                   render_buffer,
+                                                   sizeof(render_buffer));
+
   framework.Run();
   return 0;
 }

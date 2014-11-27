@@ -1,0 +1,24 @@
+
+config("platform") {
+  defines = [
+    "WIN",
+  ]
+}
+
+config("default_libs") {
+  libs = [
+    "advapi32.lib",
+    "comdlg32.lib",
+    "gdi32.lib",
+    "kernel32.lib",
+    "odbc32.lib",
+    "odbccp32.lib",
+    "ole32.lib",
+    "oleaut32.lib",
+    "psapi.lib",
+    "shell32.lib",
+    "user32.lib",
+    "uuid.lib",
+    "winspool.lib",
+  ]
+}

@@ -5,7 +5,7 @@
 #include "VertexFormat.h"
 #include "DrawPrimitive.h"
 
-namespace YEngine { namespace YFramework {
+namespace YCommon { namespace YPlatform {
   struct PlatformHandle;
 }}
 
@@ -31,7 +31,7 @@ enum UsageType {
 };
 
 namespace RenderDevice {
-  void Initialize(const YEngine::YFramework::PlatformHandle& handle,
+  void Initialize(const YCommon::YPlatform::PlatformHandle& handle,
                   uint32_t width, uint32_t height,
                   void* buffer, size_t buffer_size);
   void Terminate();
