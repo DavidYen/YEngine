@@ -7,7 +7,7 @@ import sys
 import traceback
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_CONFIG_FILE = os.path.join(SCRIPT_DIR, 'VSConfig.json')
+DEFAULT_CONFIG_FILE = os.path.join(SCRIPT_DIR, 'SystemPaths.json')
 DEFAULT_CONFIG_FILENAME = os.path.basename(DEFAULT_CONFIG_FILE)
 
 def GetConfigDict(args):
@@ -28,7 +28,7 @@ def SaveConfigDict(args, config_dict):
 
 def do_config(args):
   config_dict = GetConfigDict(args)
-  config_dict[args.vs_name] = args.vs_path
+  config_dict[args.name] = args.path
 
   SaveConfigDict(args, config_dict)
   return 0
@@ -36,7 +36,7 @@ def do_config(args):
 def do_list(args):
   config_json = GetConfigDict(args)
   if not config_json:
-    print 'No Visual Studio paths found'
+    print 'No system paths found'
     return 1
 
   for name, path in config_json.iter_items():
@@ -48,8 +48,8 @@ def do_output(args):
   name = args.output_name
   config_dict = GetConfigDict(args)
   if name not in config_dict:
-    print 'Visual Studio Path is not set:', name
-    print 'Configure Usage: %s config %s vs_path' % (sys.argv[0], name)
+    print 'System Path is not set:', name
+    print 'Configure Usage: %s config %s PATH' % (sys.argv[0], name)
     return 1
 
   print config_dict[name]
@@ -62,25 +62,25 @@ def do_main(argv):
   parser.add_argument(
       '--config-file', dest='config_file', action='store',
       default=DEFAULT_CONFIG_FILE,
-      help='VS Configuration file. (default: %s)' % DEFAULT_CONFIG_FILENAME)
+      help='Configuration file. (default: %s)' % DEFAULT_CONFIG_FILENAME)
 
   # Configure Command
   config_parser = command_parser.add_parser('config')
   config_parser.add_argument(
-      'vs_name',
-      help='Visual Studio Name: IE. VS20XX, SDK, VS20XXe...etc.')
+      'name',
+      help='System Name: IE. VS20XX, SDK, VS20XXe...etc.')
   config_parser.add_argument(
-      'vs_path',
-      help='Path for the Visual Studio path')
+      'path',
+      help='Path for the System path')
 
   # List Command
   config_parser = command_parser.add_parser('list')
 
-  # Output Visual Studio Command
+  # Output System Command
   output_parser = command_parser.add_parser('output')
   output_parser.add_argument(
       '--name', dest='output_name', action='store',
-      help='Output the path for a given visual studio name.')
+      help='Output the path for a given system name.')
 
   args = parser.parse_args(argv)
 
