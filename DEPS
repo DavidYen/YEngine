@@ -49,11 +49,8 @@ hooks = [
   {
     "name": "generate_ninja",
     "pattern": ".",
-    "directory": "yengine",
-    "action": [ "gn",
-                "--root=yengine",
-                "gen",
-                "//out",
+    "action": [ "python",
+                "yengine/generate_ninja.py",
     ],
   },
 ]

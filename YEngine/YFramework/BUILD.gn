@@ -6,7 +6,6 @@ static_library("YFramework") {
   ]
 
   deps = [
-    "//YEngine/YCore",
     "//YEngine/YRenderDevice",
   ]
 }

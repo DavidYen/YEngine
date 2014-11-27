@@ -1,3 +1,5 @@
 
 static_library("YCore") {
+  sources = [
+  ]
 }
