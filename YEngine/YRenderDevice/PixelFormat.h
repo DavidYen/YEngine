@@ -25,7 +25,7 @@ struct Pixel_F32 {
 const size_t kPixelFormatSize[] = {
   sizeof(Pixel_A8R8G8B8), // kPixelFormat_A8R8G8B8,
   sizeof(Pixel_F32),      // kPixelFormat_F32,
-}
+};
 static_assert(ARRAY_SIZE(kPixelFormatSize) == NUM_PIXEL_FORMATS,
               "kPixelFormatSize must be defined for every pixel format.");
 

@@ -12,7 +12,7 @@ namespace {
 namespace YCommon { namespace YUtils {
 
 void Assert::Initialize(
-    const YEngine::YFramework::PlatformHandle& platform_handle) {
+    const YCommon::YPlatform::PlatformHandle& platform_handle) {
   const WinPlatformHandle& win_handle =
     reinterpret_cast<const WinPlatformHandle&>(platform_handle);
   gMainWindowHandle = win_handle.mHwnd;
@@ -25,7 +25,7 @@ void Assert::Assert(const char* file, uint32_t line, const char* message) {
   char buffer[512];
   buffer[sizeof(buffer)-1] = '\0';
   snprintf(buffer, sizeof(buffer)-1, "[%s:%u] %s", file, line, message);
-  MessageBoxA(gMainWindowHandle, buffer, "Yengine Assertion", MB_OK );
+  MessageBoxA(gMainWindowHandle, buffer, "Assertion", MB_OK );
   __debugbreak();
 }
 

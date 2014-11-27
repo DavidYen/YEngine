@@ -35,6 +35,6 @@ struct VertexDeclElement {
   VertexElementUsage mElementUsage;
 };
 
-}}
+}} // namespace YEngine { namespace YRenderDevice {
 
 #endif // YENGINE_YRENDERDEVICE_VERTEXDECLELEMENT_H

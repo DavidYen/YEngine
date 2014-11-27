@@ -3,4 +3,14 @@
 
 #define IS_POWER_OF_2(num) (!(num & (num - 1)))
 
+/***********
+* See: http://cnicholson.net/2011/01/stupid-c-tricks-a-better-sizeof_array/
+************/
+namespace array_size_helper {
+  template<typename T, size_t N>
+  uint8_t (&SIZEOF_ARRAY_REQUIRES_ARRAY_ARGUMENT(T (&)[N]))[N];
+}
+#define ARRAY_SIZE(x) \
+    sizeof(array_size_helper::SIZEOF_ARRAY_REQUIRES_ARRAY_ARGUMENT(x))
+
 #endif // YCOMMON_HEADERS_MACROS_H

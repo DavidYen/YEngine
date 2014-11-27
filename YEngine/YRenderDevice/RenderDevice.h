@@ -18,6 +18,8 @@ typedef uint16_t VertexBufferID;
 typedef uint16_t IndexBufferID;
 typedef uint16_t ConstantBufferID;
 
+struct VertexDeclElement;
+
 enum UsageType {
   kUsageType_Invalid,   // Invalid
   kUsageType_Immutable, // Never changing
@@ -88,7 +90,7 @@ namespace RenderDevice {
   void ReleaseTexture(TextureID texture);
   void ReleaseVertexBuffer(VertexBufferID vertex_buffer);
   void ReleaseIndexBuffer(IndexBufferID index_buffer);
-  void ReleaseConstantBuffer(ConstantdBufferID constant_buffer);
+  void ReleaseConstantBuffer(ConstantBufferID constant_buffer);
 
   // Activations
   void ActivateViewPort(uint32_t top, uint32_t left,

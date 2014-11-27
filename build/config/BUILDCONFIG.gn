@@ -2,7 +2,6 @@
 ###############
 # BUILD FLAGS #
 ###############
-
 #
 # Input Arguments to the build, along with their default values.
 #
@@ -30,7 +29,6 @@ if (compiler == "VS2012e") {
 ##################
 # OS DEFINITIONS #
 ##################
-
 is_win = false
 is_mac = false
 is_linux = false
@@ -52,7 +50,6 @@ if (os =="win") {
 ##################
 # Source Filters #
 ##################
-
 #
 # These patterns filter out platform specific files.
 #
@@ -94,7 +91,6 @@ set_sources_assignment_filter(source_assignment_filter)
 ##################
 # Configurations #
 ##################
-
 _compiler_configs = [
   "//build/config/compiler/${compiler}:compiler",
   "//build/config/compiler:default_include_dirs",
@@ -110,7 +106,6 @@ _compiler_configs += [
 ###################
 # Default Targets #
 ###################
-
 set_defaults("executable") {
   configs = _compiler_configs + _linker_configs + [
     "//build/config:default_libs",
@@ -134,7 +129,6 @@ set_defaults("source_set") {
 #############
 # Toolchain #
 #############
-
 host_toolchain = false
 if (is_win) {
   if (is_visual_studio) {

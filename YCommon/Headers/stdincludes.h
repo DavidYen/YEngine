@@ -4,6 +4,8 @@
 
 #include <YCommon/YUtils/Assert.h>
 
+#include "Macros.h"
+
 #ifdef _MSC_VER
   #define snprintf _snprintf_s
 #endif
