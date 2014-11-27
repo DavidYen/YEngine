@@ -51,16 +51,11 @@ void AtomicArray::Init(void* buffer, size_t buffer_size,
           "Atomic Array element size must be a multiple of %u - supplied %u.",
           static_cast<uint32_t>(sizeof(uint32_t)),
           static_cast<uint32_t>(item_size));
-  YASSERT(buffer_size >= ((item_size+sizeof(uint32_t)) * num_items),
+  YASSERT(buffer_size >= (item_size * num_items),
           "Atomic Array %u[%u] requires at least %u bytes, supplied %u bytes.",
           static_cast<uint32_t>(item_size), num_items,
-          static_cast<uint32_t>((item_size+sizeof(uint32_t)) * num_items),
+          static_cast<uint32_t>(item_size * num_items),
           static_cast<uint32_t>(buffer_size));
-
-  // Initialize Free Array bytes to -1
-  uint32_t* free_array = reinterpret_cast<uint32_t*>(
-      static_cast<uint8_t*>(buffer) + (item_size * num_items));
-  memset(free_array, -1, sizeof(uint32_t) * num_items);
 }
 
 uint32_t AtomicArray::Allocate() {

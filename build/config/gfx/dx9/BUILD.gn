@@ -5,6 +5,7 @@ dx9_path = exec_script("//build/system_paths.py",
 
 config("gfx") {
   libs = [
+    "D3d9.lib",
   ]
 
   include_dirs = [

@@ -74,6 +74,7 @@ template("visual_studio_debug") {
       "/Od",  # Disable optimization.
       "/Ob0",  # Disable all inlining (on by default).
       "/RTC1",  # Runtime checks for stack frame and uninitialized variables.
+      "/MDd",  # Multithreaded, dynamic link, debug
     ]
 
     # Produce PDB File

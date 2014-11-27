@@ -57,7 +57,7 @@ int WINAPI WinMain(HINSTANCE hInst,
   YCommon::YPlatform::PlatformHandle platform_handle;
   YCommon::YPlatform::InitWinPlatformHandle(platform_handle, hWnd, true);
 
-  static char render_buffer[1024];
+  static char render_buffer[1024*10];
   YEngine::YFramework::YFramework framework(platform_handle);
   YEngine::YRenderDevice::RenderDevice::Initialize(platform_handle,
                                                    1280,
