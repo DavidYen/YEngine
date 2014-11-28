@@ -4,8 +4,8 @@
 namespace YCommon { namespace YUtils {
 
 namespace Hash {
-  uint32_t Hash32(void* data, size_t data_size);
-  uint64_t Hash64(void* data, size_t data_size);
+  uint32_t Hash32(const void* data, size_t data_size);
+  uint64_t Hash64(const void* data, size_t data_size);
 }
 
 }} // namespace YCommon { namespace YUtils {

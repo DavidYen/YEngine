@@ -3,6 +3,8 @@ static_library("YContainers") {
   sources = [
     "AtomicArray.cpp",
     "AtomicArray.h",
+    "AtomicHashTable.cpp",
+    "AtomicHashTable.h",
     "AtomicQueue.cpp",
     "AtomicQueue.h",
     "ThreadPool.cpp",
