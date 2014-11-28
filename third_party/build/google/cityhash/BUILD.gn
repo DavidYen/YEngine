@@ -1,0 +1,12 @@
+
+static_library("cityhash") {
+  sources = [
+    "//third_party/google/cityhash/src/city.h",
+    "//third_party/google/cityhash/src/city.cc",
+  ]
+
+  include_dirs = [
+    "//third_party/google/cityhash/src",
+    ".",
+  ]
+}

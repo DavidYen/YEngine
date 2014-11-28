@@ -2,6 +2,8 @@
 static_library("YUtils") {
   sources = [
     "Assert.h",
+    "Hash.cpp",
+    "Hash.h",
   ]
 
   if (is_win) {
@@ -9,4 +11,8 @@ static_library("YUtils") {
       "Assert_WinMsgBox.cpp",
     ]
   }
+
+  deps = [
+    "//third_party/build/google/cityhash",
+  ]
 }

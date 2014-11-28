@@ -7,7 +7,7 @@ namespace YCommon { namespace YPlatform {
 
 namespace YCommon { namespace YUtils {
 
-namespace Assert{
+namespace Assert {
   void Initialize(const YCommon::YPlatform::PlatformHandle& platform_handle);
   void Terminate();
 
