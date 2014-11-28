@@ -92,6 +92,8 @@ void AtomicHashTable::Insert(uint64_t hash_key,
       return;
     }
   }
+
+  YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
 }
 
 const void* AtomicHashTable::GetValue(const void* key, size_t key_size) const {
