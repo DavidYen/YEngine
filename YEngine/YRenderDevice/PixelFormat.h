@@ -29,6 +29,13 @@ const size_t kPixelFormatSize[] = {
 static_assert(ARRAY_SIZE(kPixelFormatSize) == NUM_PIXEL_FORMATS,
               "kPixelFormatSize must be defined for every pixel format.");
 
+const char* kPixelFormatNames[] = {
+  "A8R8G8B8", // kPixelFormat_A8R8G8B8,
+  "F32",      // kPixelFormat_F32,
+};
+static_assert(ARRAY_SIZE(kPixelFormatNames) == NUM_PIXEL_FORMATS,
+              "kPixelFormatNames must be defined for every pixel format.");
+
 }} // namespace YEngine { namespace YRenderDevice {
 
 #endif // YENGINE_YRENDERDEVICE_PIXELFORMAT_H
