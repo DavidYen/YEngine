@@ -18,6 +18,7 @@ class AtomicHashTable {
 
   void Init(void* buffer, size_t buffer_size,
             size_t num_entries, size_t max_value_size);
+  void Reset();
 
   uint64_t Insert(const void* key, size_t key_size,
                   const void* value, size_t value_size);

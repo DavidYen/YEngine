@@ -59,6 +59,12 @@ void AtomicHashTable::Init(void* buffer, size_t buffer_size,
   memset(buffer, EMPTY_VALUE, sizeof(uint64_t) * num_entries);
 }
 
+void AtomicHashTable::Reset() {
+  mBuffer = NULL;
+  mNumEntries = 0;
+  mMaxValueSize = 0;
+}
+
 uint64_t AtomicHashTable::Insert(const void* key, size_t key_size,
                                  const void* value, size_t value_size) {
   const uint64_t hash_key = YCommon::YUtils::Hash::Hash64(key, key_size);
