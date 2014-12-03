@@ -13,4 +13,15 @@ namespace array_size_helper {
 #define ARRAY_SIZE(x) \
     sizeof(array_size_helper::SIZEOF_ARRAY_REQUIRES_ARRAY_ARGUMENT(x))
 
+/***********
+* ALIGN_FRONT(x) ALIGN_BACK(x) for each compiler.
+************/
+#ifdef _MSC_VER
+  #define ALIGN_FRONT(x) __declspec(align(x))
+  #define ALIGN_BACK(x)
+#else
+  #define ALIGN_FRONT(x)
+  #define ALIGN_BACK(x) __attribute__ ((aligned (x)))
+#endif
+
 #endif // YCOMMON_HEADERS_MACROS_H
