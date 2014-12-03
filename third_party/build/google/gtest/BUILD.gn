@@ -1,0 +1,40 @@
+
+config("gtest_config") {
+  include_dirs = [
+    "//third_party/google/gtest",
+    "//third_party/google/gtest/include",
+  ]
+
+  if (is_win) {
+    cflags = [
+      "/wd4800", # Unused variable warning.
+      "/wd4702"
+    ]
+
+    ldflags = [
+      "/IGNORE:4006"
+    ]
+  }
+
+  # VS only has a max of 10, but define for all compilers so we don't write
+  # any tests which use more than 10
+  defines = [
+    "_VARIADIC_MAX=10",
+  ]
+}
+
+static_library("gtest") {
+  sources = [
+    "//third_party/google/gtest/src/gtest-all.cc",
+    "//third_party/google/gtest/src/gtest-death-test.cc",
+    "//third_party/google/gtest/src/gtest-filepath.cc",
+    "//third_party/google/gtest/src/gtest-internal-inl.h",
+    "//third_party/google/gtest/src/gtest-port.cc",
+    "//third_party/google/gtest/src/gtest-printers.cc",
+    "//third_party/google/gtest/src/gtest-test-part.cc",
+    "//third_party/google/gtest/src/gtest-typed-test.cc",
+    "//third_party/google/gtest/src/gtest.cc",
+  ]
+
+  all_dependent_configs = [ ":gtest_config" ]
+}

@@ -20,6 +20,19 @@ declare_args() {
   gfx = "dx9"
 }
 
+###################
+# Other Templates #
+###################
+template("unit_test") {
+  executable(target_name) {
+    sources = invoker.sources
+    deps = invoker.deps
+    configs = invoker.configs
+
+    sources += [ "//third_party/google/gtest/src/gtest_main.cc" ]
+  }
+}
+
 #################
 # Compiler Type #
 #################
@@ -88,6 +101,17 @@ set_defaults("shared_library") {
 
 set_defaults("source_set") {
   configs = _compiler_configs
+}
+
+set_defaults("unit_test") {
+  deps = [
+    "//third_party/build/google/gtest",
+  ]
+
+  configs = _compiler_configs + _linker_configs + [
+    "//build/config/platform/${os}:default_libs",
+    "//third_party/build/google/gtest:gtest_config",
+  ]
 }
 
 #############
