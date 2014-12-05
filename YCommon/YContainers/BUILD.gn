@@ -11,3 +11,14 @@ static_library("YContainers") {
     "ThreadPool.h",
   ]
 }
+
+unit_test("YContainer_Test") {
+  sources = [
+    "AtomicArray_test.cpp",
+  ]
+
+  deps += [
+    ":YContainers",
+    "//YCommon/YUtils"
+  ]
+}

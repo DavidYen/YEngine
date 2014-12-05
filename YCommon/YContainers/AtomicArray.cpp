@@ -1,6 +1,7 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "AtomicArray.h"
 
+#include <algorithm>
 #include <string>
 
 #include <YCommon/Headers/Atomics.h>
@@ -18,7 +19,8 @@ AtomicArray::AtomicArray()
       mItemSize(0),
       mNumItems(0),
       mUsedIndexes(0),
-      mNextFreeIndex(static_cast<uint32_t>(-1)) {
+      mNextFreeIndex(CONSTRUCT_VALUE(static_cast<uint64_t>(0),
+                                     static_cast<uint32_t>(-1))) {
 }
 
 AtomicArray::AtomicArray(void* buffer, size_t buffer_size,
@@ -27,7 +29,8 @@ AtomicArray::AtomicArray(void* buffer, size_t buffer_size,
       mItemSize(0),
       mNumItems(0),
       mUsedIndexes(0),
-      mNextFreeIndex(static_cast<uint32_t>(-1)) {
+      mNextFreeIndex(CONSTRUCT_VALUE(static_cast<uint64_t>(0),
+                                     static_cast<uint32_t>(-1))) {
   Init(buffer, buffer_size, item_size, num_items);
 }
 
@@ -40,7 +43,8 @@ void AtomicArray::Init(void* buffer, size_t buffer_size,
   mItemSize = item_size;
   mNumItems = num_items;
   mUsedIndexes = 0;
-  mNextFreeIndex = static_cast<uint32_t>(-1);
+  mNextFreeIndex = CONSTRUCT_VALUE(static_cast<uint64_t>(0),
+                                   static_cast<uint32_t>(-1));
 
   (void) buffer_size;
   YASSERT(reinterpret_cast<uintptr_t>(buffer) % sizeof(uint32_t) == 0,
@@ -58,57 +62,52 @@ void AtomicArray::Init(void* buffer, size_t buffer_size,
           static_cast<uint32_t>(buffer_size));
 }
 
+void AtomicArray::Reset() {
+  mBuffer = NULL;
+  mItemSize = 0;
+  mNumItems = 0;
+  mUsedIndexes = 0;
+  mNextFreeIndex = CONSTRUCT_VALUE(static_cast<uint64_t>(0),
+                                   static_cast<uint32_t>(-1));
+}
+
 uint32_t AtomicArray::Allocate() {
-  uint64_t used_size_value = mUsedIndexes;
+  uint32_t used_indexes = mUsedIndexes;
   uint64_t next_free_index_value = mNextFreeIndex;
   MemoryBarrier();
 
   const size_t item_size = mItemSize;
-  const size_t array_size = mNumItems;
   uint8_t* buffer_ptr = static_cast<uint8_t*>(mBuffer);
 
   // Check if there are any free items
-  uint64_t free_index = static_cast<uint64_t>(-1);
-  uint64_t next_free_index_num = GET_NUM(next_free_index_value);
-  while (next_free_index_num != static_cast<uint32_t>(-1)) {
-    uint8_t* next_free_loc = &buffer_ptr[item_size*next_free_index_num];
-    uint64_t new_next_free_index = *reinterpret_cast<uint32_t*>(next_free_loc);
+  uint32_t next_num = static_cast<uint32_t>(GET_NUM(next_free_index_value));
+  while (next_num != static_cast<uint32_t>(-1)) {
+    uint8_t* next_free_loc = &buffer_ptr[item_size*next_num];
+    uint32_t new_next_free_index = *reinterpret_cast<uint32_t*>(next_free_loc);
 
     if (AtomicCmpSet64(&mNextFreeIndex,
                        next_free_index_value,
                        CONSTRUCT_NEXT_VALUE(GET_CNT(next_free_index_value),
                                             new_next_free_index))) {
-      free_index = next_free_index_num;
-      break;
+      return next_num;
     }
 
     next_free_index_value = mNextFreeIndex;
     MemoryBarrier();
 
-    next_free_index_num = GET_NUM(next_free_index_value);
+    next_num = static_cast<uint32_t>(GET_NUM(next_free_index_value));
   }
 
   // Check if used rest of array
-  if (free_index == static_cast<uint64_t>(-1)) {
-    uint64_t used_size_num = GET_NUM(used_size_value);
-    while ((used_size_num+1) < array_size) {
-      const uint32_t test_free_index = static_cast<uint32_t>(used_size_num);
-      if (AtomicCmpSet64(&mUsedIndexes,
-                         used_size_value,
-                         CONSTRUCT_NEXT_VALUE(GET_CNT(used_size_value),
-                                              used_size_num+1))) {
-        free_index = test_free_index;
-        break;
-      }
-
-      used_size_value = mUsedIndexes;
-      MemoryBarrier();
-
-      used_size_num = GET_NUM(used_size_value);
+  const size_t array_size = mNumItems;
+  if (used_indexes < array_size) {
+    uint32_t new_index = AtomicAdd32(&mUsedIndexes, 1);
+    if (new_index < array_size) {
+      return new_index;
     }
   }
 
-  return static_cast<uint32_t>(free_index);
+  return static_cast<uint32_t>(-1);
 }
 
 uint32_t AtomicArray::Insert(const void* data_item) {
@@ -116,7 +115,7 @@ uint32_t AtomicArray::Insert(const void* data_item) {
   uint32_t free_index = Allocate();
 
   // Copy data if index is reserved successfully.
-  if (free_index == static_cast<uint32_t>(-1)) {
+  if (free_index != static_cast<uint32_t>(-1)) {
     memcpy(static_cast<uint8_t*>(mBuffer) + (item_size * free_index),
            data_item,
            item_size);
@@ -151,8 +150,8 @@ void AtomicArray::Remove(uint32_t index) {
   }
 }
 
-uint32_t AtomicArray::GetMaxUsedIndex() {
-  return static_cast<uint32_t>(GET_NUM(mUsedIndexes));
+uint32_t AtomicArray::GetNumIndexesUsed() {
+  return min(mUsedIndexes, mNumItems);
 }
 
 }} // namespace YCommon { namespace YContainers {

@@ -16,6 +16,7 @@ class AtomicArray {
 
   void Init(void* buffer, size_t buffer_size,
             size_t item_size, uint32_t num_items);
+  void Reset();
 
   // Allocates or Removes an index
   uint32_t Allocate(); // returns -1 on failure.
@@ -23,14 +24,16 @@ class AtomicArray {
 
   // Returns inserted index or -1.
   uint32_t Insert(const void* data_item);
-  uint32_t GetMaxUsedIndex();
 
- private:
+  // Gets max number of indexes used.
+  uint32_t GetNumIndexesUsed();
+
+ protected:
   void* mBuffer;
   size_t mItemSize;
   uint32_t mNumItems;
 
-  volatile uint64_t mUsedIndexes;
+  volatile uint32_t mUsedIndexes;
   volatile uint64_t mNextFreeIndex;;
 };
 
@@ -55,23 +58,28 @@ class TypedAtomicArray : public AtomicArray {
   uint32_t Insert(const T& data_item) {
     return AtomicArray::Insert(static_cast<const void*>(&data_item));
   }
+
+  const T& operator[](size_t index) const {
+    return static_cast<T*>(mBuffer)[index];
+  }
+
+  T& operator[](size_t index) {
+    return static_cast<T*>(mBuffer)[index];
+  }
 };
 
 template<typename T, size_t items>
 class ContainedAtomicArray : public TypedAtomicArray<T> {
  public:
-  ContainedAtomicArray() : TypedAtomicArray(mBuffer, sizeof(mBuffer), items) {}
+  ContainedAtomicArray() : TypedAtomicArray(mData, sizeof(mData), items) {}
   ~ContainedAtomicArray() {}
 
   void Init() {
-    TypedAtomicArray::Init(mBuffer, sizeof(mBuffer), items);
+    TypedAtomicArray::Init(mData, sizeof(mData), items);
   }
 
-  const T& operator[](size_t index) const { return mBuffer[index]; }
-  T& operator[](size_t index) { return mBuffer[index]; }
-
  private:
-  T mBuffer[items];
+  T mData[items];
 };
 
 }} // namespace YCommon { namespace YContainers {
