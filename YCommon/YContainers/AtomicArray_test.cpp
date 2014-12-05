@@ -96,33 +96,91 @@ TEST(BasicAtomicArrayTest, ContainedArrayFunctions) {
 TEST(AtomicArrayReuseTest, AscendingReuse) {
   ContainedAtomicArray<int, 10> atomic_array;
 
+  // Initialize
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(i, atomic_array.Insert(100+i));
   }
 
+  // Remove Ascending
   for (int i = 0; i < 10; ++i) {
+    atomic_array.Remove(i);
+  }
+
+  // Reinsert
+  for (int i = 0; i < 10; ++i) {
+    atomic_array.Insert(100+i);
+  }
+
+  // Validate
+  int validation[10] = { 0 };
+  for (int i = 0; i < 10; ++i) {
+    int value = atomic_array[i] - 100;
+    ASSERT_GE(value, 0);
+    ASSERT_LT(value, 10);
+    EXPECT_EQ(validation[value], 0);
+
+    validation[value] = 1;
   }
 }
 
 TEST(AtomicArrayReuseTest, DescendingReuse) {
   ContainedAtomicArray<int, 10> atomic_array;
 
+  // Initialize
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(i, atomic_array.Insert(100+i));
   }
 
+  // Remove Descending
+  for (int i = 9; i >= 0; --i) {
+    atomic_array.Remove(i);
+  }
+
+  // Reinsert
   for (int i = 0; i < 10; ++i) {
+    atomic_array.Insert(100+i);
+  }
+
+  // Validate
+  int validation[10] = { 0 };
+  for (int i = 0; i < 10; ++i) {
+    int value = atomic_array[i] - 100;
+    ASSERT_GE(value, 0);
+    ASSERT_LT(value, 10);
+    EXPECT_EQ(validation[value], 0);
+
+    validation[value] = 1;
   }
 }
 
 TEST(AtomicArrayReuseTest, OutOfOrderReuse) {
   ContainedAtomicArray<int, 10> atomic_array;
 
+  // Initialize
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(i, atomic_array.Insert(100+i));
   }
 
+  // Remove Out of Order
+  for (int i = 0; i < 5; ++i) {
+    atomic_array.Remove(i * 2 + 1);
+    atomic_array.Remove(i * 2);
+  }
+
+  // Reinsert
   for (int i = 0; i < 10; ++i) {
+    atomic_array.Insert(100+i);
+  }
+
+  // Validate
+  int validation[10] = { 0 };
+  for (int i = 0; i < 10; ++i) {
+    int value = atomic_array[i] - 100;
+    ASSERT_GE(value, 0);
+    ASSERT_LT(value, 10);
+    EXPECT_EQ(validation[value], 0);
+
+    validation[value] = 1;
   }
 }
 
