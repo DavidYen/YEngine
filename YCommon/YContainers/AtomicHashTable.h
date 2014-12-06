@@ -57,19 +57,19 @@ class TypedAtomicHashTable : public AtomicHashTable {
     return AtomicHashTable::Insert(hash_key, &value, sizeof(value));
   }
 
-  const T& GetValue(const void* key, size_t key_size) const {
-    return *static_cast<const T*>(AtomicHashTable::GetValue(key, key_size));
+  const T* GetValue(const void* key, size_t key_size) const {
+    return static_cast<const T*>(AtomicHashTable::GetValue(key, key_size));
   }
-  const T& GetValue(uint64_t hash_key) const {
-    return *static_cast<const T*>(AtomicHashTable::GetValue(hash_key));
-  }
-
-  T& GetValue(const void* key, size_t key_size) {
-    return *static_cast<T*>(AtomicHashTable::GetValue(key, key_size));
+  const T* GetValue(uint64_t hash_key) const {
+    return static_cast<const T*>(AtomicHashTable::GetValue(hash_key));
   }
 
-  T& GetValue(uint64_t hash_key) {
-    return *static_cast<T*>(AtomicHashTable::GetValue(hash_key));
+  T* GetValue(const void* key, size_t key_size) {
+    return static_cast<T*>(AtomicHashTable::GetValue(key, key_size));
+  }
+
+  T* GetValue(uint64_t hash_key) {
+    return static_cast<T*>(AtomicHashTable::GetValue(hash_key));
   }
 };
 
@@ -85,12 +85,12 @@ class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
     return AtomicHashTable::Insert(&key, sizeof(key), &value, sizeof(value));
   }
 
-  const T2& GetValue(const T1& key) const {
-    return *static_cast<const T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
+  const T2* GetValue(const T1& key) const {
+    return static_cast<const T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
   }
 
-  T2& GetValue(const T1& key) {
-    return *static_cast<T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
+  T2* GetValue(const T1& key) {
+    return static_cast<T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
   }
 };
 
