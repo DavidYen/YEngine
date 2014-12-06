@@ -28,6 +28,9 @@ class AtomicMemPool {
   // Gets max number of indexes used.
   uint32_t GetNumIndexesUsed();
 
+  size_t GetItemSize() { return mItemSize; }
+  uint32_t GetNumItems() { return mNumItems; }
+
  protected:
   void* mBuffer;
   size_t mItemSize;

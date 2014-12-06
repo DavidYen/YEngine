@@ -25,3 +25,14 @@ unit_test("YContainer_Test") {
     ":YContainers",
   ]
 }
+
+unit_test("YContainer_AtomicTest") {
+  sources = [
+    "AtomicMemPool_AtomicTest.cpp",
+  ]
+
+  deps += [
+    ":YContainers",
+    "//YCommon/YPlatform",
+  ]
+}
