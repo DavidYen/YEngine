@@ -46,7 +46,7 @@ ThreadPool::~ThreadPool() {
   MemoryBarrier();
 
   for (size_t i = 0; i < mNumThreads; ++i) {
-    mThreads[i].join();
+    mThreads[i].Join();
 
     // Explicitly call destructor for placement new.
     mThreads[i].~Thread();
@@ -93,7 +93,7 @@ bool ThreadPool::Pause() {
   return true;
 }
 
-int ThreadPool::ThreadPoolThread(void* arg) {
+uintptr_t ThreadPool::ThreadPoolThread(void* arg) {
   ThreadData* thread_data = static_cast<ThreadData*>(arg);
 
   ThreadData::RunArgs run_arg;

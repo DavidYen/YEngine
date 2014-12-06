@@ -7,12 +7,12 @@
 ********/
 namespace YCommon { namespace YContainers {
 
-class AtomicArray {
+class AtomicMemPool {
  public:
-  AtomicArray();
-  AtomicArray(void* buffer, size_t buffer_size,
+  AtomicMemPool();
+  AtomicMemPool(void* buffer, size_t buffer_size,
               size_t item_size, uint32_t num_items);
-  ~AtomicArray();
+  ~AtomicMemPool();
 
   void Init(void* buffer, size_t buffer_size,
             size_t item_size, uint32_t num_items);
@@ -38,25 +38,25 @@ class AtomicArray {
 };
 
 template<typename T>
-class TypedAtomicArray : public AtomicArray {
+class TypedAtomicMemPool : public AtomicMemPool {
  public:
-  TypedAtomicArray() : AtomicArray() {}
-  TypedAtomicArray(T* buffer, size_t buffer_size, uint32_t num_items)
-      : AtomicArray(static_cast<void*>(buffer), buffer_size,
+  TypedAtomicMemPool() : AtomicMemPool() {}
+  TypedAtomicMemPool(T* buffer, size_t buffer_size, uint32_t num_items)
+      : AtomicMemPool(static_cast<void*>(buffer), buffer_size,
                     sizeof(T), num_items) {}
-  ~TypedAtomicArray() {}
+  ~TypedAtomicMemPool() {}
 
   void Init(T* buffer, size_t buffer_size, uint32_t num_items) {
-    return AtomicArray::Init(static_cast<void*>(buffer), buffer_size,
+    return AtomicMemPool::Init(static_cast<void*>(buffer), buffer_size,
                              sizeof(T), num_items);
   }
 
   uint32_t Insert(const T* data_item) {
-    return AtomicArray::Insert(static_cast<const void*>(data_item));
+    return AtomicMemPool::Insert(static_cast<const void*>(data_item));
   }
 
   uint32_t Insert(const T& data_item) {
-    return AtomicArray::Insert(static_cast<const void*>(&data_item));
+    return AtomicMemPool::Insert(static_cast<const void*>(&data_item));
   }
 
   const T& operator[](size_t index) const {
@@ -69,13 +69,13 @@ class TypedAtomicArray : public AtomicArray {
 };
 
 template<typename T, size_t items>
-class ContainedAtomicArray : public TypedAtomicArray<T> {
+class ContainedAtomicMemPool : public TypedAtomicMemPool<T> {
  public:
-  ContainedAtomicArray() : TypedAtomicArray(mData, sizeof(mData), items) {}
-  ~ContainedAtomicArray() {}
+  ContainedAtomicMemPool() : TypedAtomicMemPool(mData, sizeof(mData), items) {}
+  ~ContainedAtomicMemPool() {}
 
   void Init() {
-    TypedAtomicArray::Init(mData, sizeof(mData), items);
+    TypedAtomicMemPool::Init(mData, sizeof(mData), items);
   }
 
  private:

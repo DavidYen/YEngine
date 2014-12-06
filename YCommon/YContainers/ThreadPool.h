@@ -32,7 +32,7 @@ class ThreadPool {
   }
 
  protected:
-  static int ThreadPoolThread(void* arg);
+  static uintptr_t ThreadPoolThread(void* arg);
 
  private:
   YPlatform::Thread* mThreads;

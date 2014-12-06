@@ -1,5 +1,5 @@
 #include <YCommon/Headers/stdincludes.h>
-#include "AtomicArray.h"
+#include "AtomicMemPool.h"
 
 #include <algorithm>
 #include <string>
@@ -14,7 +14,7 @@ namespace YCommon { namespace YContainers {
 * the element locations will contain an index to the next "free" element
 * index. It basically becomes a linked list of free elements.
 **************/
-AtomicArray::AtomicArray()
+AtomicMemPool::AtomicMemPool()
     : mBuffer(NULL),
       mItemSize(0),
       mNumItems(0),
@@ -23,7 +23,7 @@ AtomicArray::AtomicArray()
                                      static_cast<uint32_t>(-1))) {
 }
 
-AtomicArray::AtomicArray(void* buffer, size_t buffer_size,
+AtomicMemPool::AtomicMemPool(void* buffer, size_t buffer_size,
                          size_t item_size, uint32_t num_items)
     : mBuffer(NULL),
       mItemSize(0),
@@ -34,10 +34,10 @@ AtomicArray::AtomicArray(void* buffer, size_t buffer_size,
   Init(buffer, buffer_size, item_size, num_items);
 }
 
-AtomicArray::~AtomicArray() {
+AtomicMemPool::~AtomicMemPool() {
 }
 
-void AtomicArray::Init(void* buffer, size_t buffer_size,
+void AtomicMemPool::Init(void* buffer, size_t buffer_size,
                        size_t item_size, uint32_t num_items) {
   mBuffer = buffer;
   mItemSize = item_size;
@@ -62,7 +62,7 @@ void AtomicArray::Init(void* buffer, size_t buffer_size,
           static_cast<uint32_t>(buffer_size));
 }
 
-void AtomicArray::Reset() {
+void AtomicMemPool::Reset() {
   mBuffer = NULL;
   mItemSize = 0;
   mNumItems = 0;
@@ -71,7 +71,7 @@ void AtomicArray::Reset() {
                                    static_cast<uint32_t>(-1));
 }
 
-uint32_t AtomicArray::Allocate() {
+uint32_t AtomicMemPool::Allocate() {
   uint32_t used_indexes = mUsedIndexes;
   uint64_t next_free_index_value = mNextFreeIndex;
   MemoryBarrier();
@@ -110,7 +110,7 @@ uint32_t AtomicArray::Allocate() {
   return static_cast<uint32_t>(-1);
 }
 
-uint32_t AtomicArray::Insert(const void* data_item) {
+uint32_t AtomicMemPool::Insert(const void* data_item) {
   const size_t item_size = mItemSize;
   uint32_t free_index = Allocate();
 
@@ -124,7 +124,7 @@ uint32_t AtomicArray::Insert(const void* data_item) {
   return free_index;
 }
 
-void AtomicArray::Remove(uint32_t index) {
+void AtomicMemPool::Remove(uint32_t index) {
   uint64_t next_free_index_value = mNextFreeIndex;
   MemoryBarrier();
 
@@ -150,7 +150,7 @@ void AtomicArray::Remove(uint32_t index) {
   }
 }
 
-uint32_t AtomicArray::GetNumIndexesUsed() {
+uint32_t AtomicMemPool::GetNumIndexesUsed() {
   return min(mUsedIndexes, mNumItems);
 }
 

@@ -5,7 +5,7 @@
 #include <d3dx9.h>
 #include <string>
 
-#include <YCommon/YContainers/AtomicArray.h>
+#include <YCommon/YContainers/AtomicMemPool.h>
 #include <YCommon/YPlatform/PlatformHandle_Win.h>
 #include <YCommon/Headers/Atomics.h>
 #include <YCommon/Headers/Macros.h>
@@ -29,18 +29,18 @@ namespace YEngine { namespace YRenderDevice {
 * Helper Classes
 **************/
 template <typename T, typename T_ID, size_t size>
-class DataArray : public YCommon::YContainers::ContainedAtomicArray<T, size> {
+class DataArray : public YCommon::YContainers::ContainedAtomicMemPool<T, size> {
  public:
   bool used[size];
 
   void Init() {
     memset(used, 0, sizeof(used));
-    YCommon::YContainers::ContainedAtomicArray<T, size>::Init();
+    YCommon::YContainers::ContainedAtomicMemPool<T, size>::Init();
   }
 
   void Release() {
-    const uint32_t max_index = GetMaxUsedIndex();
-    for (uint32_t i = 0; i < max_index; ++i) {
+    const uint32_t count = GetNumIndexesUsed();
+    for (uint32_t i = 0; i < count; ++i) {
       if (used[i]) {
         (*this)[i].Release();
       }

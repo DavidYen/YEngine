@@ -1,24 +1,27 @@
 
 static_library("YContainers") {
   sources = [
-    "AtomicArray.cpp",
-    "AtomicArray.h",
     "AtomicHashTable.cpp",
     "AtomicHashTable.h",
+    "AtomicMemPool.cpp",
+    "AtomicMemPool.h",
     "AtomicQueue.cpp",
     "AtomicQueue.h",
     "ThreadPool.cpp",
     "ThreadPool.h",
   ]
+
+  deps = [
+    "//YCommon/YUtils",
+  ]
 }
 
 unit_test("YContainer_Test") {
   sources = [
-    "AtomicArray_test.cpp",
+    "AtomicMemPool_Test.cpp",
   ]
 
   deps += [
     ":YContainers",
-    "//YCommon/YUtils"
   ]
 }
