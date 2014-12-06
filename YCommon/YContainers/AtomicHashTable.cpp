@@ -36,7 +36,7 @@ void AtomicHashTable::Init(void* buffer, size_t buffer_size,
           "Atomic Hash Table memory must be aligned to %u bytes - supplied %p.",
           static_cast<uint32_t>(sizeof(uint64_t)),
           buffer);
-  YASSERT(num_entries > MAX_TRIES,
+  YASSERT(num_entries >= MAX_TRIES,
           "Atomic Hash Table entry count must be at least %u - supplied %u.",
           static_cast<uint32_t>(MAX_TRIES),
           static_cast<uint32_t>(num_entries));

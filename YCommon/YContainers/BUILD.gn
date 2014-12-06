@@ -18,6 +18,7 @@ static_library("YContainers") {
 
 unit_test("YContainer_Test") {
   sources = [
+    "AtomicHashTable_Test.cpp",
     "AtomicMemPool_Test.cpp",
   ]
 

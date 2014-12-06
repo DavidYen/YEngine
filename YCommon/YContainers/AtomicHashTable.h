@@ -37,7 +37,7 @@ class AtomicHashTable {
   size_t mMaxValueSize;
 };
 
-template<typename T>
+template <typename T>
 class TypedAtomicHashTable : public AtomicHashTable {
  public:
   TypedAtomicHashTable() : AtomicHashTable() {}
@@ -73,6 +73,27 @@ class TypedAtomicHashTable : public AtomicHashTable {
   }
 };
 
+template <typename T1, typename T2>
+class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
+ public:
+  FullTypedAtomicHashTable() : TypedAtomicHashTable() {}
+  FullTypedAtomicHashTable(void* buffer, size_t buffer_size, size_t num_entries)
+      : TypedAtomicHashTable(buffer, buffer_size, num_entries) {}
+  ~FullTypedAtomicHashTable() {}
+
+  uint64_t Insert(const T1& key, const T2& value) {
+    return AtomicHashTable::Insert(&key, sizeof(key), &value, sizeof(value));
+  }
+
+  const T2& GetValue(const T1& key) const {
+    return *static_cast<const T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
+  }
+
+  T2& GetValue(const T1& key) {
+    return *static_cast<T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
+  }
+};
+
 template <typename T, size_t entries>
 class ContainedAtomicHashTable : public TypedAtomicHashTable<T> {
  public:
@@ -83,6 +104,18 @@ class ContainedAtomicHashTable : public TypedAtomicHashTable<T> {
  private:
   ALIGN_FRONT(8)
   uint8_t mBuffer[(sizeof(uint64_t)+sizeof(T))*entries] ALIGN_BACK(8);
+};
+
+template <typename T1, typename T2, size_t entries>
+class ContainedFullAtomicHashTable : public FullTypedAtomicHashTable<T1, T2> {
+ public:
+  ContainedFullAtomicHashTable()
+      : FullTypedAtomicHashTable(mBuffer, sizeof(mBuffer), entries) {}
+  ~ContainedFullAtomicHashTable() {}
+
+ private:
+  ALIGN_FRONT(8)
+  uint8_t mBuffer[(sizeof(uint64_t)+sizeof(T2))*entries] ALIGN_BACK(8);
 };
 
 }} // namespace YCommon { namespace YContainers {
