@@ -63,7 +63,7 @@ uintptr_t IncrementRoutine(void* arg) {
 TEST(BasicThreadTest, StartStopTest) {
   Thread test_thread(NopRoutine, NULL);
   ASSERT_TRUE(test_thread.Run());
-  ASSERT_TRUE(test_thread.join(5000));
+  ASSERT_TRUE(test_thread.Join(5000));
 }
 
 TEST(BasicThreadTest, NameTest) {
@@ -89,7 +89,7 @@ TEST(BasicThreadTest, IsRunningTest) {
 
   arg.StopThread();
 
-  ASSERT_TRUE(test_thread.join(5000));
+  ASSERT_TRUE(test_thread.Join(5000));
   ASSERT_FALSE(test_thread.IsRunning());
 }
 
@@ -100,18 +100,18 @@ TEST(BasicThreadTest, JoinTest) {
   ASSERT_TRUE(test_thread.Run());
   arg.WaitForThreadToStart();
 
-  ASSERT_FALSE(test_thread.join(100));
+  ASSERT_FALSE(test_thread.Join(100));
 
   arg.StopThread();
 
-  ASSERT_TRUE(test_thread.join(5000));
+  ASSERT_TRUE(test_thread.Join(5000));
 }
 
 TEST(BasicThreadTest, ReturnValueTest) {
   uintptr_t test_value = 123;
   Thread test_thread(NopRoutine, reinterpret_cast<void*>(test_value));
   ASSERT_TRUE(test_thread.Run());
-  ASSERT_TRUE(test_thread.join(5000));
+  ASSERT_TRUE(test_thread.Join(5000));
 
   ASSERT_EQ(test_value, test_thread.ReturnValue());
 }
@@ -123,8 +123,8 @@ TEST(BasicThreadTest, ThreadsRunTest) {
 
   ASSERT_TRUE(test_thread.Run());
   ASSERT_TRUE(test_thread2.Run());
-  ASSERT_TRUE(test_thread.join(5000));
-  ASSERT_TRUE(test_thread2.join(5000));
+  ASSERT_TRUE(test_thread.Join(5000));
+  ASSERT_TRUE(test_thread2.Join(5000));
 
   ASSERT_EQ(arg.num, 2);
 }

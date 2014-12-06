@@ -17,10 +17,15 @@ static_library("YPlatform") {
       "Thread_Win.cpp",
     ]
   }
+
+  deps = [
+    "//YCommon/YUtils",
+  ]
 }
 
 unit_test("YPlatform_Test") {
   sources = [
+    "Semaphore_Test.cpp",
     "Thread_Test.cpp",
   ]
 

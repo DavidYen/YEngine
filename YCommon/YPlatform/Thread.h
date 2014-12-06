@@ -15,11 +15,13 @@ class Thread {
 
   bool Initialize(ThreadRoutine thread_func, void* thread_arg);
   bool Run();
-  bool join(size_t milliseconds = -1);
+  bool Join(size_t milliseconds = -1);
 
   void SetName(const char* name) {
-    size_t name_len = strlen(name);
-    memcpy(mName, name, std::min(sizeof(mName)-1, name_len));
+    const size_t name_len = strlen(name);
+    const size_t member_len = sizeof(mName) - 1;
+    const size_t copy_len = member_len < name_len ? member_len : name_len;
+    memcpy(mName, name, copy_len);
     mName[sizeof(mName)-1] = '\0';
   }
 

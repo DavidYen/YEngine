@@ -128,7 +128,7 @@ bool Thread::Run() {
   return true;
 }
 
-bool Thread::join(size_t milliseconds) {
+bool Thread::Join(size_t milliseconds) {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (!thread_pimpl->started)
     return false;

@@ -19,7 +19,9 @@ Semaphore::Semaphore(int initial_count, int maximum_count) {
                                             static_cast<LONG>(maximum_count),
                                             NULL);
 
-  YASSERT(semaphore_handle == NULL, "Semaphore Handle was NULL.");
+  YASSERT(semaphore_handle != NULL,
+          "Semaphore Handle was NULL: %u",
+          static_cast<uint32_t>(GetLastError()));
   WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   win_data->semaphore_handle = semaphore_handle;
 }
