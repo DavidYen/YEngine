@@ -14,7 +14,7 @@ struct WindowsPimpl {
   ThreadRoutine thread_routine;
   void* thread_arg;
   const char* thread_name;
-  int ret_code;
+  uintptr_t ret_code;
 };
 
 // How to set thread names in windows
@@ -54,7 +54,7 @@ static DWORD ThreadBeginProc(LPVOID lpParam)
   SetThreadName(static_cast<DWORD>(-1), thread_pimpl->thread_name);
 #endif // GOLD
 
-  const int ret = thread_pimpl->thread_routine(thread_pimpl->thread_arg);
+  const uintptr_t ret = thread_pimpl->thread_routine(thread_pimpl->thread_arg);
   thread_pimpl->ret_code = ret;
 
   ExitThread(0);
@@ -69,7 +69,7 @@ Thread::Thread() {
 }
 
 Thread::Thread(ThreadRoutine thread_func, void* thread_arg,
-                 const char* name) {
+               const char* name) {
   memset(mName, 0, sizeof(mName));
   memset(mPimpl, 0, sizeof(mPimpl));
 
@@ -94,6 +94,7 @@ bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   thread_pimpl->thread_routine = thread_func;
   thread_pimpl->thread_arg = thread_arg;
   thread_pimpl->thread_name = mName;
+  thread_pimpl->ret_code = 0;
 
   DWORD thread_id = 0;
   HANDLE thread_handle = CreateThread(
@@ -146,15 +147,19 @@ bool Thread::IsRunning() const {
   DWORD exit_code = static_cast<DWORD>(-1);
   return (thread_pimpl->started &&
           GetExitCodeThread(thread_pimpl->thread_handle, &exit_code) &&
-          exit_code == 0);
+          exit_code == STILL_ACTIVE);
 }
 
-int Thread::ReturnValue() const {
-  if (IsRunning())
-    return -1;
-
+uintptr_t Thread::ReturnValue() const {
   const WindowsPimpl* thread_pimpl =
     reinterpret_cast<const WindowsPimpl*>(mPimpl);
+
+  DWORD exit_code = static_cast<DWORD>(-1);
+  if (!thread_pimpl->started ||
+      !GetExitCodeThread(thread_pimpl->thread_handle, &exit_code) ||
+      exit_code != 0) {
+    return static_cast<uintptr_t>(-1);
+  }
 
   return thread_pimpl->ret_code;
 }

@@ -5,7 +5,7 @@
 
 namespace YCommon { namespace YPlatform {
 
-typedef int (*ThreadRoutine)(void* arg);
+typedef uintptr_t (*ThreadRoutine)(void* arg);
 
 class Thread {
  public:
@@ -22,6 +22,7 @@ class Thread {
     memcpy(mName, name, std::min(sizeof(mName)-1, name_len));
     mName[sizeof(mName)-1] = '\0';
   }
+
   const char* GetName() const {
     return mName;
   }
@@ -29,7 +30,7 @@ class Thread {
   bool IsRunning() const;
 
   // Returned undefined behavior if it is still running.
-  int ReturnValue() const;
+  uintptr_t ReturnValue() const;
 
  private:
   char mPimpl[128-32];

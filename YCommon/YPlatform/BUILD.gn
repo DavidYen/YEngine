@@ -18,3 +18,13 @@ static_library("YPlatform") {
     ]
   }
 }
+
+unit_test("YPlatform_Test") {
+  sources = [
+    "Thread_Test.cpp",
+  ]
+
+  deps += [
+    ":YPlatform",
+  ]
+}
