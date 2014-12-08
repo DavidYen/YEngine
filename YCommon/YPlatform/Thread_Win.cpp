@@ -79,7 +79,11 @@ Thread::Thread(ThreadRoutine thread_func, void* thread_arg,
 }
 
 Thread::~Thread() {
-  Reset();
+  WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
+  // No longer running, restart.
+  if (thread_pimpl->valid) {
+    CloseHandle(thread_pimpl->thread_handle);
+  }
 }
 
 bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
@@ -90,9 +94,7 @@ bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
     }
 
     // No longer running, restart.
-    if (thread_pimpl->valid) {
-      CloseHandle(thread_pimpl->thread_handle);
-    }
+    CloseHandle(thread_pimpl->thread_handle);
     memset(mName, 0, sizeof(mName));
     memset(mPimpl, 0, sizeof(mPimpl));
   }
