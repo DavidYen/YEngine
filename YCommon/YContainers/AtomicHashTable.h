@@ -25,8 +25,8 @@ class AtomicHashTable {
   void Insert(uint64_t hash_key,
               const void* value, size_t value_size);
 
-  const void* GetValue(const void* key, size_t key_size) const;
-  const void* GetValue(uint64_t hash_key) const;
+  const void* const GetValue(const void* key, size_t key_size) const;
+  const void* const GetValue(uint64_t hash_key) const;
 
   void* GetValue(const void* key, size_t key_size);
   void* GetValue(uint64_t hash_key);
@@ -57,15 +57,15 @@ class TypedAtomicHashTable : public AtomicHashTable {
     return AtomicHashTable::Insert(hash_key, &value, sizeof(value));
   }
 
-  const T* GetValue(const void* key, size_t key_size) const {
-    return static_cast<const T*>(AtomicHashTable::GetValue(key, key_size));
+  const T* const GetValue(const void* key, size_t size) const {
+    return static_cast<const T* const>(AtomicHashTable::GetValue(key, size));
   }
-  const T* GetValue(uint64_t hash_key) const {
-    return static_cast<const T*>(AtomicHashTable::GetValue(hash_key));
+  const T* const GetValue(uint64_t hash_key) const {
+    return static_cast<const T* const>(AtomicHashTable::GetValue(hash_key));
   }
 
-  T* GetValue(const void* key, size_t key_size) {
-    return static_cast<T*>(AtomicHashTable::GetValue(key, key_size));
+  T* GetValue(const void* key, size_t size) {
+    return static_cast<T*>(AtomicHashTable::GetValue(key, size));
   }
 
   T* GetValue(uint64_t hash_key) {
@@ -85,11 +85,12 @@ class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
     return AtomicHashTable::Insert(&key, sizeof(key), &value, sizeof(value));
   }
 
-  const T2* GetValue(const T1& key) const {
-    return static_cast<const T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
+  const T2* const GetValue(const T1& key) const {
+    return static_cast<const T2* const>(AtomicHashTable::GetValue(&key,
+                                                                  sizeof(T1)));
   }
 
-  T2* GetValue(const T1& key) {
+  T2* GetValue(T1& key) {
     return static_cast<T2*>(AtomicHashTable::GetValue(&key, sizeof(T1)));
   }
 };
@@ -100,6 +101,10 @@ class ContainedAtomicHashTable : public TypedAtomicHashTable<T> {
   ContainedAtomicHashTable()
       : TypedAtomicHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedAtomicHashTable() {}
+
+  void Reset() {
+    Init(mBuffer, sizeof(mBuffer), entries, sizeof(T));
+  }
 
  private:
   ALIGN_FRONT(8)
@@ -112,6 +117,10 @@ class ContainedFullAtomicHashTable : public FullTypedAtomicHashTable<T1, T2> {
   ContainedFullAtomicHashTable()
       : FullTypedAtomicHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedFullAtomicHashTable() {}
+
+  void Reset() {
+    Init(mBuffer, sizeof(mBuffer), entries);
+  }
 
  private:
   ALIGN_FRONT(8)

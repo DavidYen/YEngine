@@ -102,11 +102,12 @@ void AtomicHashTable::Insert(uint64_t hash_key,
   YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
 }
 
-const void* AtomicHashTable::GetValue(const void* key, size_t key_size) const {
+const void* const AtomicHashTable::GetValue(const void* key,
+                                            size_t key_size) const {
   return GetValue(YCommon::YUtils::Hash::Hash64(key, key_size));
 }
 
-const void* AtomicHashTable::GetValue(uint64_t hash_key) const {
+const void* const AtomicHashTable::GetValue(uint64_t hash_key) const {
   const size_t key_table_size = sizeof(uint64_t) * mNumEntries;
   volatile uint64_t* hash_table = static_cast<volatile uint64_t*>(mBuffer);
   const uint8_t* hash_value_table =

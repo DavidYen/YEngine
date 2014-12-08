@@ -1,5 +1,5 @@
-#ifndef YCOMMON_YCONTAINERS_ATOMICARRAY_H
-#define YCOMMON_YCONTAINERS_ATOMICARRAY_H
+#ifndef YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H
+#define YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H
 
 /*******
 * Atomic Array able to store and remove fixed size elements.
@@ -87,4 +87,4 @@ class ContainedAtomicMemPool : public TypedAtomicMemPool<T> {
 
 }} // namespace YCommon { namespace YContainers {
 
-#endif // YCOMMON_YCONTAINERS_ATOMICARRAY_H
+#endif // YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H

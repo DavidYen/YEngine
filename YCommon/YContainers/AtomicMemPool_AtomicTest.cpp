@@ -80,13 +80,12 @@ TEST(AtomicMemPoolTest, AllocRemoveTest) {
 /*************
 * Test constant adding and removing
 **************/
+template <size_t POOL_SIZE>
 class ThreadedAllocRemoveTest : public ::testing::Test {
  public:
-  template <size_t test_size>
   void RunTest(int iterations) {
-    ContainedAtomicMemPool<int, test_size> mem_pool;
-    AllocRemoveArg arg_data(&mem_pool, test_size, iterations);
-    AllocRemoveArg arg_half_data(&mem_pool, test_size / 2, iterations);
+    AllocRemoveArg arg_data(&mMemPool, POOL_SIZE, iterations);
+    AllocRemoveArg arg_half_data(&mMemPool, POOL_SIZE / 2, iterations);
 
     YCommon::YPlatform::Thread test_threads[NUM_THREADS];
     for (int i = 0; i < NUM_THREADS; ++i) {
@@ -102,24 +101,29 @@ class ThreadedAllocRemoveTest : public ::testing::Test {
 
     // Make sure we can still allocate 100 items
     uint32_t data = 123;
-    for (int i = 0; i < test_size; ++i) {
-      ASSERT_NE(static_cast<uint32_t>(-1), mem_pool.Insert(data));
+    for (size_t i = 0; i < POOL_SIZE; ++i) {
+      ASSERT_NE(static_cast<uint32_t>(-1), mMemPool.Insert(data));
     }
-    ASSERT_EQ(static_cast<uint32_t>(-1), mem_pool.Insert(data));
+    ASSERT_EQ(static_cast<uint32_t>(-1), mMemPool.Insert(data));
   }
+
+  ContainedAtomicMemPool<int, POOL_SIZE> mMemPool;
 };
 
-TEST_F(ThreadedAllocRemoveTest, MinimalTests) {
-  RunTest<10>(10);
+class MinimalAtomicMemPoolTest : public ThreadedAllocRemoveTest<10> {};
+class SmallAtomicMemPoolTest : public ThreadedAllocRemoveTest<100> {};
+class LargeAtomicMemPoolTest : public ThreadedAllocRemoveTest<2000> {};
+
+TEST_F(MinimalAtomicMemPoolTest , MinimalTests) {
+  RunTest(10);
 }
 
-TEST_F(ThreadedAllocRemoveTest, SmallTests) {
-  RunTest<100>(100000);
+TEST_F(SmallAtomicMemPoolTest, SmallTests) {
+  RunTest(100000);
 }
 
-TEST_F(ThreadedAllocRemoveTest, LargeTests) {
-  RunTest<2000>(100000);
+TEST_F(LargeAtomicMemPoolTest, LargeTests) {
+  RunTest(100000);
 }
-
 
 }} // namespace YCommon { namespace YContainers {

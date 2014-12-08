@@ -29,6 +29,7 @@ unit_test("YContainer_Test") {
 
 unit_test("YContainer_AtomicTest") {
   sources = [
+    "AtomicHashTable_AtomicTest.cpp",
     "AtomicMemPool_AtomicTest.cpp",
   ]
 
