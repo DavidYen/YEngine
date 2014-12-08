@@ -10,7 +10,8 @@ namespace YCommon { namespace YContainers {
 
 class AtomicQueue {
  public:
-  AtomicQueue(void* buffer, size_t item_size, size_t num_items);
+  AtomicQueue(void* buffer, size_t buffer_size,
+              size_t item_size, size_t num_items);
   ~AtomicQueue();
 
   bool Enqueue(const void* data_item);
@@ -28,9 +29,9 @@ class AtomicQueue {
 template<typename T>
 class TypedAtomicQueue : public AtomicQueue {
  public:
-  TypedAtomicQueue(T* buffer, size_t item_size, size_t num_items)
-      : AtomicQueue(static_cast<void*>(buffer), item_size, num_items) {
-  }
+  TypedAtomicQueue(T* buffer, size_t buffer_size, size_t num_items)
+      : AtomicQueue(static_cast<void*>(buffer), buffer_size,
+                    sizeof(T), num_items) {}
 
   bool Enqueue(const T* data_item) {
     return AtomicQueue::Enqueue(static_cast<const void*>(data_item));
@@ -47,6 +48,16 @@ class TypedAtomicQueue : public AtomicQueue {
   bool Dequeue(T& data_item) {
     return Dequeue(&data_item);
   }
+};
+
+template<typename T, size_t items>
+class ContainedAtomicQueue : public TypedAtomicQueue<T> {
+ public:
+  ContainedAtomicQueue() : TypedAtomicQueue(mData, sizeof(mData), items) {}
+  ~ContainedAtomicQueue() {}
+
+ private:
+  T mData[items];
 };
 
 }} // namespace YCommon { namespace YContainers {

@@ -8,13 +8,19 @@
 
 namespace YCommon { namespace YContainers {
 
-AtomicQueue::AtomicQueue(void* buffer, size_t item_size,
-                         size_t num_items)
+AtomicQueue::AtomicQueue(void* buffer, size_t buffer_size,
+                         size_t item_size, size_t num_items)
     : mBuffer(buffer),
       mItemSize(item_size),
       mNumItems(num_items),
       mHead(0),
       mTail(0) {
+  (void) buffer_size;
+  YASSERT(buffer_size >= (item_size * num_items),
+          "Atomic Queue %u[%u] requires at least %u bytes, supplied %u bytes.",
+          static_cast<uint32_t>(item_size), num_items,
+          static_cast<uint32_t>(item_size * num_items),
+          static_cast<uint32_t>(buffer_size));
 }
 
 AtomicQueue::~AtomicQueue() {
