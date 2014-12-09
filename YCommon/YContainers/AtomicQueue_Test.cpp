@@ -18,6 +18,27 @@ TEST(BasicAtomicQueueTest, ConstructorTest) {
   ContainedAtomicQueue<int, 1> contained_array;
 }
 
+TEST(BasicAtomicQueueTest, SizeTest) {
+  int queue_data[2];
+  AtomicQueue atomic_queue(queue_data, sizeof(queue_data),
+                           sizeof(int), 2);
+
+  EXPECT_EQ(sizeof(int), atomic_queue.ItemSize());
+  EXPECT_EQ(ARRAY_SIZE(queue_data), atomic_queue.Size());
+
+  int typed_data[4];
+  TypedAtomicQueue<int> typed_queue(typed_data,
+                                    sizeof(typed_data),
+                                    ARRAY_SIZE(typed_data));
+
+  EXPECT_EQ(sizeof(int), typed_queue.ItemSize());
+  EXPECT_EQ(ARRAY_SIZE(typed_data), typed_queue.Size());
+
+  ContainedAtomicQueue<int, 6> contained_array;
+  EXPECT_EQ(sizeof(int), contained_array.ItemSize());
+  EXPECT_EQ(6, contained_array.Size());
+}
+
 TEST(BasicAtomicQueueTest, EnqueueTest) {
   int queue_data[2];
   AtomicQueue queue(queue_data, sizeof(queue_data),

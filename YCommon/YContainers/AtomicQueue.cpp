@@ -81,4 +81,23 @@ bool AtomicQueue::Dequeue(void* data_item) {
   return true;
 }
 
+size_t AtomicQueue::CurrentSize() const {
+  const uint64_t cur_head = mHead;
+  const uint64_t cur_tail = mTail;
+  MemoryBarrier();
+
+  const uint64_t cur_head_num = GET_NUM(cur_head);
+  const uint64_t cur_tail_num = GET_NUM(cur_tail);
+
+  if (cur_head_num == cur_tail_num) {
+    // Empty if the counters match, full otherwise.
+    return (cur_head == cur_tail) ? 0 : mItemSize;
+  } else if (cur_tail_num > cur_head_num) {
+    return (cur_tail_num - cur_head_num) / mItemSize;
+  } else {
+    const uint64_t looped_tail = cur_tail_num + (mItemSize * mNumItems);
+    return (looped_tail - cur_head_num) / mItemSize;
+  }
+}
+
 }} // namespace YCommon { namespace YContainers {

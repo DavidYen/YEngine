@@ -16,6 +16,10 @@ class AtomicQueue {
 
   bool Enqueue(const void* data_item);
   bool Dequeue(void* data_item);
+  size_t CurrentSize() const;
+
+  size_t ItemSize() const { return mItemSize; }
+  size_t Size() const { return mNumItems; }
 
  private:
   void* mBuffer;
