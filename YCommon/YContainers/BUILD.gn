@@ -16,7 +16,7 @@ static_library("YContainers") {
   ]
 }
 
-unit_test("YContainer_Test") {
+unit_test("YContainers_Test") {
   sources = [
     "AtomicHashTable_Test.cpp",
     "AtomicMemPool_Test.cpp",
@@ -28,10 +28,11 @@ unit_test("YContainer_Test") {
   ]
 }
 
-unit_test("YContainer_AtomicTest") {
+unit_test("YContainers_AtomicTest") {
   sources = [
     "AtomicHashTable_AtomicTest.cpp",
     "AtomicMemPool_AtomicTest.cpp",
+    "AtomicQueue_AtomicTest.cpp",
   ]
 
   deps += [
