@@ -6,6 +6,8 @@
 
 #include <YCommon/Headers/Atomics.h>
 
+#include "Timer.h"
+
 namespace YCommon { namespace YPlatform {
 
 /* Nop Routines, just returns the arg. */
@@ -101,6 +103,26 @@ TEST(BasicThreadTest, JoinTest) {
   arg.WaitForThreadToStart();
 
   ASSERT_FALSE(test_thread.Join(100));
+
+  arg.StopThread();
+
+  ASSERT_TRUE(test_thread.Join(5000));
+}
+
+TEST(BasicThreadTest, JoinInMilliseconds) {
+  RunStopArg arg;
+  Thread test_thread(RunStopRoutine, &arg);
+
+  ASSERT_TRUE(test_thread.Run());
+  arg.WaitForThreadToStart();
+
+  Timer test_timer;
+  test_timer.Start();
+  ASSERT_FALSE(test_thread.Join(100));
+  test_timer.Pulse();
+
+  EXPECT_LE(100, test_timer.GetPulsedTimeMilli());
+  EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
 
   arg.StopThread();
 

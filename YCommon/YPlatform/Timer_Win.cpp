@@ -65,7 +65,9 @@ uint64_t Timer::GetPulsedTimeMicro() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
   const int64_t diff_micro = diff * 1000 * 1000;
-  const int64_t micro_seconds = diff_micro / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t micro_seconds = (diff_micro + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(micro_seconds);
 }
@@ -74,7 +76,9 @@ uint64_t Timer::GetPulsedTimeMilli() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
   const int64_t diff_milli = diff * 1000;
-  const int64_t milli_seconds = diff_milli / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t milli_seconds = (diff_milli + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(milli_seconds);
 }
@@ -82,7 +86,9 @@ uint64_t Timer::GetPulsedTimeMilli() const {
 uint64_t Timer::GetPulsedTimeSeconds() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
-  const int64_t seconds = diff / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t seconds = (diff + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(seconds);
 }
@@ -107,7 +113,9 @@ uint64_t Timer::GetDiffTimeMicro() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
   const int64_t diff_micro = diff * 1000 * 1000;
-  const int64_t micro_seconds = diff_micro / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t micro_seconds = (diff_micro + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(micro_seconds);
 }
@@ -116,7 +124,9 @@ uint64_t Timer::GetDiffTimeMilli() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
   const int64_t diff_milli = diff * 1000;
-  const int64_t milli_seconds = diff_milli / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t milli_seconds = (diff_milli + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(milli_seconds);
 }
@@ -124,7 +134,9 @@ uint64_t Timer::GetDiffTimeMilli() const {
 uint64_t Timer::GetDiffTimeSeconds() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
-  const int64_t seconds = diff / win_pimpl->counts_per_seconds;
+  const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
+  const int64_t half_second = counts_per_sec / 2;
+  const int64_t seconds = (diff + half_second) / counts_per_sec;
 
   return static_cast<uint64_t>(seconds);
 }
