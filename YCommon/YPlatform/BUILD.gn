@@ -4,7 +4,9 @@ static_library("YPlatform") {
     "Platform.h",
     "PlatformHandle.h",
     "Semaphore.h",
+    "Sleep.h",
     "Thread.h",
+    "Timer.h",
   ]
 
   if (is_win) {
@@ -14,7 +16,9 @@ static_library("YPlatform") {
       "PlatformHandle_Win.cpp",
       "PlatformHandle_Win.h",
       "Semaphore_Win.cpp",
+      "Sleep_Win.cpp",
       "Thread_Win.cpp",
+      "Timer_Win.cpp",
     ]
   }
 
@@ -26,7 +30,9 @@ static_library("YPlatform") {
 unit_test("YPlatform_Test") {
   sources = [
     "Semaphore_Test.cpp",
+    "Sleep_Test.cpp",
     "Thread_Test.cpp",
+    "Timer_Test.cpp",
   ]
 
   deps += [
