@@ -2,52 +2,44 @@
 #include "ThreadPool.h"
 
 #include <YCommon/Headers/Atomics.h>
+#include <YCommon/YPlatform/Timer.h>
 
 namespace YCommon { namespace YContainers {
 
-ThreadPool::ThreadData::ThreadData(size_t num_threads, void* buffer,
-                                   size_t buffer_size)
-    : mRunState(kRunState_Idle),
-      mSemaphore(static_cast<int>(num_threads),
-                 static_cast<int>(num_threads)),
-      mRunQueue(static_cast<ThreadPool::ThreadData::RunArgs*>(buffer),
-                sizeof(RunArgs),
-                ((buffer_size - sizeof(YPlatform::Thread)*num_threads) /
-                 sizeof(ThreadPool::ThreadData::RunArgs))) {
+void ThreadPool::ThreadData::Initialize(size_t num_threads, void* buffer,
+                                       size_t buffer_size) {
+  mRunState = kRunState_Stopped;
+  mSemaphore.Initialize(static_cast<int>(num_threads),
+                        static_cast<int>(num_threads));
+  mRunQueue.Initialize(static_cast<ThreadPool::ThreadData::RunArgs*>(buffer),
+                       buffer_size,
+                       buffer_size / sizeof(ThreadPool::ThreadData::RunArgs));
 }
 
 ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
     : mThreads(NULL),
-      mNumThreads(0),
-      mBuffer(buffer),
-      mBufferSize(buffer_size),
-      mThreadData(num_threads, buffer, buffer_size) {
+      mNumThreads(0) {
   const size_t thread_size = sizeof(YPlatform::Thread) * num_threads;
   YASSERT(buffer_size > thread_size,
           "Buffer size is not big enough to contain ThreadPool");
 
-  const size_t num_run_args = (buffer_size - thread_size) /
-                              sizeof(ThreadPool::ThreadData::RunArgs);
+  const size_t num_run_args = ((buffer_size - thread_size) /
+                               sizeof(ThreadPool::ThreadData::RunArgs));
   YASSERT(num_run_args > 0,
           "Number of run arguments must be greater than 0");
 
-  uint8_t* thread_loc = static_cast<uint8_t*>(buffer) + num_run_args;
-  mThreads = new (thread_loc) YPlatform::Thread[num_threads];
+  mThreads = new (buffer) YPlatform::Thread[num_threads];
   mNumThreads = num_threads;
-
-  for (size_t i = 0; i < num_threads; ++i) {
-    mThreads[i].Initialize(ThreadPool::ThreadPoolThread, &mThreadData);
-    mThreads[i].Run();
-  }
+  mThreadData.Initialize(num_threads,
+                         static_cast<uint8_t*>(buffer) + thread_size,
+                         buffer_size - thread_size);
 }
 
 ThreadPool::~ThreadPool() {
-  mThreadData.mRunState = ThreadData::kRunState_Stopped;
-  MemoryBarrier();
+  Stop();
 
-  for (size_t i = 0; i < mNumThreads; ++i) {
-    mThreads[i].Join();
-
+  const size_t num_threads = mNumThreads;
+  for (size_t i = 0; i < num_threads; ++i) {
     // Explicitly call destructor for placement new.
     mThreads[i].~Thread();
   }
@@ -69,17 +61,22 @@ bool ThreadPool::EnqueueRun(YPlatform::ThreadRoutine thread_routine,
 }
 
 bool ThreadPool::Start() {
-  const ThreadData::RunState run_state = mThreadData.mRunState;
-  if (run_state == ThreadData::kRunState_Running ||
-      run_state == ThreadData::kRunState_Stopped)
+  const ThreadData::RunState prev_run_state = mThreadData.mRunState;
+  if (prev_run_state == ThreadData::kRunState_Running) {
     return false;
+  }
 
   mThreadData.mRunState = ThreadData::kRunState_Running;
   MemoryBarrier();
 
   const size_t num_threads = mNumThreads;
   for (size_t i = 0; i < num_threads; ++i) {
-    mThreadData.mSemaphore.Release();
+    if (prev_run_state == ThreadData::kRunState_Stopped) {
+      mThreads[i].Initialize(ThreadPool::ThreadPoolThread, &mThreadData);
+      mThreads[i].Run();
+    } else {
+      mThreadData.mSemaphore.Release();
+    }
   }
   return true;
 }
@@ -90,6 +87,35 @@ bool ThreadPool::Pause() {
 
   mThreadData.mRunState = ThreadData::kRunState_Paused;
   MemoryBarrier();
+  return true;
+}
+
+bool ThreadPool::Stop(size_t milliseconds) {
+  mThreadData.mRunState = ThreadData::kRunState_Stopped;
+  MemoryBarrier();
+
+  const size_t num_threads = mNumThreads;
+  mThreadData.mSemaphore.Release(static_cast<int>(num_threads));
+
+  if (milliseconds == static_cast<size_t>(-1)) {
+    for (size_t i = 0; i < num_threads; ++i) {
+      mThreads[i].Join();
+    }
+  } else {
+    YPlatform::Timer timer;
+    timer.Start();
+
+    const uint64_t milli64 = static_cast<uint64_t>(milliseconds);
+    for (size_t i = 0; i < num_threads; ++i) {
+      timer.Pulse();
+      const uint64_t waited = timer.GetPulsedTimeMilli();
+      if (waited >= milli64 ||
+          !mThreads[i].Join(static_cast<size_t>(milli64 - waited))) {
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 

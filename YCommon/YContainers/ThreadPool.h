@@ -17,6 +17,7 @@ class ThreadPool {
 
   bool Start();
   bool Pause();
+  bool Stop(size_t milliseconds = -1);
 
   bool Running() const {
     return mThreadData.mRunState == ThreadData::kRunState_Running;
@@ -27,25 +28,24 @@ class ThreadPool {
   }
 
   size_t GetQueueSize() const {
-    return (mBufferSize - sizeof(YPlatform::Thread) * mNumThreads) /
-           sizeof(ThreadData::RunArgs);
+    return mThreadData.mRunQueue.Size();
   }
 
  protected:
   static uintptr_t ThreadPoolThread(void* arg);
 
- private:
+ protected:
   YPlatform::Thread* mThreads;
   size_t mNumThreads;
 
-  void* mBuffer;
-  size_t mBufferSize;
-
   struct ThreadData {
-    ThreadData(size_t num_threads, void* buffer, size_t buffer_size);
+    ThreadData() : mRunState(kRunState_Invalid) {}
+
+    void Initialize(size_t num_threads, void* buffer, size_t buffer_size);
 
     volatile enum RunState {
-      kRunState_Idle,
+      kRunState_Invalid,
+
       kRunState_Running,
       kRunState_Paused,
       kRunState_Stopped,
@@ -59,6 +59,17 @@ class ThreadPool {
     };
     TypedAtomicQueue<RunArgs> mRunQueue;
   } mThreadData;
+};
+
+template <size_t NUM_THREADS, size_t QUEUE_SIZE>
+class ContainedThreadPool : public ThreadPool {
+ public:
+  ContainedThreadPool() : ThreadPool(NUM_THREADS, mBuffer, sizeof(mBuffer)) {}
+  ~ContainedThreadPool() {}
+
+ private:
+  uint8_t mBuffer[sizeof(YPlatform::Thread) * NUM_THREADS +
+                  sizeof(ThreadData::RunArgs) * QUEUE_SIZE];
 };
 
 }} // namespace YCommon { namespace YContainers {

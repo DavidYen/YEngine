@@ -14,7 +14,7 @@ class Thread {
   ~Thread();
 
   bool Initialize(ThreadRoutine thread_func, void* thread_arg);
-  bool Run();
+  YStatusCode Run();
   bool Join(size_t milliseconds = -1);
 
   void SetName(const char* name) {

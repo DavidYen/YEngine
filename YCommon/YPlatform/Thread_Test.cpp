@@ -91,7 +91,7 @@ TEST(BasicThreadTest, IsRunningTest) {
 
   arg.StopThread();
 
-  ASSERT_TRUE(test_thread.Join(5000));
+  ASSERT_TRUE(test_thread.Join(500));
   ASSERT_FALSE(test_thread.IsRunning());
 }
 
@@ -106,7 +106,19 @@ TEST(BasicThreadTest, JoinTest) {
 
   arg.StopThread();
 
-  ASSERT_TRUE(test_thread.Join(5000));
+  ASSERT_TRUE(test_thread.Join(500));
+}
+
+TEST(BasicThreadTest, JoinFinishedThreadTest) {
+  RunStopArg arg;
+  Thread test_thread(RunStopRoutine, &arg);
+
+  ASSERT_TRUE(test_thread.Run());
+
+  arg.StopThread();
+
+  ASSERT_TRUE(test_thread.Join(500));
+  ASSERT_TRUE(test_thread.Join(500));
 }
 
 TEST(BasicThreadTest, JoinInMilliseconds) {
@@ -121,7 +133,7 @@ TEST(BasicThreadTest, JoinInMilliseconds) {
   ASSERT_FALSE(test_thread.Join(100));
   test_timer.Pulse();
 
-  EXPECT_LE(100, test_timer.GetPulsedTimeMilli());
+  EXPECT_LE(95, test_timer.GetPulsedTimeMilli());
   EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
 
   arg.StopThread();

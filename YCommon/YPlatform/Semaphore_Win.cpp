@@ -9,7 +9,25 @@ struct WindowsPimpl {
   HANDLE semaphore_handle;
 };
 
+Semaphore::Semaphore() {
+  static_assert(sizeof(WindowsPimpl) < sizeof(mPimpl),
+                "Windows Semaphore Pimpl larger than Semaphore Pimpl!");
+
+  memset(mPimpl, 0, sizeof(mPimpl));
+}
+
 Semaphore::Semaphore(int initial_count, int maximum_count) {
+  memset(mPimpl, 0, sizeof(mPimpl));
+  Initialize(initial_count, maximum_count);
+}
+
+Semaphore::~Semaphore() {
+  WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
+  CloseHandle(win_data->semaphore_handle);
+}
+
+
+void Semaphore::Initialize(int initial_count, int maximum_count) {
   static_assert(sizeof(WindowsPimpl) < sizeof(mPimpl),
                 "Windows Semaphore Pimpl larger than Semaphore Pimpl!");
 
@@ -26,11 +44,6 @@ Semaphore::Semaphore(int initial_count, int maximum_count) {
   win_data->semaphore_handle = semaphore_handle;
 }
 
-Semaphore::~Semaphore() {
-  WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
-  CloseHandle(win_data->semaphore_handle);
-}
-
 bool Semaphore::Wait(size_t milliseconds) {
   const WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
   DWORD result = 0;
@@ -45,9 +58,15 @@ bool Semaphore::Wait(size_t milliseconds) {
   return (result == WAIT_OBJECT_0);
 }
 
-bool Semaphore::Release() {
+bool Semaphore::Release(int count) {
   const WindowsPimpl* win_data = reinterpret_cast<WindowsPimpl*>(mPimpl);
-  return ReleaseSemaphore(win_data->semaphore_handle, 1, NULL) == TRUE;
+  BOOL retvalue = ReleaseSemaphore(
+      win_data->semaphore_handle, // _In_       HANDLE hSemaphore,
+      static_cast<LONG>(count),   // _In_       LONG lReleaseCount,
+      NULL                        // _Out_opt_  LPLONG lpPreviousCount
+  );
+
+  return retvalue == TRUE;
 }
 
 }} // namespace YCommon { namespace YPlatform {

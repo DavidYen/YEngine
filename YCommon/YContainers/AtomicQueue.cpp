@@ -8,22 +8,41 @@
 
 namespace YCommon { namespace YContainers {
 
-AtomicQueue::AtomicQueue(void* buffer, size_t buffer_size,
-                         size_t item_size, size_t num_items)
-    : mBuffer(buffer),
-      mItemSize(item_size),
-      mNumItems(num_items),
+AtomicQueue::AtomicQueue()
+    : mBuffer(NULL),
+      mItemSize(0),
+      mNumItems(0),
       mHead(0),
       mTail(0) {
+}
+
+AtomicQueue::AtomicQueue(void* buffer, size_t buffer_size,
+                         size_t item_size, size_t num_items)
+    : mBuffer(NULL),
+      mItemSize(0),
+      mNumItems(0),
+      mHead(0),
+      mTail(0) {
+  Initialize(buffer, buffer_size, item_size, num_items);
+}
+
+AtomicQueue::~AtomicQueue() {
+}
+
+void AtomicQueue::Initialize(void* buffer, size_t buffer_size,
+                             size_t item_size, size_t num_items) {
+  mBuffer = buffer;
+  mItemSize = item_size;
+  mNumItems = num_items;
+  mHead = 0;
+  mTail = 0;
+
   (void) buffer_size;
   YASSERT(buffer_size >= (item_size * num_items),
           "Atomic Queue %u[%u] requires at least %u bytes, supplied %u bytes.",
           static_cast<uint32_t>(item_size), num_items,
           static_cast<uint32_t>(item_size * num_items),
           static_cast<uint32_t>(buffer_size));
-}
-
-AtomicQueue::~AtomicQueue() {
 }
 
 bool AtomicQueue::Enqueue(const void* data_item) {

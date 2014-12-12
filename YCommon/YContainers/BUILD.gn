@@ -13,6 +13,7 @@ static_library("YContainers") {
 
   deps = [
     "//YCommon/YUtils",
+    "//YCommon/YPlatform",
   ]
 }
 
@@ -21,6 +22,7 @@ unit_test("YContainers_Test") {
     "AtomicHashTable_Test.cpp",
     "AtomicMemPool_Test.cpp",
     "AtomicQueue_Test.cpp",
+    "ThreadPool_Test.cpp",
   ]
 
   deps += [

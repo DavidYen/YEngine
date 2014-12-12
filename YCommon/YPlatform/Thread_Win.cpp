@@ -123,17 +123,17 @@ bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   return false;
 }
 
-bool Thread::Run() {
+YStatusCode Thread::Run() {
   WindowsPimpl* thread_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   if (!thread_pimpl->valid)
-    return false;
+    return kStatusCode_InvalidArguments;
   else if (thread_pimpl->started)
-    return false;
+    return kStatusCode_AlreadyRunning;
   else if (1 != ResumeThread(thread_pimpl->thread_handle))
-    return false;
+    return kStatusCode_SystemError;
 
   thread_pimpl->started = true;
-  return true;
+  return kStatusCode_OK;
 }
 
 bool Thread::Join(size_t milliseconds) {
