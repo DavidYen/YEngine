@@ -1,0 +1,6 @@
+
+config("rapidjson") {
+  include_dirs = [
+    "//third_party/rapidjson/include",
+  ]
+}

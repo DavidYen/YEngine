@@ -1,8 +1,12 @@
 vars = {
   "chromium_git": "https://chromium.googlesource.com",
   "buildtools_revision": "05dd6a24723170d7c6ff35b537ee02947f619891",
+
   "gflags_git": "https://code.google.com/p/gflags",
   "gflags_revision": "05b155ff59114735ec8cd089f669c4c3d8f59029",
+
+  "rapidjson_git": "https://github.com/miloyip/rapidjson.git",
+  "rapidjson_revision": "879def80f2e466cdf4c86dc7e53ea2dd4cafaea0",
 }
 
 deps = {
@@ -11,6 +15,8 @@ deps = {
     Var("buildtools_revision"),
   "yengine/third_party/google/gflags":
     Var("gflags_git") + ".git@" + Var("gflags_revision"),
+  "yengine/third_party/rapidjson":
+    Var("rapidjson_git") + "@" + Var("rapidjson_revision"),
 }
 
 hooks = [
