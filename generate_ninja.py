@@ -7,12 +7,29 @@ import traceback
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIGS = ['Debug', 'Release', 'Gold', 'Platinum']
+ARG_ENVVAR = 'GN_DEFINES'
+
+def ParseArgString(arg_string):
+  """Parses an arg string of the format "A=B B=C" and returns a dictionary."""
+  arg_dict = {}
+  for pairs in arg_string.split(' '):
+    if pairs:
+      name, value = pairs.split('=', 1)
+      arg_dict[name] = value
+
+  return arg_dict
 
 def do_main(argv):
+  arg_dict = ParseArgString(os.getenv(ARG_ENVVAR, ''))
+  for arg in argv:
+    name, value = arg.split('=', 1)
+    arg_dict[name] = value
+
   for config in CONFIGS:
     print 'GN: Generating Ninja Files (%s)...' % config
     sys.stdout.flush()
-    arg_dict = { 'config': config.lower() }
+
+    arg_dict['config'] = config.lower()
     arg_strings = ['%s="%s"' % (key, value)
                    for key, value in arg_dict.iteritems()]
     subprocess.check_call(['gn',
