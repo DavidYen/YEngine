@@ -61,7 +61,7 @@ void Timer::Stop() {
 }
 
 // Get the pulsed time from start time.
-uint64_t Timer::GetPulsedTimeMicro() const {
+int64_t Timer::GetPulsedTimeMicro() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
   const int64_t diff_micro = diff * 1000 * 1000;
@@ -69,10 +69,10 @@ uint64_t Timer::GetPulsedTimeMicro() const {
   const int64_t half_second = counts_per_sec / 2;
   const int64_t micro_seconds = (diff_micro + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(micro_seconds);
+  return micro_seconds;
 }
 
-uint64_t Timer::GetPulsedTimeMilli() const {
+int64_t Timer::GetPulsedTimeMilli() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
   const int64_t diff_milli = diff * 1000;
@@ -80,36 +80,36 @@ uint64_t Timer::GetPulsedTimeMilli() const {
   const int64_t half_second = counts_per_sec / 2;
   const int64_t milli_seconds = (diff_milli + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(milli_seconds);
+  return milli_seconds;
 }
 
-uint64_t Timer::GetPulsedTimeSeconds() const {
+int64_t Timer::GetPulsedTimeSeconds() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->start_count;
   const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
   const int64_t half_second = counts_per_sec / 2;
   const int64_t seconds = (diff + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(seconds);
+  return seconds;
 }
 
 float Timer::GetPulsedTimeMicroFloat() const {
-  const uint64_t micro_time = GetPulsedTimeMicro();
+  const int64_t micro_time = GetPulsedTimeMicro();
   return static_cast<float>(micro_time);
 }
 
 float Timer::GetPulsedTimeMilliFloat() const {
-  const uint64_t micro_time = GetPulsedTimeMicro();
+  const int64_t micro_time = GetPulsedTimeMicro();
   return static_cast<float>(micro_time) / 1000.0f;
 }
 
 float Timer::GetPulsedTimeSecondsFloat() const {
-  const uint64_t micro_time = GetPulsedTimeMicro();
+  const int64_t micro_time = GetPulsedTimeMicro();
   return static_cast<float>(micro_time) / (1000.0f * 1000.0f);
 }
 
 // Get the pulsed time from the previous pulsed time.
-uint64_t Timer::GetDiffTimeMicro() const {
+int64_t Timer::GetDiffTimeMicro() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
   const int64_t diff_micro = diff * 1000 * 1000;
@@ -117,10 +117,10 @@ uint64_t Timer::GetDiffTimeMicro() const {
   const int64_t half_second = counts_per_sec / 2;
   const int64_t micro_seconds = (diff_micro + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(micro_seconds);
+  return micro_seconds;
 }
 
-uint64_t Timer::GetDiffTimeMilli() const {
+int64_t Timer::GetDiffTimeMilli() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
   const int64_t diff_milli = diff * 1000;
@@ -128,31 +128,31 @@ uint64_t Timer::GetDiffTimeMilli() const {
   const int64_t half_second = counts_per_sec / 2;
   const int64_t milli_seconds = (diff_milli + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(milli_seconds);
+  return milli_seconds;
 }
 
-uint64_t Timer::GetDiffTimeSeconds() const {
+int64_t Timer::GetDiffTimeSeconds() const {
   const WindowsPimpl* win_pimpl = reinterpret_cast<const WindowsPimpl*>(mPimpl);
   const int64_t diff = win_pimpl->pulsed_count - win_pimpl->last_pulsed_count;
   const int64_t counts_per_sec = win_pimpl->counts_per_seconds;
   const int64_t half_second = counts_per_sec / 2;
   const int64_t seconds = (diff + half_second) / counts_per_sec;
 
-  return static_cast<uint64_t>(seconds);
+  return seconds;
 }
 
 float Timer::GetDiffTimeMicroFloat() const {
-  const uint64_t micro_time = GetDiffTimeMicro();
+  const int64_t micro_time = GetDiffTimeMicro();
   return static_cast<float>(micro_time);
 }
 
 float Timer::GetDiffTimeMilliFloat() const {
-  const uint64_t micro_time = GetDiffTimeMicro();
+  const int64_t micro_time = GetDiffTimeMicro();
   return static_cast<float>(micro_time) / 1000.0f;
 }
 
 float Timer::GetDiffTimeSecondsFloat() const {
-  const uint64_t micro_time = GetDiffTimeMicro();
+  const int64_t micro_time = GetDiffTimeMicro();
   return static_cast<float>(micro_time) / (1000.0f * 1000.0f);
 }
 

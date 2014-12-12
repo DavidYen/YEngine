@@ -4,9 +4,9 @@
 namespace YCommon { namespace YPlatform {
 
 namespace Sleep {
-  void MicroSleep(uint64_t microseconds);
-  void MilliSleep(uint64_t milliseconds);
-  void Sleep(uint64_t seconds);
+  void MicroSleep(int64_t microseconds);
+  void MilliSleep(int64_t milliseconds);
+  void Sleep(int64_t seconds);
 
   void MicroSleepFloat(float microseconds);
   void MilliSleepFloat(float milliseconds);

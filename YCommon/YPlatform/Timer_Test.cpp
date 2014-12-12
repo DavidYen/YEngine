@@ -99,10 +99,10 @@ TEST(BasicTimerTest, GetsAreConstantTest) {
   Sleep::MicroSleep(10);
   test_timer.Pulse();
 
-  const uint64_t pulsed = test_timer.GetPulsedTimeMicro();
+  const int64_t pulsed = test_timer.GetPulsedTimeMicro();
   EXPECT_EQ(pulsed, test_timer.GetPulsedTimeMicro());
 
-  const uint64_t diff_time = test_timer.GetDiffTimeMicro();
+  const int64_t diff_time = test_timer.GetDiffTimeMicro();
   EXPECT_EQ(diff_time, test_timer.GetDiffTimeMicro());
 
   Sleep::MicroSleep(15);
@@ -119,9 +119,9 @@ TEST(BasicTimerTest, PulseConversionTest) {
   Sleep::SleepFloat(2.0f);
   test_timer.Pulse();
 
-  const uint64_t pulsed_micro = test_timer.GetPulsedTimeMicro();
-  const uint64_t pulsed_milli = test_timer.GetPulsedTimeMilli();
-  const uint64_t pulsed_secs = test_timer.GetPulsedTimeSeconds();
+  const int64_t pulsed_micro = test_timer.GetPulsedTimeMicro();
+  const int64_t pulsed_milli = test_timer.GetPulsedTimeMilli();
+  const int64_t pulsed_secs = test_timer.GetPulsedTimeSeconds();
 
   EXPECT_LE((pulsed_micro + 500) / 1000 - 1, pulsed_milli);
   EXPECT_GE((pulsed_micro + 500) / 1000 + 1, pulsed_milli);
@@ -135,9 +135,9 @@ TEST(BasicTimerTest, PulseConversionTest) {
   EXPECT_FLOAT_EQ(pulsed_micro_float / 1000.0f, pulsed_milli_float);
   EXPECT_FLOAT_EQ(pulsed_milli_float / 1000.0f, pulsed_secs_float);
 
-  const uint64_t diff_micro = test_timer.GetDiffTimeMicro();
-  const uint64_t diff_milli = test_timer.GetDiffTimeMilli();
-  const uint64_t diff_secs = test_timer.GetDiffTimeSeconds();
+  const int64_t diff_micro = test_timer.GetDiffTimeMicro();
+  const int64_t diff_milli = test_timer.GetDiffTimeMilli();
+  const int64_t diff_secs = test_timer.GetDiffTimeSeconds();
 
   EXPECT_LE((diff_micro + 500) / 1000 - 1, diff_milli);
   EXPECT_GE((diff_micro + 500) / 1000 + 1, diff_milli);

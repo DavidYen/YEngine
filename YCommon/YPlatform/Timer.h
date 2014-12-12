@@ -13,17 +13,17 @@ class Timer {
   void Stop();
 
   // Get the pulsed time from start time.
-  uint64_t GetPulsedTimeMicro() const;
-  uint64_t GetPulsedTimeMilli() const;
-  uint64_t GetPulsedTimeSeconds() const;
+  int64_t GetPulsedTimeMicro() const;
+  int64_t GetPulsedTimeMilli() const;
+  int64_t GetPulsedTimeSeconds() const;
   float GetPulsedTimeMicroFloat() const;
   float GetPulsedTimeMilliFloat() const;
   float GetPulsedTimeSecondsFloat() const;
 
   // Get the pulsed time from the previous pulsed time.
-  uint64_t GetDiffTimeMicro() const;
-  uint64_t GetDiffTimeMilli() const;
-  uint64_t GetDiffTimeSeconds() const;
+  int64_t GetDiffTimeMicro() const;
+  int64_t GetDiffTimeMilli() const;
+  int64_t GetDiffTimeSeconds() const;
   float GetDiffTimeMicroFloat() const;
   float GetDiffTimeMilliFloat() const;
   float GetDiffTimeSecondsFloat() const;
