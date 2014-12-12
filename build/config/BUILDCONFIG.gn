@@ -25,9 +25,21 @@ declare_args() {
 ###################
 template("unit_test") {
   executable(target_name) {
-    sources = invoker.sources
-    deps = invoker.deps
-    configs = invoker.configs
+    sources = []
+    deps = []
+    configs = []
+
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+
+    if (defined(invoker.configs)) {
+      configs = invoker.configs
+    }
 
     sources += [ "//third_party/google/gtest/src/gtest_main.cc" ]
   }

@@ -7,6 +7,12 @@ import("//build/config/compiler/VisualStudio/visual_studio_path.gni")
 # This script outputs environment.x86 and environment.x64
 exec_script("setup_environment.py", [compiler, visual_studio_path])
 
+# Some of GN's internal commands depend on chromium scripts for some reason,
+# duplicate those scripts here
+exec_script("//build/copy_file.py",
+            [rebase_path("//third_party/google/chromium/win_tool.py"),
+             "gyp-win-tool"])
+
 # Parameters:
 #  cpu_arch: cpu_arch to pass as a build arg
 #  environment: File name of environment file.

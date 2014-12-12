@@ -1,0 +1,57 @@
+
+cmake_path = exec_script("//build/system_paths.py",
+                         ["output", "--name", "cmake"],
+                         "trim string")
+
+action("gflags_cmake") {
+  script = "//build/cmd_wrapper.py"
+  outputs = [ "$target_gen_dir/include/gflags/gflags.h" ]
+
+  inputs = [
+    "//third_party/google/gflags/CMakeLists.txt",
+    "//third_party/google/gflags/src/config.h.in",
+    "//third_party/google/gflags/src/gflags.h.in",
+    "//third_party/google/gflags/src/gflags_completions.h.in",
+    "//third_party/google/gflags/src/gflags_declare.h.in",
+  ]
+
+  args = [ "--cwd", rebase_path("$target_gen_dir", root_build_dir),
+           "${cmake_path}",
+           rebase_path("//third_party/google/gflags", "$target_gen_dir") ]
+}
+
+config("gflags_config") {
+  # All gflag apps must have access to the include directory.
+  include_dirs = [
+    "$target_gen_dir/include",
+    "$target_gen_dir/include/gflags",
+  ]
+}
+
+static_library("gflags") {
+  sources = [
+    "$target_gen_dir/include/gflags/gflags.h",
+    "//third_party/google/gflags/src/gflags.cc",
+    "//third_party/google/gflags/src/gflags_completions.cc",
+    "//third_party/google/gflags/src/gflags_reporting.cc",
+  ]
+
+  if (is_win) {
+    cflags = [
+      "/wd4127", # Constant expression
+      "/wd4005", # Macro Redefinition
+      "/wd4512", # Assignment operator
+      "/wd4702", # Unreachable code
+    ]
+
+    sources += [
+      "//third_party/google/gflags/src/windows_port.cc",
+    ]
+  }
+
+  deps = [
+    ":gflags_cmake",
+  ]
+
+  all_dependent_configs = [ ":gflags_config" ]
+}
