@@ -32,7 +32,7 @@ TEST(BasicSemaphoreTest, WaitReleaseTest) {
   SemaphoreArg arg_data(&semaphore);
 
   Thread test_thread(SemaphoreRoutine, &arg_data);
-  ASSERT_TRUE(test_thread.Run());
+  ASSERT_EQ(kStatusCode_OK, test_thread.Run());
   ASSERT_FALSE(test_thread.Join(100));
 
   semaphore.Release();
@@ -45,7 +45,7 @@ TEST(BasicSemaphoreTest, InitialCountTest) {
   SemaphoreArg arg_data(&semaphore);
 
   Thread test_thread(SemaphoreRoutine, &arg_data);
-  ASSERT_TRUE(test_thread.Run());
+  ASSERT_EQ(kStatusCode_OK, test_thread.Run());
   ASSERT_TRUE(test_thread.Join(5000));
   ASSERT_EQ(0, test_thread.ReturnValue());
 }
@@ -55,14 +55,14 @@ TEST(BasicSemaphoreTest, MaximumCountTest) {
   SemaphoreArg arg_data(&semaphore);
 
   Thread test_thread(SemaphoreRoutine, &arg_data);
-  ASSERT_TRUE(test_thread.Run());
+  ASSERT_EQ(kStatusCode_OK, test_thread.Run());
   ASSERT_FALSE(test_thread.Join(100));
   semaphore.Release();
   ASSERT_TRUE(test_thread.Join(5000));
   ASSERT_EQ(0, test_thread.ReturnValue());
 
   Thread test_thread2(SemaphoreRoutine, &arg_data);
-  ASSERT_TRUE(test_thread2.Run());
+  ASSERT_EQ(kStatusCode_OK, test_thread2.Run());
   ASSERT_FALSE(test_thread2.Join(100));
   semaphore.Release();
   ASSERT_TRUE(test_thread2.Join(5000));
@@ -74,7 +74,7 @@ TEST(BasicSemaphoreTest, WaitFailTest) {
   SemaphoreArg arg_data(&semaphore, 10);
 
   Thread test_thread(SemaphoreRoutine, &arg_data);
-  ASSERT_TRUE(test_thread.Run());
+  ASSERT_EQ(kStatusCode_OK, test_thread.Run());
   ASSERT_TRUE(test_thread.Join(5000));
   ASSERT_EQ(1, test_thread.ReturnValue());
 }
