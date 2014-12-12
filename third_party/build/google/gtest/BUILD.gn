@@ -12,7 +12,7 @@ config("gtest_config") {
     ]
 
     ldflags = [
-      "/IGNORE:4006"
+      "/IGNORE:4006",
     ]
   }
 

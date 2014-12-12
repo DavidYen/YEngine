@@ -26,6 +26,10 @@ config("gflags_config") {
     "$target_gen_dir/include",
     "$target_gen_dir/include/gflags",
   ]
+
+  libs = [
+    "shlwapi.lib",
+  ]
 }
 
 static_library("gflags") {

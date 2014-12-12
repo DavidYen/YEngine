@@ -10,7 +10,7 @@ template("visual_studio_config") {
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -62,7 +62,7 @@ template("visual_studio_debug") {
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -98,7 +98,7 @@ template("visual_studio_release") {
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -131,7 +131,7 @@ template("visual_studio_gold") {
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -164,7 +164,7 @@ template("visual_studio_platinum") {
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {

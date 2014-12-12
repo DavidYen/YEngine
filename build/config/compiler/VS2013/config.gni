@@ -1,33 +1,42 @@
 
 import("../VisualStudio/visual_studio_config.gni")
 
-template("vs2012_config") {
+template("vs2013_config") {
   visual_studio_config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
     if (defined(invoker.cflags)) {
       cflags = invoker.cflags
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
       defines = invoker.defines
     }
+
+    # VS2012 doesn't need this, but VS2013 needs to serialize pdb generation.
+    cflags += [
+      "/FS", # Serialize PDB generation.
+    ]
   }
 }
 
 #########################
 # Optimization Settings #
 #########################
-template("vs2012_debug") {
+template("vs2013_debug") {
   visual_studio_debug(target_name) {
     if (defined(invoker.cflags)) {
       cflags = invoker.cflags
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -36,14 +45,14 @@ template("vs2012_debug") {
   }
 }
 
-template("vs2012_release") {
+template("vs2013_release") {
   visual_studio_release(target_name) {
     if (defined(invoker.cflags)) {
       cflags = invoker.cflags
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -52,14 +61,14 @@ template("vs2012_release") {
   }
 }
 
-template("vs2012_gold") {
+template("vs2013_gold") {
   visual_studio_config(target_name) {
     if (defined(invoker.cflags)) {
       cflags = invoker.cflags
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {
@@ -68,14 +77,14 @@ template("vs2012_gold") {
   }
 }
 
-template("vs2012_platinum") {
+template("vs2013_platinum") {
   visual_studio_config(target_name) {
     if (defined(invoker.cflags)) {
       cflags = invoker.cflags
     }
 
     if (defined(invoker.ldflags)) {
-      cflags = invoker.cflags
+      ldflags = invoker.ldflags
     }
 
     if (defined(invoker.defines)) {

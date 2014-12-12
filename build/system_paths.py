@@ -39,7 +39,7 @@ def do_list(args):
     print 'No system paths found'
     return 1
 
-  for name, path in config_json.iter_items():
+  for name, path in config_json.iteritems():
     print '%s: %s' % (name, path)
 
   return 0

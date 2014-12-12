@@ -1,0 +1,22 @@
+
+import("config.gni")
+
+vs2013_config("compiler") {
+  cflags = []
+}
+
+vs2013_debug("debug") {
+  cflags = []
+}
+
+vs2013_release("release") {
+  cflags = []
+}
+
+vs2013_gold("gold") {
+  cflags = []
+}
+
+vs2013_platinum("platinum") {
+  cflags = []
+}

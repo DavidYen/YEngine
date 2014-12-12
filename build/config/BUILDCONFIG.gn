@@ -14,7 +14,7 @@ declare_args() {
   target_arch = "x86_64"
 
   # Compiler
-  compiler = "VS2012e"
+  compiler = "VS2013"
 
   # Gfx
   gfx = "dx9"
@@ -50,7 +50,7 @@ template("unit_test") {
 #################
 is_visual_studio = false
 
-if (compiler == "VS2012e") {
+if (compiler == "VS2013") {
   is_visual_studio = true
 }
 
@@ -146,4 +146,5 @@ if (is_win) {
   }
 }
 
-assert(host_toolchain != false, "Host Toolchain was not setup correctly!")
+assert(host_toolchain != false,
+       "Host Toolchain ($compiler) was not setup correctly!")
