@@ -1,6 +1,7 @@
 
 # Ignore Dependency Repos
 buildtools/
+third_party/google/gflags
 
 # Ignore Output Directory
 out/
