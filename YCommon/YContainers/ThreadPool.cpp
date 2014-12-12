@@ -23,9 +23,8 @@ ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
   YASSERT(buffer_size > thread_size,
           "Buffer size is not big enough to contain ThreadPool");
 
-  const size_t num_run_args = ((buffer_size - thread_size) /
-                               sizeof(ThreadPool::ThreadData::RunArgs));
-  YASSERT(num_run_args > 0,
+  YASSERT(((buffer_size - thread_size) /
+            sizeof(ThreadPool::ThreadData::RunArgs)) > 0,
           "Number of run arguments must be greater than 0");
 
   mThreads = new (buffer) YPlatform::Thread[num_threads];
