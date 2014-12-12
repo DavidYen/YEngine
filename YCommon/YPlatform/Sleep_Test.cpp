@@ -10,19 +10,21 @@ namespace YCommon { namespace YPlatform {
 TEST(BasicSleepTest, MicroSleepTest) {
   Timer test_timer;
   test_timer.Start();
-  Sleep::MicroSleep(20);
+  Sleep::MicroSleep(200);
   test_timer.Pulse();
 
-  EXPECT_LE(19, test_timer.GetPulsedTimeMicro());
+  EXPECT_LE(150, test_timer.GetPulsedTimeMicro());
+  EXPECT_GE(250, test_timer.GetPulsedTimeMicro());
 }
 
 TEST(BasicTimerTest, MilliSleepTest) {
   Timer test_timer;
   test_timer.Start();
-  Sleep::MilliSleep(10);
+  Sleep::MilliSleep(100);
   test_timer.Pulse();
 
-  EXPECT_LE(9, test_timer.GetPulsedTimeMilli());
+  EXPECT_LE(90, test_timer.GetPulsedTimeMilli());
+  EXPECT_GE(110, test_timer.GetPulsedTimeMilli());
 }
 
 TEST(BasicTimerTest, SleepTest) {
@@ -31,7 +33,7 @@ TEST(BasicTimerTest, SleepTest) {
   Sleep::Sleep(1);
   test_timer.Pulse();
 
-  EXPECT_LE(1, test_timer.GetPulsedTimeSeconds());
+  EXPECT_EQ(1, test_timer.GetPulsedTimeSeconds());
 }
 
 TEST(BasicSleepTest, MicroSleepFloatTest) {
