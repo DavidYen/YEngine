@@ -39,10 +39,11 @@ TEST(BasicTimerTest, SleepTest) {
 TEST(BasicSleepTest, MicroSleepFloatTest) {
   Timer test_timer;
   test_timer.Start();
-  Sleep::MicroSleepFloat(10.5);
+  Sleep::MicroSleepFloat(100.5);
   test_timer.Pulse();
 
-  EXPECT_LE(10.45f, test_timer.GetPulsedTimeMicroFloat());
+  EXPECT_LE(90.0, test_timer.GetPulsedTimeMicroFloat());
+  EXPECT_GE(110.f, test_timer.GetPulsedTimeMicroFloat());
 }
 
 TEST(BasicTimerTest, MilliSleepFloatTest) {
@@ -52,6 +53,7 @@ TEST(BasicTimerTest, MilliSleepFloatTest) {
   test_timer.Pulse();
 
   EXPECT_LE(2.45f, test_timer.GetPulsedTimeMilliFloat());
+  EXPECT_GE(2.55f, test_timer.GetPulsedTimeMilliFloat());
 }
 
 TEST(BasicTimerTest, SleepFloatTest) {
@@ -61,6 +63,7 @@ TEST(BasicTimerTest, SleepFloatTest) {
   test_timer.Pulse();
 
   EXPECT_LE(1.45f, test_timer.GetPulsedTimeSecondsFloat());
+  EXPECT_GE(1.55f, test_timer.GetPulsedTimeSecondsFloat());
 }
 
 }} // namespace YCommon { namespace YPlatform {
