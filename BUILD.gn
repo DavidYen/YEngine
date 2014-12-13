@@ -2,7 +2,6 @@
 group("root") {
   deps = [
     "//YEngine",
-    "//YTools/YShaderCompiler",
-    "//third_party/build/google/flatbuffers:flatc",
+    "//YTools",
   ]
 }

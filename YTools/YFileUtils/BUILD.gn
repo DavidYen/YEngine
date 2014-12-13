@@ -1,0 +1,13 @@
+
+tool_static_library("YFileUtils") {
+  sources = [
+    "FileEnv.cpp",
+    "FileEnv.h",
+    "FileStream.cpp",
+    "FileStream.h",
+  ]
+
+  deps = [
+    "//YCommon/YPlatform",
+  ]
+}

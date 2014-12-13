@@ -32,6 +32,7 @@ template("visual_studio_config") {
 
     defines += [
       "WIN32_LEAN_AND_MEAN", # May move to a separate config for 3rd party.
+      "_CRT_SECURE_NO_WARNINGS", # Meant to be cross platform
     ]
 
     # Incremental Linking based on configuration
