@@ -26,6 +26,54 @@ template("vs2013_config") {
   }
 }
 
+template("vs2013_exceptions") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    cflags += [
+      "/EHsc",  # Enable Exceptions
+    ]
+  }
+}
+
+template("vs2013_noexceptions") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    defines += [
+      "_HAS_EXCEPTIONS=0",  # Disable all exceptions for MSVC
+    ]
+  }
+}
+
 #########################
 # Optimization Settings #
 #########################

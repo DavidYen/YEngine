@@ -28,6 +28,7 @@ template("unit_test") {
     sources = []
     deps = []
     configs = []
+    include_dirs = []
 
     if (defined(invoker.sources)) {
       sources = invoker.sources
@@ -41,7 +42,41 @@ template("unit_test") {
       configs = invoker.configs
     }
 
+    if (defined(invoker.include_dirs)) {
+      include_dirs = invoker.include_dirs
+    }
+
     sources += [ "//third_party/google/gtest/src/gtest_main.cc" ]
+  }
+}
+
+template("tool_executable") {
+  executable(target_name) {
+    sources = []
+    cflags = []
+    deps = []
+    configs = []
+    include_dirs = []
+
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+
+    if (defined(invoker.configs)) {
+      configs = invoker.configs
+    }
+
+    if (defined(invoker.include_dirs)) {
+      include_dirs = invoker.include_dirs
+    }
   }
 }
 
@@ -98,6 +133,7 @@ _compiler_configs += [
 set_defaults("executable") {
   configs = _compiler_configs + _linker_configs + [
     "//build/config/platform/${os}:default_libs",
+    "//build/config/compiler/${compiler}:noexceptions",
   ]
 }
 
@@ -123,6 +159,13 @@ set_defaults("unit_test") {
   configs = _compiler_configs + _linker_configs + [
     "//build/config/platform/${os}:default_libs",
     "//third_party/build/google/gtest:gtest_config",
+  ]
+}
+
+set_defaults("tool_executable") {
+  configs = _compiler_configs + _linker_configs + [
+    "//build/config/platform/${os}:default_libs",
+    "//build/config/compiler/${compiler}:exceptions",
   ]
 }
 

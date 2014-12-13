@@ -5,6 +5,14 @@ vs2013_config("compiler") {
   cflags = []
 }
 
+vs2013_exceptions("exceptions") {
+  cflags = []
+}
+
+vs2013_noexceptions("noexceptions") {
+  cflags = []
+}
+
 vs2013_debug("debug") {
   cflags = []
 }
