@@ -32,7 +32,6 @@ template("visual_studio_config") {
 
     defines += [
       "WIN32_LEAN_AND_MEAN", # May move to a separate config for 3rd party.
-       "_HAS_EXCEPTIONS=0",  # Disable all exceptions for MSVC
     ]
 
     # Incremental Linking based on configuration
