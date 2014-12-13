@@ -1,6 +1,7 @@
 
 static_library("YPlatform") {
   sources = [
+    "FilePath.h",
     "Platform.h",
     "PlatformHandle.h",
     "Semaphore.h",
@@ -11,6 +12,7 @@ static_library("YPlatform") {
 
   if (is_win) {
     sources += [
+      "FilePath_Win.cpp",
       "Platform_Win.cpp",
       "Platform_Win.h",
       "PlatformHandle_Win.cpp",
