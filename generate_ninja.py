@@ -25,7 +25,16 @@ def do_main(argv):
     name, value = arg.split('=', 1)
     arg_dict[name] = value
 
-  for config in CONFIGS:
+  # See if user has chosen a configuration to generate.
+  config = arg_dict.get('config', None)
+  if config:
+    configs = [config]
+  else:
+    # Generate all of them
+    configs = CONFIGS
+
+  # Generate configurations
+  for config in configs:
     print 'GN: Generating Ninja Files (%s)...' % config
     sys.stdout.flush()
 
