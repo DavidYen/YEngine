@@ -1,4 +1,29 @@
 
+config("flatbuffers_config") {
+  include_dirs = [
+    "//third_party/google/flatbuffers/include",
+  ]
+}
+
+static_library("flatbuffers") {
+  sources = [
+    "//third_party/google/flatbuffers/src/idl_parser.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_text.cpp",
+  ]
+
+  cflags = [
+    "/wd4702", # Unreachable code.
+  ]
+
+  configs += [
+    "//build/config/compiler/${compiler}:exceptions",
+  ]
+
+  all_dependent_configs = [
+    ":flatbuffers_config",
+  ]
+}
+
 tool_executable("flatc") {
   sources = [
     "//third_party/google/flatbuffers/src/flatc.cpp",
@@ -14,7 +39,7 @@ tool_executable("flatc") {
     "/wd4702", # Unreachable code.
   ]
 
-  include_dirs = [
-    "//third_party/google/flatbuffers/include",
+  configs += [
+    ":flatbuffers_config",
   ]
 }
