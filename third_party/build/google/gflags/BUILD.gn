@@ -44,6 +44,7 @@ tool_static_library("gflags") {
     cflags = [
       "/wd4127", # Constant expression
       "/wd4005", # Macro Redefinition
+      "/wd4389", # Signed / unsigned mismatch
       "/wd4512", # Assignment operator
       "/wd4702", # Unreachable code
     ]

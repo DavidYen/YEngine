@@ -108,7 +108,7 @@ bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   HANDLE thread_handle = CreateThread(
       NULL,            // default security attributes
       0,               // use default stack size  
-      ThreadBeginProc, // thread function name
+      (LPTHREAD_START_ROUTINE)ThreadBeginProc, // thread function name
       thread_pimpl,    // argument to thread function 
       CREATE_SUSPENDED,// use default creation flags 
       &thread_id);     // returns the thread identifier

@@ -121,12 +121,6 @@ template("vc_toolchain") {
     # passed to the build. They are ignored when this is the default toolchain.
     toolchain_args() {
       cpu_arch = invoker.cpu_arch
-
-      # Normally the build config resets the CPU architecture to 32-bits. Setting
-      # this flag overrides that behavior.
-      if (defined(invoker.force_win64)) {
-        force_win64 = invoker.force_win64
-      }
     }
   }
 }
@@ -139,5 +133,4 @@ vc_toolchain("32") {
 vc_toolchain("64") {
   environment = "environment.x64"
   cpu_arch = "x64"
-  force_win64 = true
 }

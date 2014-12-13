@@ -5,6 +5,12 @@ static_library("cityhash") {
     "//third_party/google/cityhash/src/city.cc",
   ]
 
+  if (is_win) {
+    cflags = [
+      "/wd4018", # Signed / unsigned mismatch
+    ]
+  }
+
   include_dirs = [
     "//third_party/google/cityhash/src",
     ".",
