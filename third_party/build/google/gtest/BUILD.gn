@@ -8,7 +8,7 @@ config("gtest_config") {
   if (is_win) {
     cflags = [
       "/wd4800", # Unused variable warning.
-      "/wd4702"
+      "/wd4702",
     ]
 
     ldflags = [

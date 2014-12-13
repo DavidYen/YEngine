@@ -1,0 +1,20 @@
+
+tool_executable("flatc") {
+  sources = [
+    "//third_party/google/flatbuffers/src/flatc.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_cpp.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_fbs.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_general.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_go.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_text.cpp",
+    "//third_party/google/flatbuffers/src/idl_parser.cpp",
+  ]
+
+  cflags = [
+    "/wd4702", # Unreachable code.
+  ]
+
+  include_dirs = [
+    "//third_party/google/flatbuffers/include",
+  ]
+}
