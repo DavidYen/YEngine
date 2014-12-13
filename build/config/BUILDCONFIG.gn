@@ -183,7 +183,9 @@ set_defaults("executable") {
 }
 
 set_defaults("static_library") {
-  configs = _compiler_configs
+  configs = _compiler_configs + [
+    "//build/config/compiler/${compiler}:noexceptions",
+  ]
 }
 
 set_defaults("shared_library") {
