@@ -1,0 +1,17 @@
+
+namespace YEngine;
+
+file_identifier "SHDR";
+file_extension "shdr";
+
+table Variant {
+  name:string;
+  vertex_shader:[ubyte];
+  pixel_shader:[ubyte];
+}
+
+table Shader {
+  variants:[Variant];
+}
+
+root_type Shader;
