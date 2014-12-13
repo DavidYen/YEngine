@@ -68,7 +68,7 @@ template("vc_toolchain") {
         # allow targets to override this extension on Windows.
         "{{target_out_dir}}/{{target_output_name}}.lib",
       ]
-      # default_output_extension = ".lib"
+      default_output_extension = ".lib"
       # The use of inputs_newline is to work around a fixed per-line buffer
       # size in the linker.
       rspfile_content = "{{inputs_newline}}"
@@ -81,7 +81,7 @@ template("vc_toolchain") {
 
       command = "$win_cmd_wrap -e $env -- link.exe /nologo /IMPLIB:$libname /DLL /OUT:$dllname /PDB:${dllname}.pdb @$rspfile"
 
-      # default_output_extension = ".dll"
+      default_output_extension = ".dll"
       description = "LINK(DLL) {{output}}"
       outputs = [
         dllname,
@@ -95,9 +95,9 @@ template("vc_toolchain") {
     tool("link") {
       rspfile = "{{output}}.rsp"
 
-      command = "$win_cmd_wrap -e $env -- link.exe /NOLOGO /OUT:{{output}}.exe /PDB:{{output}}.pdb @$rspfile"
+      command = "$win_cmd_wrap -e $env -- link.exe /NOLOGO /OUT:{{output}} /PDB:{{output}}.pdb @$rspfile"
 
-      # default_output_extension = ".exe"
+      default_output_extension = ".exe"
       description = "LINK {{output}}"
       outputs = [
         "{{target_output_name}}{{output_extension}}",
