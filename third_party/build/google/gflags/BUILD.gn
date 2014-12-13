@@ -32,7 +32,7 @@ config("gflags_config") {
   ]
 }
 
-static_library("gflags") {
+tool_static_library("gflags") {
   sources = [
     "$target_gen_dir/include/gflags/gflags.h",
     "//third_party/google/gflags/src/gflags.cc",
@@ -52,10 +52,6 @@ static_library("gflags") {
       "//third_party/google/gflags/src/windows_port.cc",
     ]
   }
-
-  configs += [
-    "//build/config/compiler/${compiler}:exceptions",
-  ]
 
   deps = [
     ":gflags_cmake",

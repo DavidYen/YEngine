@@ -57,6 +57,7 @@ template("tool_executable") {
     deps = []
     configs = []
     include_dirs = []
+    public_configs = []
 
     if (defined(invoker.sources)) {
       sources = invoker.sources
@@ -76,6 +77,50 @@ template("tool_executable") {
 
     if (defined(invoker.include_dirs)) {
       include_dirs = invoker.include_dirs
+    }
+
+    if (defined(invoker.public_configs)) {
+      public_configs = invoker.public_configs
+    }
+  }
+}
+
+template("tool_static_library") {
+  static_library(target_name) {
+    sources = []
+    cflags = []
+    deps = []
+    configs = []
+    include_dirs = []
+    public_configs = []
+    all_dependent_configs = []
+
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+
+    if (defined(invoker.configs)) {
+      configs = invoker.configs
+    }
+
+    if (defined(invoker.include_dirs)) {
+      include_dirs = invoker.include_dirs
+    }
+
+    if (defined(invoker.public_configs)) {
+      public_configs = invoker.public_configs
+    }
+
+    if (defined(invoker.all_dependent_configs)) {
+      all_dependent_configs = invoker.all_dependent_configs
     }
   }
 }
@@ -165,6 +210,12 @@ set_defaults("unit_test") {
 set_defaults("tool_executable") {
   configs = _compiler_configs + _linker_configs + [
     "//build/config/platform/${os}:default_libs",
+    "//build/config/compiler/${compiler}:exceptions",
+  ]
+}
+
+set_defaults("tool_static_library") {
+  configs = _compiler_configs + [
     "//build/config/compiler/${compiler}:exceptions",
   ]
 }
