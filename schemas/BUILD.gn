@@ -1,7 +1,7 @@
 
 config("schema_config") {
   include_dirs = [
-    "$target_gen_dir/include",
+    "${root_build_dir}/include",
   ]
 }
 
@@ -14,11 +14,11 @@ template("compile_schema") {
       "//schemas/${schema}.fbs",
     ]
     outputs = [
-      "$target_gen_dir/include/schemas/${schema}_generated.h",
+      "${root_build_dir}/include/schemas/${schema}_generated.h",
     ]
 
     args = [ "--", "flatc", "-c",
-             "-o", rebase_path(root_build_dir + "/include/schemas/"),
+             "-o", rebase_path("${root_build_dir}/include/schemas/"),
              rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
 
     deps = [

@@ -53,6 +53,10 @@ static_library("gflags") {
     ]
   }
 
+  configs += [
+    "//build/config/compiler/${compiler}:exceptions",
+  ]
+
   deps = [
     ":gflags_cmake",
   ]
