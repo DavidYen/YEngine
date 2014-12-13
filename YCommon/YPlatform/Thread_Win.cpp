@@ -46,7 +46,7 @@ static void SetThreadName(DWORD dwThreadID, const char* threadName) {
 #endif GOLD
 
 // System Windows Thread functions
-static DWORD ThreadBeginProc(LPVOID lpParam)
+static DWORD __stdcall ThreadBeginProc(LPVOID lpParam)
 {
   WindowsPimpl* thread_pimpl = static_cast<WindowsPimpl*>(lpParam);
 
@@ -108,7 +108,7 @@ bool Thread::Initialize(ThreadRoutine thread_func, void* thread_arg) {
   HANDLE thread_handle = CreateThread(
       NULL,            // default security attributes
       0,               // use default stack size  
-      (LPTHREAD_START_ROUTINE)ThreadBeginProc, // thread function name
+      ThreadBeginProc, // thread function name
       thread_pimpl,    // argument to thread function 
       CREATE_SUSPENDED,// use default creation flags 
       &thread_id);     // returns the thread identifier
