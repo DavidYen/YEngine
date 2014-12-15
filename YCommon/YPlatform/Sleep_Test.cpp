@@ -43,7 +43,7 @@ TEST(BasicSleepTest, MicroSleepFloatTest) {
   test_timer.Pulse();
 
   EXPECT_LE(90.0, test_timer.GetPulsedTimeMicroFloat());
-  EXPECT_GE(110.f, test_timer.GetPulsedTimeMicroFloat());
+  EXPECT_GE(115.f, test_timer.GetPulsedTimeMicroFloat());
 }
 
 TEST(BasicTimerTest, MilliSleepFloatTest) {
