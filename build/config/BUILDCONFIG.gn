@@ -58,6 +58,7 @@ template("tool_executable") {
     configs = []
     include_dirs = []
     public_configs = []
+    libs = []
 
     if (defined(invoker.sources)) {
       sources = invoker.sources
@@ -81,6 +82,10 @@ template("tool_executable") {
 
     if (defined(invoker.public_configs)) {
       public_configs = invoker.public_configs
+    }
+
+    if (defined(invoker.libs)) {
+      libs  = invoker.libs
     }
   }
 }
@@ -204,6 +209,7 @@ set_defaults("unit_test") {
   ]
 
   configs = _compiler_configs + _linker_configs + [
+    "//build/config/compiler/${compiler}:exceptions",
     "//build/config/platform/${os}:default_libs",
     "//third_party/build/google/gtest:gtest_config",
   ]
