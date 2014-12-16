@@ -1,6 +1,7 @@
 
 static_library("YPlatform") {
   sources = [
+    "FilePath.cpp",
     "FilePath.h",
     "Platform.h",
     "PlatformHandle.h",
@@ -31,6 +32,7 @@ static_library("YPlatform") {
 
 unit_test("YPlatform_Test") {
   sources = [
+    "FilePath_Test.cpp",
     "Semaphore_Test.cpp",
     "Sleep_Test.cpp",
     "Thread_Test.cpp",

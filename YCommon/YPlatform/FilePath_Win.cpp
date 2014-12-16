@@ -5,6 +5,17 @@
 
 namespace YCommon { namespace YPlatform {
 
+bool FilePath::GetCurrentWorkingDirectory(char* dir, size_t dir_size,
+                                          size_t* dest_len) {
+  const DWORD ret = GetCurrentDirectory(static_cast<DWORD>(dir_size), dir);
+  if (ret == 0 || ret == dir_size)
+    return false;
+
+  if (dest_len)
+    *dest_len = static_cast<size_t>(ret);
+  return true;
+}
+
 bool FilePath::IsFile(const char* filepath) {
   const DWORD attrib = GetFileAttributes(filepath);
   return (attrib != INVALID_FILE_ATTRIBUTES) &&
