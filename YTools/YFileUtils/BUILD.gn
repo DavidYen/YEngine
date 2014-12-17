@@ -3,6 +3,8 @@ tool_static_library("YFileUtils") {
   sources = [
     "FileEnv.cpp",
     "FileEnv.h",
+    "FilePath.cpp",
+    "FilePath.h",
     "FileStream.cpp",
     "FileStream.h",
   ]

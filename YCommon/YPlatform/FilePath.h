@@ -29,6 +29,9 @@ namespace FilePath {
                const char* dir, size_t dir_len,
                char* dest, size_t dest_size, size_t* dest_len = NULL);
 
+  // Directory Path
+  bool DirPath(const char* path, size_t path_len,
+               char* dest, size_t dest_size, size_t* dest_len = NULL);
 } // namespace FilePath
 
 }} // namespace YCommon { namespace YPlatform {

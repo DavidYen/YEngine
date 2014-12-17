@@ -260,4 +260,32 @@ bool FilePath::RelPath(const char* path, size_t path_len,
   return true;
 }
 
+// Directory Path
+bool FilePath::DirPath(const char* path, size_t path_len,
+                       char* dest, size_t dest_size, size_t* dest_len) {
+  const char* path_iter = path + path_len;
+  for(; path_iter != path; --path_iter) {
+    if (IS_PATH_SEP(*path_iter)) {
+      break;
+    }
+  }
+
+  if (path_iter == path) {
+    if (IS_PATH_SEP(*path)) {
+      ++path_iter; // first character is a slash is a root special case.
+    }
+  }
+
+  const size_t copy_len = path_iter - path;
+  if (dest_size < (copy_len + 1))
+    return false;
+
+  if (dest_len)
+    *dest_len = copy_len;
+
+  memcpy(dest, path, copy_len);
+  dest[copy_len] = '\0';
+  return true;
+}
+
 }} // namespace YCommon { namespace YPlatform {

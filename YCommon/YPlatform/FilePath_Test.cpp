@@ -313,4 +313,39 @@ TEST(RelPathTest, PartialMatchTest) {
   EXPECT_EQ(strlen(expected), dest_len);
 }
 
+TEST(DirPathTest, BasicTest) {
+  char dest[4] = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = "abc" PATH_SEP "def";
+  ASSERT_TRUE(FilePath::DirPath(path, strlen(path),
+                                dest, sizeof(dest), &dest_len));
+
+  const char* expected = "abc";
+  EXPECT_STREQ(expected, dest);
+  EXPECT_EQ(strlen(expected), dest_len);
+}
+
+TEST(DirPathTest, BasicFailTest) {
+  char dest[3] = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = "abc" PATH_SEP "def";
+  ASSERT_FALSE(FilePath::DirPath(path, strlen(path),
+                                 dest, sizeof(dest), &dest_len));
+}
+
+TEST(DirPathTest, RootTest) {
+  char dest[4] = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = PATH_SEP "abc";
+  ASSERT_TRUE(FilePath::DirPath(path, strlen(path),
+                                dest, sizeof(dest), &dest_len));
+
+  const char* expected = PATH_SEP;
+  EXPECT_STREQ(expected, dest);
+  EXPECT_EQ(strlen(expected), dest_len);
+}
+
 }} // namespace YCommon { namespace YPlatform {
