@@ -198,6 +198,53 @@ TEST(AbsPathTest, FailedAbsPathTest) {
                                  "a", strlen("a")));
 }
 
+TEST(AbsPathTest, DoubleAbsPathTest) {
+  char dest[32]  = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = "/a";
+  const char* work_dir = "/b";
+  ASSERT_TRUE(FilePath::AbsPath(path, strlen(path),
+                                dest, sizeof(dest), &dest_len,
+                                work_dir, strlen(work_dir)));
+
+  const char* expected = PATH_SEP "a";
+  EXPECT_STREQ(expected, dest);
+  EXPECT_EQ(strlen(expected), dest_len);
+}
+
+#ifdef WIN
+TEST(AbsPathTest, AbsWinPathTest) {
+  char dest[32]  = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = "a";
+  const char* work_dir = "c:\\b";
+  ASSERT_TRUE(FilePath::AbsPath(path, strlen(path),
+                                dest, sizeof(dest), &dest_len,
+                                work_dir, strlen(work_dir)));
+
+  const char* expected = "c:\\b\\a";
+  EXPECT_STREQ(expected, dest);
+  EXPECT_EQ(strlen(expected), dest_len);
+}
+
+TEST(AbsPathTest, DoubleAbsWinPathTest) {
+  char dest[32]  = { '\0' };
+  size_t dest_len = 0;
+
+  const char* path = "c:\\a";
+  const char* work_dir = "c:\\b";
+  ASSERT_TRUE(FilePath::AbsPath(path, strlen(path),
+                                dest, sizeof(dest), &dest_len,
+                                work_dir, strlen(work_dir)));
+
+  const char* expected = "c:\\a";
+  EXPECT_STREQ(expected, dest);
+  EXPECT_EQ(strlen(expected), dest_len);
+}
+#endif
+
 TEST(AbsPathTest, RelativePathTest) {
   char dest[4]  = { '\0' };
   size_t dest_len = 0;

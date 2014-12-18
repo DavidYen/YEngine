@@ -135,6 +135,10 @@ bool FilePath::NormPath(const char* path, size_t path_len,
 bool FilePath::AbsPath(const char* path, size_t path_len,
                        char* dest, size_t dest_size, size_t* dest_len,
                        const char* working_dir, size_t working_dir_len) {
+  if (IsAbsPath(path)) {
+    return NormPath(path, path_len, dest, dest_size, dest_len);
+  }
+
   char temp_work_dir[256];
   size_t temp_work_dir_len = 0;
   if (working_dir == NULL || working_dir_len == 0) {

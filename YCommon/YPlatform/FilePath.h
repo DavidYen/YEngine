@@ -4,12 +4,20 @@
 namespace YCommon { namespace YPlatform {
 
 namespace FilePath {
+  /********
+  * Platform Dependent Functions.
+  *********/
+  bool IsAbsPath(const char* path);
   bool IsFile(const char* filepath);
   bool IsDir(const char* dirpath);
   bool Exists(const char* path);
+
   bool GetCurrentWorkingDirectory(char* dir, size_t dir_size,
                                   size_t* dest_len = NULL);
 
+  /********
+  * Platform Independent Functions.
+  *********/
   // Join Paths
   bool JoinPaths(const char* dir, size_t dir_len,
                  const char* path, size_t path_len,
