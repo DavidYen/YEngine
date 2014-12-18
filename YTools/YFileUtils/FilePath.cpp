@@ -83,7 +83,7 @@ std::string FilePath::RelPath(const std::string& path,
 }
 
 // Directory Path
-std::string DirPath(const std::string& path) {
+std::string FilePath::DirPath(const std::string& path) {
   char dirpath[256];
   if (YCommon::YPlatform::FilePath::DirPath(path.c_str(), path.length(),
                                             dirpath, sizeof(dirpath))) {

@@ -5,12 +5,6 @@ tool_executable("YShaderCompiler") {
     "CompileShader.h",
   ]
 
-  if (gfx == "dx9") {
-    sources += [
-      "CompileShader_DX9.cpp",
-    ]
-  }
-
   deps = [
     "//schemas:compile_shader_schema",
     "//third_party/build/google/gflags",
@@ -21,4 +15,16 @@ tool_executable("YShaderCompiler") {
   public_configs = [
     "//third_party/build/rapidjson",
   ]
+
+  if (gfx == "dx9") {
+    sources += [
+      "CompileShader_DX9.cpp",
+      "DXShaderCompiler.cpp",
+      "DXShaderCompiler.h",
+    ]
+
+    deps += [
+      "//build/config/gfx/dx11:D3DCompiler",
+    ]
+  }
 }

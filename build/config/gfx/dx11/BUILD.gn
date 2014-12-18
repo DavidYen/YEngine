@@ -1,0 +1,38 @@
+
+import("//build/config/compiler/VisualStudio/visual_studio_path.gni")
+
+d3d_compiler = exec_script("//build/system_paths.py",
+                                 ["output", "--name", "D3DCompiler"],
+                                 "trim string")
+
+action("D3DCompilerdll") {
+  script = "//build/copy_file.py"
+
+  inputs = []
+  if (target_arch == "x86_64") {
+    inputs += [
+      "${visual_studio_path}/VC/bin/amd64/${d3d_compiler}.dll",
+    ]
+  } else {
+    inputs += [
+      "${visual_studio_path}/VC/bin/amd64_x86/${d3d_compiler}.dll",
+    ]
+  }
+
+  outputs = [
+    "${root_out_dir}/${d3d_compiler}.dll",
+  ]
+
+  args = rebase_path(inputs) +
+         rebase_path(outputs, root_build_dir)
+}
+
+source_set("D3DCompiler") {
+  libs = [
+    "D3DCompiler.lib",
+  ]
+
+  deps = [
+    ":D3DCompilerdll"
+  ]
+}
