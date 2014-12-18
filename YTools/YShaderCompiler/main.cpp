@@ -44,15 +44,12 @@ static bool ValidateOptLevel(const char* flagname,
 
 DEFINE_string(input_file, "", "Input Shader File to Compile.");
 DEFINE_string(output_file, "", "Output Shader File Compiled.");
-DEFINE_string(schema_file, "", "Flatbuffer Schema File.");
 DEFINE_string(dep_file, "", "Dependency File.");
 DEFINE_bool(debug, false, "Default shaders to have debug information.");
 DEFINE_int32(opt_level, 3, "Optimization level between -1~3 where -1 is none.");
 
 static const bool input_check =
     gflags::RegisterFlagValidator(&FLAGS_input_file, ValidateExistingFile);
-static const bool schema_check =
-    gflags::RegisterFlagValidator(&FLAGS_schema_file, ValidateExistingFile);
 
 static const bool output_check =
     gflags::RegisterFlagValidator(&FLAGS_output_file, ValidateFlagExists);
@@ -99,7 +96,10 @@ int main(int argc, char** argv) {
   const std::string file_dir =
       YTools::YFileUtils::FilePath::DirPath(FLAGS_input_file);
   const std::string abs_shader_path =
-      YTools::YFileUtils::FilePath::AbsPath(file_dir, file_string);
+      YTools::YFileUtils::FilePath::AbsPath(file_string, file_dir);
+
+  std::cout << "Compiling Shader [" << name_string << "] "
+            << file_string << "..." << std::endl;
 
   // Create Variants Here
   rapidjson::Value& variants = doc["variants"];
@@ -112,46 +112,60 @@ int main(int argc, char** argv) {
   for (rapidjson::Value::ValueIterator variant_iter = variants.Begin();
        variant_iter != variants.End();
        ++variant_iter) {
-    if (!variant_iter->IsNumber()) {
+    if (!variant_iter->IsObject()) {
       std::cerr << "Variant Item expected to be an object." << std::endl;
       return 1;
     }
 
-    rapidjson::Value& variant_name = (*variant_iter)["name"];
-    rapidjson::Value& variant_vs = (*variant_iter)["vertex_shader"];
-    rapidjson::Value& variant_ps = (*variant_iter)["pixel_shader"];
-    rapidjson::Value& variant_target = (*variant_iter)["target"];
-    rapidjson::Value& variant_def = (*variant_iter)["defines"];
-    rapidjson::Value& variant_debug = (*variant_iter)["debug"];
-    rapidjson::Value& variant_optlevel = (*variant_iter)["opt_level"];
+    rapidjson::Value::MemberIterator variant_name =
+        variant_iter->FindMember("name");
+    rapidjson::Value::MemberIterator variant_vs =
+        variant_iter->FindMember("vertex_shader");
+    rapidjson::Value::MemberIterator variant_ps =
+        variant_iter->FindMember("pixel_shader");
+    rapidjson::Value::MemberIterator variant_target =
+        variant_iter->FindMember("target");
+    rapidjson::Value::MemberIterator variant_def =
+        variant_iter->FindMember("defines");
+    rapidjson::Value::MemberIterator variant_debug =
+        variant_iter->FindMember("debug");
+    rapidjson::Value::MemberIterator variant_optlevel =
+        variant_iter->FindMember("opt_level");
 
-    if (!variant_name.IsString()) {
+    if (variant_name == variant_iter->MemberEnd() ||
+        !variant_name->value.IsString()) {
       std::cerr << "No Valid Shader Variant Name Found." << std::endl;
       return 1;
-    } else if (!variant_vs.IsString()) {
+    } else if (variant_vs == variant_iter->MemberEnd() ||
+               !variant_vs->value.IsString()) {
       std::cerr << "No Valid Shader Variant Vertex Shader Found." << std::endl;
       return 1;
-    } else if (!variant_ps.IsString()) {
+    } else if (variant_ps == variant_iter->MemberEnd() ||
+               !variant_ps->value.IsString()) {
       std::cerr << "No Valid Shader Variant Pixel Shader Found." << std::endl;
       return 1;
-    } else if (!variant_target.IsString()) {
+    } else if (variant_target == variant_iter->MemberEnd() ||
+               !variant_target->value.IsString()) {
       std::cerr << "No Valid Shader Variant Target Found." << std::endl;
       return 1;
-    } else if (!variant_def.IsNull() && !variant_def.IsArray()) {
+    } else if (variant_def != variant_iter->MemberEnd() &&
+               !variant_def->value.IsArray()) {
       std::cerr << "Shader Variant \"defines\" must an array." << std::endl;
       return 1;
-    } else if (!variant_debug.IsNull() && !variant_debug.IsBool()) {
+    } else if (variant_debug != variant_iter->MemberEnd() &&
+               !variant_debug->value.IsBool()) {
       std::cerr << "Shader Variant \"debug\" must be a bool." << std::endl;
       return 1;
-    } else if (!variant_optlevel.IsNull() && !variant_optlevel.IsNumber()) {
+    } else if (variant_optlevel != variant_iter->MemberEnd() &&
+               !variant_optlevel->value.IsNumber()) {
       std::cerr << "Shader Variant \"opt_level\" must be an int." << std::endl;
       return 1;
     }
 
     std::vector<YTools::YShaderCompiler::ShaderDefine> defines;
-    if (variant_def.IsArray()) {
-      for (rapidjson::Value::ValueIterator iter = variant_def.Begin();
-           iter != variant_def.End();
+    if (variant_def != variant_iter->MemberEnd()) {
+      for (rapidjson::Value::ValueIterator iter = variant_def->value.Begin();
+           iter != variant_def->value.End();
            ++iter) {
         rapidjson::Value& def_name = (*iter)["name"];
         rapidjson::Value& def_value = (*iter)["value"];
@@ -171,10 +185,11 @@ int main(int argc, char** argv) {
       }
     }
 
-    bool debug = variant_debug.IsBool() ? variant_debug.GetBool() : FLAGS_debug;
+    bool debug = variant_debug != variant_iter->MemberEnd() ?
+                 variant_debug->value.GetBool() : FLAGS_debug;
 
-    int opt_level = variant_optlevel.IsNumber() ?
-                    variant_optlevel.GetInt() : FLAGS_opt_level;
+    int opt_level = variant_optlevel != variant_iter->MemberEnd() ?
+                    variant_optlevel->value.GetInt() : FLAGS_opt_level;
     if (opt_level < -1 || opt_level > 3) {
       std::cerr << "Invalid Optimization Level for Variant: "
                 << opt_level
@@ -184,7 +199,7 @@ int main(int argc, char** argv) {
     YTools::YShaderCompiler::ShaderOpt shader_opt =
         static_cast<YTools::YShaderCompiler::ShaderOpt>(opt_level + 1);
 
-    const char* target_string = variant_target.GetString();
+    const char* target_string = variant_target->value.GetString();
     int major_version = atoi(target_string);
     int minor_version = 0;
     const char* dot_loc = strchr(target_string, '.');
@@ -192,10 +207,14 @@ int main(int argc, char** argv) {
       minor_version = atoi(dot_loc + 1);
     }
 
+    std::cout << "  Compiling Variant: "
+              << variant_name->value.GetString()
+              << std::endl;
+
     // Compile Vertex Shader
     std::vector<uint8_t> vs_output;
     if (!YTools::YShaderCompiler::CompileShader(
-        abs_shader_path, variant_vs.GetString(),
+        abs_shader_path, variant_vs->value.GetString(),
         YTools::YShaderCompiler::kShaderType_VertexShader,
         major_version, minor_version, shader_opt, debug,
         defines.data(), defines.size(),
@@ -207,7 +226,7 @@ int main(int argc, char** argv) {
     // Compile Pixel Shader
     std::vector<uint8_t> ps_output;
     if (!YTools::YShaderCompiler::CompileShader(
-        abs_shader_path, variant_ps.GetString(),
+        abs_shader_path, variant_ps->value.GetString(),
         YTools::YShaderCompiler::kShaderType_PixelShader,
         major_version, minor_version, shader_opt, debug,
         defines.data(), defines.size(),
@@ -216,10 +235,9 @@ int main(int argc, char** argv) {
       return 1;
     }
 
-
     variant_offsets.push_back(YEngine::CreateVariant(
         fbb,
-        fbb.CreateString(variant_name.GetString()),
+        fbb.CreateString(variant_name->value.GetString()),
         fbb.CreateVector(vs_output),
         fbb.CreateVector(ps_output)));
   }

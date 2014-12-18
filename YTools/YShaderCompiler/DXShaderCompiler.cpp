@@ -79,8 +79,11 @@ class DXIncludeData : public ID3DInclude {
     std::pair<const void*, std::string>& top = mWorkDirStack.top();
     (void) pData;
     (void) top;
-    YASSERT(top.first == pData,
-            "DXIncludeData Open/Close mismatch.");
+    if (top.first != pData) {
+      std::cerr << "DXIncludeData Open/Close mismatch." << std::endl;
+      return E_FAIL;
+    }
+
     mWorkDirStack.pop();
     return S_OK;
   }
@@ -98,9 +101,8 @@ bool DXShaderCompiler::CompileShader(const std::string& source_file,
                                      size_t num_defines,
                                      std::vector<uint8_t>& output,
                                      YFileUtils::FileEnv* file_env) {
-  std::string work_dir = YFileUtils::FilePath::GetCurrentWorkingDirectory();
-  std::string abspath = YFileUtils::FilePath::AbsPath(source_file, work_dir);
-  const std::vector<uint8_t>* source_data = GetFileData(abspath, file_env);
+  std::string work_dir = YFileUtils::FilePath::DirPath(source_file);
+  const std::vector<uint8_t>* source_data = GetFileData(source_file, file_env);
 
   std::vector<D3D_SHADER_MACRO> macros;
   for (size_t i = 0; i < num_defines; ++i) {
