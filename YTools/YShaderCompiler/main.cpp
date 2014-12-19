@@ -42,6 +42,7 @@ static bool ValidateOptLevel(const char* flagname,
   return false;
 }
 
+DEFINE_bool(verbose, false, "Verbose Output");
 DEFINE_string(input_file, "", "Input Shader File to Compile.");
 DEFINE_string(output_file, "", "Output Shader File Compiled.");
 DEFINE_string(dep_file, "", "Dependency File.");
@@ -98,8 +99,10 @@ int main(int argc, char** argv) {
   const std::string abs_shader_path =
       YTools::YFileUtils::FilePath::AbsPath(file_string, file_dir);
 
-  std::cout << "Compiling Shader [" << name_string << "] "
-            << file_string << "..." << std::endl;
+  if (FLAGS_verbose) {
+    std::cout << "Compiling Shader [" << name_string << "] "
+              << file_string << "..." << std::endl;
+  }
 
   // Create Variants Here
   rapidjson::Value& variants = doc["variants"];
@@ -207,9 +210,11 @@ int main(int argc, char** argv) {
       minor_version = atoi(dot_loc + 1);
     }
 
-    std::cout << "  Compiling Variant: "
-              << variant_name->value.GetString()
-              << std::endl;
+    if (FLAGS_verbose) {
+      std::cout << "  Compiling Variant: "
+                << variant_name->value.GetString()
+                << std::endl;
+    }
 
     // Compile Vertex Shader
     std::vector<uint8_t> vs_output;
