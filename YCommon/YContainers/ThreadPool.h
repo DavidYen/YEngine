@@ -10,9 +10,11 @@ namespace YCommon { namespace YContainers {
 
 class ThreadPool {
  public:
+  ThreadPool();
   ThreadPool(size_t num_threads, void* buffer, size_t buffer_size);
   ~ThreadPool();
 
+  void Initialize(size_t num_threads, void* buffer, size_t buffer_size);
   bool EnqueueRun(YPlatform::ThreadRoutine thread_routine, void* thread_args);
 
   bool Start();

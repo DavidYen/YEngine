@@ -16,9 +16,29 @@ void ThreadPool::ThreadData::Initialize(size_t num_threads, void* buffer,
                        buffer_size / sizeof(ThreadPool::ThreadData::RunArgs));
 }
 
+ThreadPool::ThreadPool()
+    : mThreads(NULL),
+      mNumThreads(0) {
+}
+
 ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
     : mThreads(NULL),
       mNumThreads(0) {
+  Initialize(num_threads, buffer, buffer_size);
+}
+
+ThreadPool::~ThreadPool() {
+  Stop();
+
+  const size_t num_threads = mNumThreads;
+  for (size_t i = 0; i < num_threads; ++i) {
+    // Explicitly call destructor for placement new.
+    mThreads[i].~Thread();
+  }
+}
+
+void ThreadPool::Initialize(size_t num_threads,
+                            void* buffer, size_t buffer_size) {
   const size_t thread_size = sizeof(YPlatform::Thread) * num_threads;
   YASSERT(buffer_size > thread_size,
           "Buffer size is not big enough to contain ThreadPool");
@@ -32,16 +52,6 @@ ThreadPool::ThreadPool(size_t num_threads, void* buffer, size_t buffer_size)
   mThreadData.Initialize(num_threads,
                          static_cast<uint8_t*>(buffer) + thread_size,
                          buffer_size - thread_size);
-}
-
-ThreadPool::~ThreadPool() {
-  Stop();
-
-  const size_t num_threads = mNumThreads;
-  for (size_t i = 0; i < num_threads; ++i) {
-    // Explicitly call destructor for placement new.
-    mThreads[i].~Thread();
-  }
 }
 
 bool ThreadPool::EnqueueRun(YPlatform::ThreadRoutine thread_routine,
