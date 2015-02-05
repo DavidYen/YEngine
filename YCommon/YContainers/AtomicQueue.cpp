@@ -105,6 +105,7 @@ size_t AtomicQueue::CurrentSize() const {
   const uint64_t cur_tail = mTail;
   MemoryBarrier();
 
+  const uint64_t size = static_cast<uint64_t>(mItemSize);
   const uint64_t cur_head_num = GET_NUM(cur_head);
   const uint64_t cur_tail_num = GET_NUM(cur_tail);
 
@@ -112,10 +113,10 @@ size_t AtomicQueue::CurrentSize() const {
     // Empty if the counters match, full otherwise.
     return (cur_head == cur_tail) ? 0 : mItemSize;
   } else if (cur_tail_num > cur_head_num) {
-    return (cur_tail_num - cur_head_num) / mItemSize;
+    return static_cast<size_t>((cur_tail_num - cur_head_num) / size);
   } else {
-    const uint64_t looped_tail = cur_tail_num + (mItemSize * mNumItems);
-    return (looped_tail - cur_head_num) / mItemSize;
+    const uint64_t looped_tail = cur_tail_num + (size * mNumItems);
+    return static_cast<size_t>((looped_tail - cur_head_num) / size);
   }
 }
 
