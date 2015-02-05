@@ -6,10 +6,23 @@
 
 #include "AtomicQueue.h"
 
+/***********************
+* ThreadPool handles a number of threads and allows someone to
+*   enqueue thread routines.
+*
+*   - Space Requirements: sizeof(YPlatform::Thread) * NUM_THREADS +
+*                         sizeof(YThread::RunArgs) * QUEUE_SIZE
+************************/
+
 namespace YCommon { namespace YContainers {
 
 class ThreadPool {
  public:
+  struct RunArgs {
+    YPlatform::ThreadRoutine thread_routine;
+    void* thread_args;
+  };
+
   ThreadPool();
   ThreadPool(size_t num_threads, void* buffer, size_t buffer_size);
   ~ThreadPool();
@@ -20,6 +33,10 @@ class ThreadPool {
   bool Start();
   bool Pause();
   bool Stop(size_t milliseconds = -1);
+
+  // Will wait till no jobs are running, only valid for Stopped or Pause states.
+  // Will immediately return false if not Stopped or Paused.
+  bool Join(size_t milliseconds = -1);
 
   bool Running() const {
     return mThreadData.mRunState == ThreadData::kRunState_Running;
@@ -41,7 +58,9 @@ class ThreadPool {
   size_t mNumThreads;
 
   struct ThreadData {
-    ThreadData() : mRunState(kRunState_Invalid) {}
+    ThreadData()
+      : mRunState(kRunState_Invalid),
+        mThreadsRunning(0) {}
 
     void Initialize(size_t num_threads, void* buffer, size_t buffer_size);
 
@@ -54,12 +73,9 @@ class ThreadPool {
     } mRunState;
 
     YPlatform::Semaphore mSemaphore;
-
-    struct RunArgs {
-      YPlatform::ThreadRoutine thread_routine;
-      void* thread_args;
-    };
+    YPlatform::Semaphore mParentSemaphore;
     TypedAtomicQueue<RunArgs> mRunQueue;
+    volatile uint32_t mThreadsRunning;
   } mThreadData;
 };
 
@@ -71,7 +87,7 @@ class ContainedThreadPool : public ThreadPool {
 
  private:
   uint8_t mBuffer[sizeof(YPlatform::Thread) * NUM_THREADS +
-                  sizeof(ThreadData::RunArgs) * QUEUE_SIZE];
+                  sizeof(ThreadPool::RunArgs) * QUEUE_SIZE];
 };
 
 }} // namespace YCommon { namespace YContainers {

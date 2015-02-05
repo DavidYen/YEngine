@@ -5,6 +5,7 @@
 
 #include <YCommon/Headers/Atomics.h>
 #include <YCommon/YPlatform/Semaphore.h>
+#include <YCommon/YPlatform/Timer.h>
 
 namespace YCommon { namespace YContainers {
 
@@ -12,27 +13,27 @@ struct IncrementArg {
   volatile uint32_t* num;
 };
 
-uintptr_t IncrementRoutine(void* arg) {
+static uintptr_t IncrementRoutine(void* arg) {
   volatile uint32_t* num = static_cast<IncrementArg*>(arg)->num;
   AtomicAdd32(num, 1);
 
   return 0;
 }
 
-uintptr_t ReleaseSemaphoreRoutine(void* arg) {
+static uintptr_t ReleaseSemaphoreRoutine(void* arg) {
   YPlatform::Semaphore* semaphore = static_cast<YPlatform::Semaphore*>(arg);
   semaphore->Release();
   return 0;
 }
 
-uintptr_t ReleaseWaitSemaphoreRoutine(void* arg) {
+static uintptr_t ReleaseWaitSemaphoreRoutine(void* arg) {
   YPlatform::Semaphore* semaphore = static_cast<YPlatform::Semaphore*>(arg);
   semaphore->Release();
   semaphore->Wait();
   return 0;
 }
 
-uintptr_t WaitSemaphoreRoutine(void* arg) {
+static uintptr_t WaitSemaphoreRoutine(void* arg) {
   YPlatform::Semaphore* semaphore = static_cast<YPlatform::Semaphore*>(arg);
   semaphore->Wait();
   return 0;
@@ -187,6 +188,54 @@ TEST(BasicThreadPoolTest, StartStopFailTest) {
   semaphore1.Release();
   ASSERT_TRUE(thread_pool.Stop(50));
   EXPECT_EQ(10, num);
+}
+
+TEST(BasicThreadPoolTest, PauseJoinTest) {
+  YPlatform::Semaphore semaphore(0, 1);
+  ContainedThreadPool<2, 10> thread_pool;
+
+  ASSERT_TRUE(thread_pool.Start());
+  EXPECT_FALSE(thread_pool.Join(0));
+
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore));
+  ASSERT_TRUE(semaphore.Wait(50));
+  ASSERT_TRUE(thread_pool.Pause());
+
+  YPlatform::Timer test_timer;
+  test_timer.Start();
+  EXPECT_FALSE(thread_pool.Join(100));
+  test_timer.Pulse();
+
+  EXPECT_LE(95, test_timer.GetPulsedTimeMilli());
+  EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
+
+  // Releasing the semaphore should let the join succeed.
+  semaphore.Release();
+  EXPECT_TRUE(thread_pool.Join(50));
+}
+
+TEST(BasicThreadPoolTest, StopJoinTest) {
+  YPlatform::Semaphore semaphore(0, 1);
+  ContainedThreadPool<2, 10> thread_pool;
+
+  ASSERT_TRUE(thread_pool.Start());
+  EXPECT_FALSE(thread_pool.Join(0));
+
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore));
+  ASSERT_TRUE(semaphore.Wait(50));
+  thread_pool.Stop(0);
+
+  YPlatform::Timer test_timer;
+  test_timer.Start();
+  EXPECT_FALSE(thread_pool.Join(100));
+  test_timer.Pulse();
+
+  EXPECT_LE(95, test_timer.GetPulsedTimeMilli());
+  EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
+
+  // Releasing the semaphore should let the join succeed.
+  semaphore.Release();
+  EXPECT_TRUE(thread_pool.Join(50));
 }
 
 }} // namespace YCommon { namespace YContainers {

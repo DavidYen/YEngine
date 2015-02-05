@@ -11,9 +11,11 @@ void ThreadPool::ThreadData::Initialize(size_t num_threads, void* buffer,
   mRunState = kRunState_Stopped;
   mSemaphore.Initialize(static_cast<int>(num_threads),
                         static_cast<int>(num_threads));
-  mRunQueue.Initialize(static_cast<ThreadPool::ThreadData::RunArgs*>(buffer),
+  mParentSemaphore.Initialize(0, 1);
+  mRunQueue.Initialize(static_cast<ThreadPool::RunArgs*>(buffer),
                        buffer_size,
-                       buffer_size / sizeof(ThreadPool::ThreadData::RunArgs));
+                       buffer_size / sizeof(ThreadPool::RunArgs));
+  mThreadsRunning = 0;
 }
 
 ThreadPool::ThreadPool()
@@ -44,7 +46,7 @@ void ThreadPool::Initialize(size_t num_threads,
           "Buffer size is not big enough to contain ThreadPool");
 
   YASSERT(((buffer_size - thread_size) /
-            sizeof(ThreadPool::ThreadData::RunArgs)) > 0,
+            sizeof(ThreadPool::RunArgs)) > 0,
           "Number of run arguments must be greater than 0");
 
   mThreads = new (buffer) YPlatform::Thread[num_threads];
@@ -56,13 +58,14 @@ void ThreadPool::Initialize(size_t num_threads,
 
 bool ThreadPool::EnqueueRun(YPlatform::ThreadRoutine thread_routine,
                             void* thread_args) {
-  ThreadData::RunArgs run_args = {
+  RunArgs run_args = {
     thread_routine,
     thread_args,
   };
   if (mThreadData.mRunQueue.Enqueue(run_args)) {
-    if (mThreadData.mRunState == ThreadData::kRunState_Running)
+    if (mThreadData.mRunState == ThreadData::kRunState_Running) {
       mThreadData.mSemaphore.Release();
+    }
     return true;
   }
 
@@ -106,32 +109,64 @@ bool ThreadPool::Stop(size_t milliseconds) {
   const size_t num_threads = mNumThreads;
   mThreadData.mSemaphore.Release(static_cast<int>(num_threads));
 
-  if (milliseconds == static_cast<size_t>(-1)) {
-    for (size_t i = 0; i < num_threads; ++i) {
-      mThreads[i].Join();
-    }
-  } else {
-    YPlatform::Timer timer;
-    timer.Start();
+  return Join(milliseconds);
+}
 
-    const uint64_t milli64 = static_cast<uint64_t>(milliseconds);
-    for (size_t i = 0; i < num_threads; ++i) {
-      timer.Pulse();
-      const uint64_t waited = timer.GetPulsedTimeMilli();
-      if (waited >= milli64 ||
-          !mThreads[i].Join(static_cast<size_t>(milli64 - waited))) {
-        return false;
+bool ThreadPool::Join(size_t milliseconds) {
+  const uint64_t milli64 = static_cast<uint64_t>(milliseconds);
+  if (mThreadData.mRunState == ThreadData::kRunState_Stopped) {
+    const size_t num_threads = mNumThreads;
+    if (milliseconds == static_cast<size_t>(-1)) {
+      for (size_t i = 0; i < num_threads; ++i) {
+        mThreads[i].Join();
+      }
+    } else {
+      YPlatform::Timer timer;
+      timer.Start();
+
+      for (size_t i = 0; i < num_threads; ++i) {
+        timer.Pulse();
+        const uint64_t waited = timer.GetPulsedTimeMilli();
+        if (waited >= milli64 ||
+            !mThreads[i].Join(static_cast<size_t>(milli64 - waited))) {
+          return false;
+        }
       }
     }
+    return true;
+  } else if (mThreadData.mRunState == ThreadData::kRunState_Paused) {
+    if (milliseconds == static_cast<size_t>(-1)) {
+      while (mThreadData.mThreadsRunning) {
+        MemoryBarrier();
+        mThreadData.mParentSemaphore.Wait();
+      }
+    } else {
+      YPlatform::Timer timer;
+      timer.Start();
+
+      while (mThreadData.mThreadsRunning) {
+        MemoryBarrier();
+        timer.Pulse();
+        const uint64_t waited = timer.GetPulsedTimeMilli();
+        if (waited >= milli64) {
+          return false;
+        }
+
+        const size_t to_wait = milliseconds - static_cast<size_t>(waited);
+        mThreadData.mParentSemaphore.Wait(to_wait);
+      }
+    }
+    return true;
   }
 
-  return true;
+  // Invalid Run State
+  return false;
 }
 
 uintptr_t ThreadPool::ThreadPoolThread(void* arg) {
   ThreadData* thread_data = static_cast<ThreadData*>(arg);
 
-  ThreadData::RunArgs run_arg;
+  RunArgs run_arg;
   for (;;) {
     const ThreadData::RunState run_state = thread_data->mRunState;
     MemoryBarrier();
@@ -140,7 +175,10 @@ uintptr_t ThreadPool::ThreadPoolThread(void* arg) {
       break;
     } else if (run_state == ThreadData::kRunState_Running &&
                thread_data->mRunQueue.Dequeue(run_arg)) {
+      AtomicAdd32(&thread_data->mThreadsRunning, 1);
       run_arg.thread_routine(run_arg.thread_args);
+      AtomicAdd32(&thread_data->mThreadsRunning, static_cast<uint32_t>(-1));
+      thread_data->mParentSemaphore.Release();
       continue;
     }
 
