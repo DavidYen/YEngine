@@ -28,6 +28,8 @@ template("visual_studio_config") {
       "/WX", # Treat warnings as errors
       "/errorReport:prompt", # Prompt errors immediately
       "/GR-", # No rtti
+      "/wd4127", # Constant condition expression
+      "/wd4324", # Structure was padded due to __declspec(align())
     ]
 
     defines += [

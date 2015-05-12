@@ -165,7 +165,6 @@ if (os =="win") {
 ##################
 _compiler_configs = [
   "//build/config/compiler/${compiler}:compiler",
-  "//build/config/gfx/${gfx}:gfx",
   "//build/config/platform/${os}:platform",
   "//build/config/compiler:default_include_dirs",
 ]

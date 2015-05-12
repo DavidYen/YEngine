@@ -9,6 +9,6 @@ config("gfx") {
   ]
 
   include_dirs = [
-    "/\"${dx9_path}/Include\"",
+    "/${dx9_path}/Include",
   ]
 }
