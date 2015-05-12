@@ -11,6 +11,8 @@ static_library("YContainers") {
     "CommandTree.h",
     "HashTable.h",
     "HashTable.cpp",
+    "MemBuffer.cpp",
+    "MemBuffer.h",
     "ThreadPool.cpp",
     "ThreadPool.h",
   ]

@@ -42,7 +42,6 @@ class CommandTree {
       mNumDependencies = 1;
       mDependencies[0] = dep_index;
     }
-
   };
   void ConstructTree(uint32_t num_nodes, const TreeConstructorNode* nodes);
 
