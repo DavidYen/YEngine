@@ -22,14 +22,14 @@ struct Pixel_F32 {
   float data;
 };
 
-const size_t kPixelFormatSize[] = {
+static const size_t kPixelFormatSize[] = {
   sizeof(Pixel_A8R8G8B8), // kPixelFormat_A8R8G8B8,
   sizeof(Pixel_F32),      // kPixelFormat_F32,
 };
 static_assert(ARRAY_SIZE(kPixelFormatSize) == NUM_PIXEL_FORMATS,
               "kPixelFormatSize must be defined for every pixel format.");
 
-const char* kPixelFormatNames[] = {
+static const char* kPixelFormatNames[] = {
   "A8R8G8B8", // kPixelFormat_A8R8G8B8,
   "F32",      // kPixelFormat_F32,
 };

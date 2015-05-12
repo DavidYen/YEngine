@@ -3,12 +3,14 @@ static_library("YRenderDevice") {
   sources = [
     "DrawPrimitive.h",
     "PixelFormat.h",
+    "RenderBlendState.h",
     "RenderDevice.h",
+    "SamplerState.h",
     "VertexDeclElement.h",
     "VertexFormat.h",
   ]
 
-  if (is_win) {
+  if (gfx == "dx9") {
     sources += [
       "RenderDevice_DX9.cpp",
     ]
@@ -17,5 +19,9 @@ static_library("YRenderDevice") {
   deps = [
     "//YCommon/YContainers",
     "//YCommon/YUtils",
+  ]
+
+  configs += [
+    "//build/config/gfx/${gfx}:gfx",
   ]
 }

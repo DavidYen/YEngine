@@ -11,15 +11,19 @@ namespace YCommon { namespace YPlatform {
 
 namespace YEngine { namespace YRenderDevice {
 
+typedef uint8_t RenderBlendStateID;
 typedef uint8_t RenderTargetID;
 typedef uint8_t VertexDeclID;
 typedef uint8_t VertexShaderID;
 typedef uint8_t PixelShaderID;
+typedef uint8_t SamplerStateID;
 typedef uint16_t TextureID;
 typedef uint16_t VertexBufferID;
 typedef uint16_t IndexBufferID;
 typedef uint16_t ConstantBufferID;
 
+struct RenderBlendState;
+struct SamplerState;
 struct VertexDeclElement;
 
 enum UsageType {
@@ -44,6 +48,7 @@ namespace RenderDevice {
   TextureID GetRenderTargetTexture(RenderTargetID render_target);
 
   // Creates
+  RenderBlendStateID CreateRenderBlendState(const RenderBlendState& state);
   RenderTargetID CreateRenderTarget(uint32_t width, uint32_t height,
                                     PixelFormat format);
   VertexDeclID CreateVertexDeclaration(VertexDeclElement* elements,
@@ -51,6 +56,7 @@ namespace RenderDevice {
   VertexShaderID CreateVertexShader(const void* shader_data,
                                     size_t shader_size);
   PixelShaderID CreatePixelShader(const void* shader_data, size_t shader_size);
+  SamplerStateID CreateSamplerState(const SamplerState& state);
   TextureID CreateTexture(UsageType type, uint32_t width, uint32_t height,
                           uint32_t mips, PixelFormat format,
                           void* buffer = NULL, size_t buffer_size = 0);
@@ -90,10 +96,12 @@ namespace RenderDevice {
   uint32_t GetIndexBufferCount(IndexBufferID index_buffer);
 
   // Releases
+  void ReleaseRenderBlendState(RenderBlendStateID state);
   void ReleaseRenderTarget(RenderTargetID render_target);
   void ReleaseVertexDeclaration(VertexDeclID vertex_decl);
   void ReleaseVertexShader(VertexShaderID shader);
   void ReleasePixelShader(PixelShaderID shader);
+  void ReleaseSamplerState(SamplerStateID state);
   void ReleaseTexture(TextureID texture);
   void ReleaseVertexBuffer(VertexBufferID vertex_buffer);
   void ReleaseIndexBuffer(IndexBufferID index_buffer);
@@ -103,10 +111,12 @@ namespace RenderDevice {
   void ActivateViewPort(uint32_t top, uint32_t left,
                         uint32_t width, uint32_t height,
                         float min_z, float max_z);
+  void ActivateRenderBlendState(RenderBlendStateID blend_state);
   void ActivateRenderTarget(int target, RenderTargetID render_target);
   void ActivateVertexDeclaration(VertexDeclID vertex_decl);
   void ActivateVertexShader(VertexShaderID shader);
   void ActivatePixelShader(PixelShaderID shader);
+  void ActivateSamplerState(int sampler, SamplerStateID sampler_state);
   void ActivateTexture(int sampler, TextureID texture);
   void ActivateVertexStream(uint32_t stream, VertexBufferID vertex_buffer);
   void ActivateIndexStream(IndexBufferID index_buffer);

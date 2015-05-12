@@ -10,9 +10,13 @@
 #include <YCommon/Headers/Atomics.h>
 #include <YCommon/Headers/Macros.h>
 
+#include "RenderBlendState.h"
+#include "SamplerState.h"
 #include "VertexDeclElement.h"
 
 #define NULL_RENDER_TARGET static_cast<RenderTargetID>(-1)
+#define MAX_RENDER_BLEND_STATES 12
+#define MAX_SAMPLER_STATES 24
 #define MAX_ELEMENTS_PER_VERTEX 24
 #define MAX_STREAM_SOURCES 2
 #define MAX_NUM_SURFACES 12
@@ -77,6 +81,63 @@ namespace {
   uint64_t gMemorySize = 0;
   volatile uint64_t gUsedMemory = 0;
 
+  const D3DBLEND kRenderBlendStates[] = {
+    D3DBLEND_ZERO,         // kRenderBlend_Zero,
+    D3DBLEND_ONE,          // kRenderBlend_One,
+    D3DBLEND_SRCCOLOR,     // kRenderBlend_SrcColor,
+    D3DBLEND_INVSRCCOLOR,  // kRenderBlend_InvSrcColor,
+    D3DBLEND_DESTCOLOR,    // kRenderBlend_DestColor,
+    D3DBLEND_INVDESTCOLOR, // kRenderBlend_InvDestColor
+    D3DBLEND_SRCALPHA,     // kRenderBlend_SrcAlpha,
+    D3DBLEND_INVSRCALPHA,  // kRenderBlend_InvSrcAlpha,
+    D3DBLEND_DESTALPHA,    // kRenderBlend_DestAlpha,
+    D3DBLEND_INVDESTALPHA, // kRenderBlend_InvDestAlpha,
+  };
+  static_assert(ARRAY_SIZE(kRenderBlendStates) == NUM_RENDER_BLENDS,
+                "Render Blend state translation must match.");
+
+  const D3DBLENDOP kRenderBlendOps[] = {
+    D3DBLENDOP_ADD,         // kRenderBlendOp_Add,
+    D3DBLENDOP_SUBTRACT,    // kRenderBlendOp_Subtract,
+    D3DBLENDOP_REVSUBTRACT, // kRenderBlendOp_RevSubtract,
+    D3DBLENDOP_MIN,         // kRenderBlendOp_Min,
+    D3DBLENDOP_MAX,         // kRenderBlendOp_Max,
+  };
+  static_assert(ARRAY_SIZE(kRenderBlendOps) == NUM_RENDER_BLEND_OPS,
+                "Render blend op translation must match.");
+
+  struct SamplerFilterState {
+    D3DTEXTUREFILTERTYPE min_filter;
+    D3DTEXTUREFILTERTYPE mag_filter;
+    D3DTEXTUREFILTERTYPE mip_filter;
+  };
+  const SamplerFilterState kSamplerFilterStates[] = {
+    // kSamplerFilter_MinMagMipPoint,
+    { D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT },
+    // kSamplerFilter_MinPoint_MagMipLinear,
+    { D3DTEXF_POINT, D3DTEXF_LINEAR, D3DTEXF_LINEAR },
+    // kSamplerFilter_MinLinear_MagMipPoint,
+    { D3DTEXF_LINEAR, D3DTEXF_POINT, D3DTEXF_POINT },
+    // kSamplerFilter_MinLinear_MagPoint_MipLinear,
+    { D3DTEXF_LINEAR, D3DTEXF_POINT, D3DTEXF_LINEAR },
+    // kSamplerFilter_MinMagLinear_MipPoint,
+    { D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_POINT },
+    // kSamplerFilter_MinMagMipLinear,
+    { D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_LINEAR },
+    // kSamplerFilter_Anisotropic,
+    { D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC },
+  };
+  static_assert(ARRAY_SIZE(kSamplerFilterStates) == NUM_SAMPLER_FILTERS,
+                "Sampler Filter State translation must match.");
+
+  const D3DTEXTUREADDRESS kSamplerAddressModes[] = {
+    D3DTADDRESS_WRAP,   // kSamplerAddressMode_Wrap,
+    D3DTADDRESS_MIRROR, // kSamplerAddressMode_Mirror,
+    D3DTADDRESS_CLAMP,  // kSamplerAddressMode_Clamp,
+  };
+  static_assert(ARRAY_SIZE(kSamplerAddressModes) == NUM_SAMPLER_ADDRESS_MODES,
+                "Sampler Address Mode translation must match.");
+
   const D3DFORMAT kTextureFormats[] = {
     D3DFMT_A8R8G8B8, // kPixelFormat_A8R8G8B8,
     D3DFMT_R32F,     // kPixelFormat_F32,
@@ -135,6 +196,26 @@ namespace {
   };
   static_assert(ARRAY_SIZE(kVertexElementUsages) == NUM_VERTEX_ELEMENT_USAGES,
                 "Number of vertex element usages must match.");
+
+  // Render Blend State
+  struct InternalRenderBlendState {
+    RenderBlendState state_data;
+    void Init() {}
+    void Release() {}
+  };
+  DataArray<InternalRenderBlendState,
+            RenderBlendStateID,
+            MAX_RENDER_BLEND_STATES> gRenderBlendStates;
+
+  // Sampler State
+  struct InternalSamplerState {
+    SamplerState state_data;
+    void Init() {}
+    void Release() {}
+  };
+  DataArray<InternalSamplerState,
+            SamplerStateID,
+            MAX_SAMPLER_STATES> gSamplerStates;
 
   // Texture Data
   struct TextureData {
@@ -400,6 +481,33 @@ TextureID RenderDevice::GetRenderTargetTexture(RenderTargetID render_target) {
 }
 
 // Creates
+RenderBlendStateID RenderDevice::CreateRenderBlendState(
+    const RenderBlendState& state) {
+  YASSERT(state.source >= 0 && state.source < NUM_RENDER_BLENDS,
+          "Invalid Render Blend source: %d", static_cast<int>(state.source));
+  YASSERT(state.dest >= 0 && state.dest < NUM_RENDER_BLENDS,
+          "Invalid Render Blend dest: %d", static_cast<int>(state.dest));
+  YASSERT(state.blend_op >= 0 && state.blend_op < NUM_RENDER_BLEND_OPS,
+          "Invalid Render Blend dest: %d", static_cast<int>(state.dest));
+  YASSERT(state.alpha_source >= 0 && state.alpha_source < NUM_RENDER_BLENDS,
+          "Invalid Alpha Render Blend source: %d",
+          static_cast<int>(state.alpha_source));
+  YASSERT(state.alpha_dest >= 0 && state.alpha_dest < NUM_RENDER_BLENDS,
+          "Invalid Alpha Render Blend dest: %d",
+          static_cast<int>(state.alpha_dest));
+  YASSERT(state.alpha_blend_op >= 0 &&
+          state.alpha_blend_op < NUM_RENDER_BLEND_OPS,
+          "Invalid Alpha Render Blend dest: %d",
+          static_cast<int>(state.alpha_blend_op));
+
+  const RenderBlendStateID state_id = gRenderBlendStates.AllocateID();
+  YASSERT(state_id != static_cast<RenderBlendStateID>(-1),
+          "Maximum number of render blend states reached.");
+
+  gRenderBlendStates[state_id].state_data = state;
+  return state_id;
+}
+
 RenderTargetID RenderDevice::CreateRenderTarget(uint32_t width, uint32_t height,
                                                 PixelFormat format) {
   YASSERT(format > 0 && format < ARRAY_SIZE(kTextureFormats),
@@ -538,6 +646,25 @@ PixelShaderID RenderDevice::CreatePixelShader(const void* shader_data,
   (void) hr;
 
   return shader_id;
+}
+
+SamplerStateID RenderDevice::CreateSamplerState(const SamplerState& state) {
+  YASSERT(state.filter >= 0 && state.filter < NUM_SAMPLER_FILTERS,
+          "Invalid Sampler Filter: %d", static_cast<int>(state.filter));
+  YASSERT(state.address_mode_u >= 0 &&
+          state.address_mode_u < NUM_SAMPLER_ADDRESS_MODES,
+          "Invalid Sampler Address Mode U: %d",
+          static_cast<int>(state.address_mode_u));
+
+
+
+
+  const SamplerStateID state_id = gSamplerStates.AllocateID();
+  YASSERT(state_id != static_cast<SamplerStateID>(-1),
+          "Maximum number of sampler states reached.");
+
+  gSamplerStates[state_id].state_data = state;
+  return state_id;
 }
 
 TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
@@ -1149,6 +1276,49 @@ void RenderDevice::ActivateViewPort(uint32_t top, uint32_t left,
   (void) hr;
 }
 
+void RenderDevice::ActivateRenderBlendState(RenderBlendStateID blend_state) {
+  YASSERT(blend_state < ARRAY_SIZE(gRenderBlendStates.used) &&
+          gRenderBlendStates.used[blend_state],
+          "Activating Invalid Blend State ID: %d",
+          static_cast<int>(blend_state));
+
+  const RenderBlendState& state = gRenderBlendStates[blend_state].state_data;
+  HRESULT hr = E_FAIL;
+  (void) hr;
+
+  hr = gD3DDevice->SetRenderState(D3DRS_SRCBLEND,
+                                  kRenderBlendStates[state.source]);
+  YASSERT(hr == D3D_OK, "Could not set render source blend.");
+
+  hr = gD3DDevice->SetRenderState(D3DRS_DESTBLEND,
+                                  kRenderBlendStates[state.dest]);
+  YASSERT(hr == D3D_OK, "Could not set render dest blend.");
+
+  hr = gD3DDevice->SetRenderState(D3DRS_BLENDOP,
+                                  kRenderBlendOps[state.blend_op]);
+  YASSERT(hr == D3D_OK, "Could not set render blend op.");
+
+  if (state.source == state.alpha_source && state.dest == state.alpha_dest) {
+    hr = gD3DDevice->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+    YASSERT(hr == D3D_OK, "Could not set render blend alpha disabled.");
+  } else {
+    hr = gD3DDevice->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
+    YASSERT(hr == D3D_OK, "Could not set render blend alpha enabled.");
+
+    hr = gD3DDevice->SetRenderState(D3DRS_SRCBLEND,
+                                    kRenderBlendStates[state.alpha_source]);
+    YASSERT(hr == D3D_OK, "Could not set render alpha source blend.");
+
+    hr = gD3DDevice->SetRenderState(D3DRS_DESTBLEND,
+                                    kRenderBlendStates[state.alpha_dest]);
+    YASSERT(hr == D3D_OK, "Could not set render alpha dest blend.");
+
+    hr = gD3DDevice->SetRenderState(D3DRS_BLENDOP,
+                                    kRenderBlendOps[state.alpha_blend_op]);
+    YASSERT(hr == D3D_OK, "Could not set render alpha blend op.");
+  }
+}
+
 void RenderDevice::ActivateRenderTarget(int target,
                                         RenderTargetID render_target) {
   HRESULT hr = E_FAIL;
@@ -1217,6 +1387,43 @@ void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
           "Could not activate pixel shader ID %d.",
           static_cast<int>(shader));
   (void) hr;
+}
+
+void RenderDevice::ActivateSamplerState(int sampler,
+                                        SamplerStateID sampler_state) {
+  YASSERT(sampler_state < ARRAY_SIZE(gSamplerStates.used) &&
+          gSamplerStates.used[sampler_state],
+          "Activating Invalid Blend State ID: %d",
+          static_cast<int>(sampler_state));
+
+  const SamplerState& state = gSamplerStates[sampler_state].state_data;
+  const SamplerFilterState& filter_state = kSamplerFilterStates[state.filter];
+  HRESULT hr = E_FAIL;
+  (void) hr;
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_MINFILTER,
+                                   filter_state.min_filter);
+  YASSERT(hr == D3D_OK, "Could not set sampler minification filter.");
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_MAGFILTER,
+                                   filter_state.mag_filter);
+  YASSERT(hr == D3D_OK, "Could not set sampler magnification filter.");
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_MIPFILTER,
+                                   filter_state.mip_filter);
+  YASSERT(hr == D3D_OK, "Could not set sampler mipmap filter.");
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_ADDRESSU,
+                                   kSamplerAddressModes[state.address_mode_u]);
+  YASSERT(hr == D3D_OK, "Could not set sampler address mode u.");
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_ADDRESSV,
+                                   kSamplerAddressModes[state.address_mode_v]);
+  YASSERT(hr == D3D_OK, "Could not set sampler address mode v.");
+
+  hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_ADDRESSW,
+                                   kSamplerAddressModes[state.address_mode_w]);
+  YASSERT(hr == D3D_OK, "Could not set sampler address mode w.");
 }
 
 void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
