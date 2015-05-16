@@ -15,6 +15,7 @@
 #include "VertexDeclElement.h"
 
 #define NULL_RENDER_TARGET static_cast<RenderTargetID>(-1)
+#define MAX_VIEWPORTS 8
 #define MAX_RENDER_BLEND_STATES 12
 #define MAX_SAMPLER_STATES 24
 #define MAX_ELEMENTS_PER_VERTEX 24
@@ -196,6 +197,35 @@ namespace {
   };
   static_assert(ARRAY_SIZE(kVertexElementUsages) == NUM_VERTEX_ELEMENT_USAGES,
                 "Number of vertex element usages must match.");
+
+  // Viewport Data
+  struct ViewPortData {
+    uint32_t top, left, width, height;
+    float min_z, max_z;
+
+    void Init() {
+      top = 0;
+      left = 0;
+      width = 0;
+      height = 0;
+      min_z = 0.0f;
+      max_z = 1.0f;
+    }
+
+    void Release() {}
+
+    void SetData(uint32_t _top, uint32_t _left,
+                 uint32_t _width, uint32_t _height,
+                 float _min_z, float _max_z) {
+      top = _top;
+      left = _left;
+      width = _width;
+      height = _height;
+      min_z = _min_z;
+      max_z = _max_z;
+    }
+  };
+  DataArray<ViewPortData, ViewPortID, MAX_VIEWPORTS> gViewPorts;
 
   // Render Blend State
   struct InternalRenderBlendState {
@@ -481,6 +511,17 @@ TextureID RenderDevice::GetRenderTargetTexture(RenderTargetID render_target) {
 }
 
 // Creates
+ViewPortID RenderDevice::CreateViewPort(uint32_t top, uint32_t left,
+                                        uint32_t width, uint32_t height,
+                                        float min_z, float max_z) {
+  const ViewPortID viewport_id = gViewPorts.AllocateID();
+  YASSERT(viewport_id != static_cast<ViewPortID>(-1),
+          "Maximum number of viewports reached.");
+
+  gViewPorts[viewport_id].SetData(top, left, width, height, min_z, max_z);
+  return viewport_id;
+}
+
 RenderBlendStateID RenderDevice::CreateRenderBlendState(
     const RenderBlendState& state) {
   YASSERT(state.source >= 0 && state.source < NUM_RENDER_BLENDS,
@@ -881,6 +922,15 @@ ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type, size_t size,
 }
 
 // Modifiers
+void RenderDevice::SetViewPort(ViewPortID viewport,
+                               uint32_t top, uint32_t left,
+                               uint32_t width, uint32_t height,
+                               float min_z, float max_z) {
+  YASSERT(viewport < ARRAY_SIZE(gViewPorts.used) && gViewPorts.used[viewport],
+          "Setting Invalid View Port ID: %d.", static_cast<int>(viewport));
+  gViewPorts[viewport].SetData(top, left, width, height, min_z, max_z);
+}
+
 void RenderDevice::FillTexture(TextureID texture, void* buffer, size_t size) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Filling Invalid Texture ID: %d.", static_cast<int>(texture));
@@ -1157,6 +1207,22 @@ void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
 }
 
 // Accessors
+void RenderDevice::GetViewPort(ViewPortID viewport,
+                               uint32_t& top, uint32_t& left,
+                               uint32_t& width, uint32_t& height,
+                               float& min_z, float& max_z) {
+  YASSERT(viewport < ARRAY_SIZE(gViewPorts.used) && gViewPorts.used[viewport],
+          "Getting Invalid View Port ID: %d.", static_cast<int>(viewport));
+
+  const ViewPortData& viewport_data = gViewPorts[viewport];
+  top = viewport_data.top;
+  left = viewport_data.left;
+  width = viewport_data.width;
+  height = viewport_data.height;
+  min_z = viewport_data.min_z;
+  max_z = viewport_data.max_z;
+}
+
 uint32_t RenderDevice::GetVertexBufferCount(VertexBufferID vertex_buffer) {
   YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
           gVertexBuffers.used[vertex_buffer],
@@ -1176,6 +1242,12 @@ uint32_t RenderDevice::GetIndexBufferCount(IndexBufferID index_buffer) {
 }
 
 // Releases
+void RenderDevice::ReleaseViewPort(ViewPortID viewport) {
+  YASSERT(viewport < ARRAY_SIZE(gViewPorts.used) && gViewPorts.used[viewport],
+          "Releasing Invalid View Port ID: %d.", static_cast<int>(viewport));
+  gViewPorts.ReleaseID(viewport);
+}
+
 void RenderDevice::ReleaseRenderTarget(RenderTargetID render_target) {
   YASSERT(render_target < ARRAY_SIZE(gSurfaces.used) &&
           gSurfaces.used[render_target],
@@ -1253,20 +1325,22 @@ void RenderDevice::ReleaseConstantBuffer(ConstantBufferID constant_buffer) {
 }
 
 // Activations
-void RenderDevice::ActivateViewPort(uint32_t top, uint32_t left,
-                                    uint32_t width, uint32_t height,
-                                    float min_z, float max_z) {
+void RenderDevice::ActivateViewPort(ViewPortID viewport) {
+  YASSERT(viewport < ARRAY_SIZE(gViewPorts.used) && gViewPorts.used[viewport],
+          "Releasing Invalid View Port ID: %d.", static_cast<int>(viewport));
+
+  const ViewPortData& viewport_data = gViewPorts[viewport];
   D3DVIEWPORT9 d3dVP;
-  d3dVP.X = left;
-  d3dVP.Y = top;
-  d3dVP.Width = width;
-  d3dVP.Height = height;
-  d3dVP.MinZ = min_z;
-  d3dVP.MaxZ = max_z;
+  d3dVP.X = viewport_data.left;
+  d3dVP.Y = viewport_data.top;
+  d3dVP.Width = viewport_data.width;
+  d3dVP.Height = viewport_data.height;
+  d3dVP.MinZ = viewport_data.min_z;
+  d3dVP.MaxZ = viewport_data.max_z;
 
   HRESULT hr = gD3DDevice->SetViewport(&d3dVP);
-  YASSERT(hr == D3D_OK, "Could not set viewport (0x%08x).",
-          static_cast<uint32_t>(hr));
+  YASSERT(hr == D3D_OK, "Could not set viewport %d (0x%08x).",
+          static_cast<int>(viewport), static_cast<uint32_t>(hr));
 }
 
 void RenderDevice::ActivateRenderBlendState(RenderBlendStateID blend_state) {

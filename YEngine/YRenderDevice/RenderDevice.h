@@ -11,6 +11,7 @@ namespace YCommon { namespace YPlatform {
 
 namespace YEngine { namespace YRenderDevice {
 
+typedef uint8_t ViewPortID;
 typedef uint8_t RenderBlendStateID;
 typedef uint8_t RenderTargetID;
 typedef uint8_t VertexDeclID;
@@ -48,6 +49,9 @@ namespace RenderDevice {
   TextureID GetRenderTargetTexture(RenderTargetID render_target);
 
   // Creates
+  ViewPortID CreateViewPort(uint32_t top, uint32_t left,
+                            uint32_t width, uint32_t height,
+                            float min_z, float max_z);
   RenderBlendStateID CreateRenderBlendState(const RenderBlendState& state);
   RenderTargetID CreateRenderTarget(uint32_t width, uint32_t height,
                                     PixelFormat format);
@@ -70,6 +74,10 @@ namespace RenderDevice {
                                         size_t buffer_size = 0);
 
   // Modifiers
+  void SetViewPort(ViewPortID viewport,
+                   uint32_t top, uint32_t left,
+                   uint32_t width, uint32_t height,
+                   float min_z, float max_z);
   void FillTexture(TextureID texture,
                    void* buffer, size_t size);
   void FillTextureMip(TextureID texture, uint32_t mip,
@@ -92,10 +100,15 @@ namespace RenderDevice {
                           void* buffer, size_t size);
 
   // Accessors
+  void GetViewPort(ViewPortID viewport,
+                   uint32_t& top, uint32_t& left,
+                   uint32_t& width, uint32_t& height,
+                   float& min_z, float& max_z);
   uint32_t GetVertexBufferCount(VertexBufferID vertex_buffer);
   uint32_t GetIndexBufferCount(IndexBufferID index_buffer);
 
   // Releases
+  void ReleaseViewPort(ViewPortID viewport);
   void ReleaseRenderBlendState(RenderBlendStateID state);
   void ReleaseRenderTarget(RenderTargetID render_target);
   void ReleaseVertexDeclaration(VertexDeclID vertex_decl);
@@ -108,9 +121,7 @@ namespace RenderDevice {
   void ReleaseConstantBuffer(ConstantBufferID constant_buffer);
 
   // Activations
-  void ActivateViewPort(uint32_t top, uint32_t left,
-                        uint32_t width, uint32_t height,
-                        float min_z, float max_z);
+  void ActivateViewPort(ViewPortID viewport);
   void ActivateRenderBlendState(RenderBlendStateID blend_state);
   void ActivateRenderTarget(int target, RenderTargetID render_target);
   void ActivateVertexDeclaration(VertexDeclID vertex_decl);
