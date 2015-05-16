@@ -541,7 +541,6 @@ RenderTargetID RenderDevice::CreateRenderTarget(uint32_t width, uint32_t height,
   hr = texture_data.texture->GetSurfaceLevel(0, &surface_data.surface);
   YASSERT(hr == D3D_OK, "Surface Target could not be extracted from texture.");
 
-  (void) hr;
   return surface_id;
 }
 
@@ -605,14 +604,13 @@ VertexDeclID RenderDevice::CreateVertexDeclaration(VertexDeclElement* elements,
   );
 
   YASSERT(hr == D3D_OK, "Could not create vertex declaration.");
-  (void) hr;
 
   return vert_decl_id;
 }
 
 VertexShaderID RenderDevice::CreateVertexShader(const void* shader_data,
                                                 size_t shader_size) {
-  (void) shader_size;
+  YASSERT(shader_size != 0, "Cannot create empty vertex shader.");
   const VertexShaderID shader_id = gVertShaders.AllocateID();
   YASSERT(shader_id != static_cast<VertexShaderID>(-1),
           "Maximum number of Vertex Shaders reached.");
@@ -624,14 +622,13 @@ VertexShaderID RenderDevice::CreateVertexShader(const void* shader_data,
       &vertex_shader.shader // [out, retval]  IDirect3DVertexShader9 **ppShader
   );
   YASSERT(hr == D3D_OK, "Could not create vertex shader.");
-  (void) hr;
 
   return shader_id;
 }
 
 PixelShaderID RenderDevice::CreatePixelShader(const void* shader_data,
                                               size_t shader_size) {
-  (void) shader_size;
+  YASSERT(shader_size != 0, "Cannot create empty pixel shader.");
   const PixelShaderID shader_id = gPixelShaders.AllocateID();
   YASSERT(shader_id != static_cast<PixelShaderID>(-1),
           "Maximum number of Pixel Shaders reached.");
@@ -643,7 +640,6 @@ PixelShaderID RenderDevice::CreatePixelShader(const void* shader_data,
       &pixel_shader.shader // [out, retval]  IDirect3DPixelShader9 **ppShader
   );
   YASSERT(hr == D3D_OK, "Could not create pixel shader.");
-  (void) hr;
 
   return shader_id;
 }
@@ -729,7 +725,6 @@ TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
              static_cast<int>(type));
   }
 
-  (void) hr;
   return texture_id;
 }
 
@@ -753,6 +748,8 @@ VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
       &vertex_buffer_data.vertex_buffer, // [out, retval]  ppVertexBuffer,
       NULL                               // [in]           HANDLE *pSharedHandle
   );
+  YASSERT(hr == D3D_OK,
+          "Could not create vertex buffer: 0x%08X.", static_cast<uint32_t>(hr));
 
   vertex_buffer_data.stride = stride;
   vertex_buffer_data.total_count = count;
@@ -782,7 +779,6 @@ VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
              static_cast<int>(type));
   }
 
-  (void) hr;
   return vert_id;
 }
 
@@ -806,6 +802,8 @@ IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
       &index_buffer_data.index_buffer, // [out, retval]  **ppIndexBuffer,
       NULL                             // [in]           HANDLE *pSharedHandle
   );
+  YASSERT(hr == D3D_OK,
+          "Could not create index buffer: 0x%08X.", static_cast<uint32_t>(hr));
 
   index_buffer_data.total_count = count;
   index_buffer_data.count = 0;
@@ -834,7 +832,6 @@ IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
              static_cast<int>(type));
   }
 
-  (void) hr;
   return indx_id;
 }
 
@@ -923,7 +920,6 @@ void RenderDevice::FillTextureMip(TextureID texture, uint32_t mip,
 
   TextureData& texture_data = gTextures[texture];
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   YASSERT(texture_data.usage == kUsageType_Static ||
           texture_data.usage == kUsageType_Dynamic,
@@ -994,7 +990,6 @@ void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
                                     void* buffer, size_t buffer_size,
                                     uint32_t index_offset) {
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
           gVertexBuffers.used[vertex_buffer],
@@ -1085,7 +1080,6 @@ void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                                    void* buffer, size_t buffer_size,
                                    uint32_t index_offset) {
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   YASSERT(index_buffer < ARRAY_SIZE(gIndexBuffers.used) &&
           gIndexBuffers.used[index_buffer],
@@ -1273,7 +1267,6 @@ void RenderDevice::ActivateViewPort(uint32_t top, uint32_t left,
   HRESULT hr = gD3DDevice->SetViewport(&d3dVP);
   YASSERT(hr == D3D_OK, "Could not set viewport (0x%08x).",
           static_cast<uint32_t>(hr));
-  (void) hr;
 }
 
 void RenderDevice::ActivateRenderBlendState(RenderBlendStateID blend_state) {
@@ -1284,7 +1277,6 @@ void RenderDevice::ActivateRenderBlendState(RenderBlendStateID blend_state) {
 
   const RenderBlendState& state = gRenderBlendStates[blend_state].state_data;
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   hr = gD3DDevice->SetRenderState(D3DRS_SRCBLEND,
                                   kRenderBlendStates[state.source]);
@@ -1322,7 +1314,6 @@ void RenderDevice::ActivateRenderBlendState(RenderBlendStateID blend_state) {
 void RenderDevice::ActivateRenderTarget(int target,
                                         RenderTargetID render_target) {
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   if (render_target == GetNullRenderTarget()) {
     hr = gD3DDevice->SetRenderTarget(static_cast<DWORD>(target), NULL);
@@ -1348,7 +1339,6 @@ void RenderDevice::ActivateVertexDeclaration(VertexDeclID vertex_decl) {
           static_cast<int>(vertex_decl));
 
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   const VertexDeclData& vertex_decl_data = gVertDecls[vertex_decl];
 
@@ -1375,7 +1365,6 @@ void RenderDevice::ActivateVertexShader(VertexShaderID shader) {
   YASSERT(hr == D3D_OK,
           "Could not activate vertex shader ID %d.",
           static_cast<int>(shader));
-  (void) hr;
 }
 
 void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
@@ -1386,7 +1375,6 @@ void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
   YASSERT(hr == D3D_OK,
           "Could not activate pixel shader ID %d.",
           static_cast<int>(shader));
-  (void) hr;
 }
 
 void RenderDevice::ActivateSamplerState(int sampler,
@@ -1399,7 +1387,6 @@ void RenderDevice::ActivateSamplerState(int sampler,
   const SamplerState& state = gSamplerStates[sampler_state].state_data;
   const SamplerFilterState& filter_state = kSamplerFilterStates[state.filter];
   HRESULT hr = E_FAIL;
-  (void) hr;
 
   hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_MINFILTER,
                                    filter_state.min_filter);
@@ -1435,7 +1422,6 @@ void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
   YASSERT(hr == D3D_OK,
           "Could not set texture ID (%d) to sampler %d.",
           static_cast<int>(texture), sampler);
-  (void) hr;
 }
 
 void RenderDevice::ActivateVertexStream(uint32_t stream,
@@ -1460,7 +1446,6 @@ void RenderDevice::ActivateVertexStream(uint32_t stream,
   YASSERT(hr == D3D_OK,
           "Could not set stream source (%u) to Vertex buffer ID: %d.",
           stream, static_cast<int>(vertex_buffer));
-  (void) hr;
 }
 
 void RenderDevice::ActivateIndexStream(IndexBufferID index_buffer) {
@@ -1474,7 +1459,6 @@ void RenderDevice::ActivateIndexStream(IndexBufferID index_buffer) {
   YASSERT(hr == D3D_OK,
           "Could not activate index buffer ID: %d.",
           static_cast<int>(index_buffer));
-  (void) hr;
 }
 
 void RenderDevice::ActivateConstantBuffer(int start_reg,
@@ -1488,7 +1472,6 @@ void RenderDevice::ActivateConstantBuffer(int start_reg,
   const int regs = static_cast<int>(const_buffer.size / (sizeof(float) * 4));
 
   HRESULT hr = E_FAIL;
-  (void) hr;
   for (int i = start_reg; i < regs; ++i) {
     hr = gD3DDevice->SetVertexShaderConstantF(
         i,
@@ -1531,8 +1514,6 @@ void RenderDevice::Draw(uint32_t start_vertex, uint32_t num_verts) {
   YASSERT(hr == D3D_OK,
           "Could not draw primitives: 0x%08x.",
           static_cast<uint32_t>(hr));
-
-  (void) hr;
 }
 
 void RenderDevice::DrawInstanced(uint32_t start_vertex,
@@ -1575,16 +1556,9 @@ void RenderDevice::DrawIndexed(uint32_t start_index, uint32_t num_indexes,
       start_index,                     // [in]  UINT StartIndex,
       num_primitives                   // [in]  UINT PrimitiveCount
   );
-    
-                                                
-                                                
-                                                
-                                                
   YASSERT(hr == D3D_OK,
           "Could not draw primitives: 0x%08x.",
           static_cast<uint32_t>(hr));
-
-  (void) hr;
 }
 
 void RenderDevice::DrawIndexedInstanced(uint32_t start_index,
@@ -1603,21 +1577,18 @@ void RenderDevice::Begin() {
   HRESULT hr = gD3DDevice->BeginScene();
   YASSERT(hr == D3D_OK,
           "BeginScene() was not successful.");
-  (void) hr;
 }
 
 void RenderDevice::End() {
   HRESULT hr = gD3DDevice->EndScene();
   YASSERT(hr == D3D_OK,
           "EndScene() was not successful.");
-  (void) hr;
 }
 
 void RenderDevice::Present() {
   HRESULT hr = gD3DDevice->Present(NULL, NULL, NULL, NULL);
   YASSERT(hr == D3D_OK,
           "Present() was not successful.");
-  (void) hr;
 }
 
 }} // namespace YEngine { namespace YRenderDevice {

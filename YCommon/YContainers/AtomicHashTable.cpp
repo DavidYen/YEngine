@@ -31,7 +31,6 @@ AtomicHashTable::~AtomicHashTable() {
 
 void AtomicHashTable::Init(void* buffer, size_t buffer_size,
                            size_t num_entries, size_t max_value_size) {
-  (void) buffer_size;
   YASSERT(reinterpret_cast<uintptr_t>(buffer) % sizeof(uint64_t) == 0,
           "Atomic Hash Table memory must be aligned to %u bytes - supplied %p.",
           static_cast<uint32_t>(sizeof(uint64_t)),
@@ -43,9 +42,6 @@ void AtomicHashTable::Init(void* buffer, size_t buffer_size,
 
   const size_t entry_size = sizeof(uint64_t) + max_value_size;
   const size_t total_table_size = entry_size * num_entries;
-
-  (void) entry_size;
-  (void) total_table_size;
 
   YASSERT(total_table_size <= buffer_size,
           "Atomic Hash Table requires %u bytes, supplied %u bytes.",

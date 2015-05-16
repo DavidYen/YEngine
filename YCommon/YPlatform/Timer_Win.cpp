@@ -21,7 +21,6 @@ Timer::Timer() {
   WindowsPimpl* win_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
   LARGE_INTEGER frequency;
   BOOL ret_value = QueryPerformanceFrequency(&frequency);
-  (void) ret_value;
   YASSERT(ret_value, "Could not query performance frequency.");
 
   win_pimpl->counts_per_seconds = frequency.QuadPart;
@@ -33,7 +32,6 @@ Timer::~Timer() {
 void Timer::Start() {
   LARGE_INTEGER current_count;
   BOOL ret_value = QueryPerformanceCounter(&current_count);
-  (void) ret_value;
   YASSERT(ret_value, "Could not query performance counter.");
 
   WindowsPimpl* win_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);
@@ -45,7 +43,6 @@ void Timer::Start() {
 void Timer::Pulse() {
   LARGE_INTEGER current_count;
   BOOL ret_value = QueryPerformanceCounter(&current_count);
-  (void) ret_value;
   YASSERT(ret_value, "Could not query performance counter.");
 
   WindowsPimpl* win_pimpl = reinterpret_cast<WindowsPimpl*>(mPimpl);

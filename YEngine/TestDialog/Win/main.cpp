@@ -9,12 +9,9 @@
 
 // Windows Entry Point
 int WINAPI WinMain(HINSTANCE hInst,
-                   HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine,
-                   int nCmdShow) {
-  (void) hPrevInstance;
-  (void) lpCmdLine;
-  (void) nCmdShow;
+                   HINSTANCE /* hPrevInstance */,
+                   LPSTR /* lpCmdLine */,
+                   int /* nCmdShow */) {
   WNDCLASSEX wndclass;
 
   // Setup Windows Class

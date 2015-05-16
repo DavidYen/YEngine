@@ -37,7 +37,6 @@ void AtomicQueue::Initialize(void* buffer, size_t buffer_size,
   mHead = 0;
   mTail = 0;
 
-  (void) buffer_size;
   YASSERT(buffer_size >= (item_size * num_items),
           "Atomic Queue %u[%u] requires at least %u bytes, supplied %u bytes.",
           static_cast<uint32_t>(item_size), num_items,

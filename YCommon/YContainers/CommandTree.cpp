@@ -34,7 +34,6 @@ void CommandTree::Initialize(size_t num_threads,
           "Command Tree cannot be initialized twice.");
 
   size_t used_buffer = 0;
-  (void) used_buffer;
 
   uint8_t* buffer_iter = static_cast<uint8_t*>(buffer);
 
@@ -164,7 +163,6 @@ uintptr_t CommandTree::ExecuteCommands(size_t milliseconds, bool* timed_out) {
   timer.Start();
 
   bool ret = false;
-  (void) ret;
 
   mTreeData.PrepareStart();
   YASSERT(mCommandTreeState == kCommandTreeState_ReadyToExecute,
@@ -257,7 +255,6 @@ uintptr_t CommandTree::CommandTreeThread(void* arg) {
     if (AtomicAdd32(&dep_node->mNumDependenciesFinished, 1) == num_deps-1) {
       bool ret = tree_data->mThreadPool->EnqueueRun(
           CommandTreeThread, dep_node);
-      (void) ret;
       YASSERT(ret, "Thread Pool failed to enqueue dependent node.");
     }
   }
