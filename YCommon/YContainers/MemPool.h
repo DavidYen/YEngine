@@ -1,18 +1,18 @@
-#ifndef YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H
-#define YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H
+#ifndef YCOMMON_YCONTAINERS_MEMPOOL_H
+#define YCOMMON_YCONTAINERS_MEMPOOL_H
 
 /*******
-* Atomic Array able to store and remove fixed size elements.
+* Array able to store and remove fixed size elements.
 *   - buffer size requirement: item_size * num_items
 ********/
 namespace YCommon { namespace YContainers {
 
-class AtomicMemPool {
+class MemPool {
  public:
-  AtomicMemPool();
-  AtomicMemPool(void* buffer, size_t buffer_size,
+  MemPool();
+  MemPool(void* buffer, size_t buffer_size,
               size_t item_size, uint32_t num_items);
-  ~AtomicMemPool();
+  ~MemPool();
 
   void Init(void* buffer, size_t buffer_size,
             size_t item_size, uint32_t num_items);
@@ -36,30 +36,30 @@ class AtomicMemPool {
   size_t mItemSize;
   uint32_t mNumItems;
 
-  volatile uint32_t mUsedIndexes;
-  volatile uint64_t mNextFreeIndex;
+  uint32_t mUsedIndexes;
+  uint32_t mNextFreeIndex;
 };
 
 template<typename T>
-class TypedAtomicMemPool : public AtomicMemPool {
+class TypedMemPool : public MemPool {
  public:
-  TypedAtomicMemPool() : AtomicMemPool() {}
-  TypedAtomicMemPool(T* buffer, size_t buffer_size, uint32_t num_items)
-      : AtomicMemPool(static_cast<void*>(buffer), buffer_size,
+  TypedMemPool() : MemPool() {}
+  TypedMemPool(T* buffer, size_t buffer_size, uint32_t num_items)
+      : MemPool(static_cast<void*>(buffer), buffer_size,
                     sizeof(T), num_items) {}
-  ~TypedAtomicMemPool() {}
+  ~TypedMemPool() {}
 
   void Init(T* buffer, size_t buffer_size, uint32_t num_items) {
-    return AtomicMemPool::Init(static_cast<void*>(buffer), buffer_size,
+    return MemPool::Init(static_cast<void*>(buffer), buffer_size,
                              sizeof(T), num_items);
   }
 
   uint32_t Insert(const T* data_item) {
-    return AtomicMemPool::Insert(static_cast<const void*>(data_item));
+    return MemPool::Insert(static_cast<const void*>(data_item));
   }
 
   uint32_t Insert(const T& data_item) {
-    return AtomicMemPool::Insert(static_cast<const void*>(&data_item));
+    return MemPool::Insert(static_cast<const void*>(&data_item));
   }
 
   const T& operator[](size_t index) const {
@@ -72,13 +72,13 @@ class TypedAtomicMemPool : public AtomicMemPool {
 };
 
 template<typename T, size_t items>
-class ContainedAtomicMemPool : public TypedAtomicMemPool<T> {
+class ContainedMemPool : public TypedMemPool<T> {
  public:
-  ContainedAtomicMemPool() : TypedAtomicMemPool(mData, sizeof(mData), items) {}
-  ~ContainedAtomicMemPool() {}
+  ContainedMemPool() : TypedMemPool(mData, sizeof(mData), items) {}
+  ~ContainedMemPool() {}
 
   void Init() {
-    TypedAtomicMemPool::Init(mData, sizeof(mData), items);
+    TypedMemPool::Init(mData, sizeof(mData), items);
   }
 
  private:
@@ -87,4 +87,4 @@ class ContainedAtomicMemPool : public TypedAtomicMemPool<T> {
 
 }} // namespace YCommon { namespace YContainers {
 
-#endif // YCOMMON_YCONTAINERS_ATOMICMEMPOOL_H
+#endif // YCOMMON_YCONTAINERS_MEMPOOL_H

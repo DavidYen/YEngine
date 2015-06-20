@@ -184,7 +184,6 @@ TEST(BasicCommandTreeTest, MultipleDependencyTest) {
   ThreadArg arg1_4 = { magic_num1 + 4, &current_num1 };
   ThreadArg arg2_3 = { magic_num2 + 3, &current_num2 };
   ThreadArg arg2_4 = { magic_num2 + 4, &current_num2 };
-  
 
   CommandTree::TreeConstructorNode tree_nodes[9];
 

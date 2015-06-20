@@ -13,6 +13,8 @@ static_library("YContainers") {
     "HashTable.cpp",
     "MemBuffer.cpp",
     "MemBuffer.h",
+    "MemPool.cpp",
+    "MemPool.h",
     "ThreadPool.cpp",
     "ThreadPool.h",
   ]
@@ -25,10 +27,10 @@ static_library("YContainers") {
 
 unit_test("YContainers_Test") {
   sources = [
-    "AtomicMemPool_Test.cpp",
     "AtomicQueue_Test.cpp",
     "CommandTree_Test.cpp",
     "HashTable_Test.cpp",
+    "MemPool_Test.cpp",
     "ThreadPool_Test.cpp",
   ]
 
