@@ -50,13 +50,17 @@ void HashTable::Init(void* buffer, size_t buffer_size,
   mNumEntries = num_entries;
   mMaxValueSize = max_value_size;
 
-  memset(buffer, EMPTY_VALUE, sizeof(uint64_t) * num_entries);
+  Clear();
 }
 
 void HashTable::Reset() {
   mBuffer = NULL;
   mNumEntries = 0;
   mMaxValueSize = 0;
+}
+
+void HashTable::Clear() {
+  memset(mBuffer, EMPTY_VALUE, sizeof(uint64_t) * mNumEntries);
 }
 
 uint64_t HashTable::Insert(const void* key, size_t key_size,

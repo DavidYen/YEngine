@@ -17,7 +17,8 @@ class HashTable {
 
   void Init(void* buffer, size_t buffer_size,
             size_t num_entries, size_t max_value_size);
-  void Reset();
+  void Reset(); // Initializes pointers to null.
+  void Clear(); // Clears out all entires.
 
   uint64_t Insert(const void* key, size_t key_size,
                   const void* value, size_t value_size);
@@ -129,3 +130,4 @@ class ContainedFullHashTable : public FullTypedHashTable<T1, T2> {
 }} // namespace YCommon { namespace YContainers {
 
 #endif // YCOMMON_YCONTAINERS_HASHTABLE_H
+
