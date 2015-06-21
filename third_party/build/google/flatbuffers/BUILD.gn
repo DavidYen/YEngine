@@ -13,6 +13,7 @@ static_library("flatbuffers") {
 
   cflags = [
     "/wd4702", # Unreachable code.
+    "/wd4244", # Conversion from unsigned int64 to int
   ]
 
   configs += [
@@ -31,12 +32,14 @@ tool_executable("flatc") {
     "//third_party/google/flatbuffers/src/idl_gen_fbs.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_general.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_go.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_python.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_text.cpp",
     "//third_party/google/flatbuffers/src/idl_parser.cpp",
   ]
 
   cflags = [
     "/wd4702", # Unreachable code.
+    "/wd4244", # Conversion from unsigned int64 to int
   ]
 
   configs += [

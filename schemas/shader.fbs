@@ -1,5 +1,5 @@
 
-namespace YEngine;
+namespace YEngineData;
 
 file_identifier "SHDR";
 file_extension "shdr";

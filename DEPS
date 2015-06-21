@@ -9,7 +9,7 @@ vars = {
   "rapidjson_revision": "879def80f2e466cdf4c86dc7e53ea2dd4cafaea0",
 
   "flatbuffers_git": "https://github.com/google/flatbuffers.git",
-  "flatbuffers_revision": "f177663ce7b971886a22177b21912f351e6a5e29",
+  "flatbuffers_revision": "c967515da56fe5a8f0a5d18eaf2a741f5999697a",
 }
 
 deps = {

@@ -151,7 +151,6 @@ bool DXShaderCompiler::CompileShader(const std::string& source_file,
     return false;
   }
 
-
   size_t code_size = code->GetBufferSize();
   output.resize(code_size);
   memcpy(output.data(), code->GetBufferPointer(), code_size);
