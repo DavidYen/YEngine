@@ -10,10 +10,33 @@ namespace YCommon { namespace YContainers {
 
 class MemBuffer {
  public:
+  MemBuffer();
   MemBuffer(void* buffer, size_t buffer_size);
+
+  void Init(void* buffer, size_t buffer_size);
+  void Reset();
+
+  void Clear();
 
   void* Allocate(size_t allocation_size);
   void Free(size_t allocation_size);
+
+
+  size_t AllocatedBufferSpace() const {
+    return mUsedBufferSize;
+  }
+
+  size_t AllocatedScratchPadSpace() const {
+    return mUsedScratchPadSize;
+  }
+
+  size_t AllocatedTotalSpace() const {
+    return mUsedBufferSize + mUsedScratchPadSize;
+  }
+
+  size_t FreeSpace() const {
+    return mBufferSize - AllocatedTotalSpace();
+  }
 
   class ScratchPad {
    public:

@@ -3,7 +3,12 @@
 
 #include <YCommon/YUtils/Assert.h>
 
-#define IS_POWER_OF_2(num) (!(num & (num - 1)))
+/***********
+* Power of 2 functions
+************/
+#define IS_POWER_OF_2(num) (!((num) & ((num) - 1)))
+#define ROUND_DOWN(num, alignment) ((num) & ~((alignment)-1))
+#define ROUND_UP(num, alignment) ROUND_DOWN((num)+((alignment)-1), (alignment))
 
 /***********
 * See: http://cnicholson.net/2011/01/stupid-c-tricks-a-better-sizeof_array/

@@ -18,6 +18,8 @@ class MemPool {
             size_t item_size, uint32_t num_items);
   void Reset();
 
+  void Clear();
+
   // Allocates or Removes an index
   uint32_t Allocate(); // returns -1 on failure.
   void Remove(uint32_t index);

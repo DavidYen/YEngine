@@ -64,6 +64,11 @@ void MemPool::Reset() {
   mNextFreeIndex = static_cast<uint32_t>(-1);
 }
 
+void MemPool::Clear() {
+  mUsedIndexes = 0;
+  mNextFreeIndex = static_cast<uint32_t>(-1);
+}
+
 uint32_t MemPool::Allocate() {
   const size_t item_size = mItemSize;
   const uint8_t* buffer_ptr = static_cast<uint8_t*>(mBuffer);

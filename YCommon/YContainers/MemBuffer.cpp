@@ -3,17 +3,43 @@
 
 namespace YCommon { namespace YContainers {
 
-MemBuffer::MemBuffer(void* buffer, size_t buffer_size)
-  : mBuffer(buffer),
+MemBuffer::MemBuffer()
+  : mBuffer(nullptr),
     mUsedBufferSize(0),
     mUsedScratchPadSize(0),
-    mBufferSize(buffer_size) {
+    mBufferSize(0) {
+}
+
+MemBuffer::MemBuffer(void* buffer, size_t buffer_size)
+  : mBuffer(nullptr),
+    mUsedBufferSize(0),
+    mUsedScratchPadSize(0),
+    mBufferSize(0) {
+  Init(buffer, buffer_size);
+}
+
+void MemBuffer::Init(void* buffer, size_t buffer_size) {
+  mBuffer = buffer;
+  mUsedBufferSize = 0;
+  mUsedScratchPadSize = 0;
+  mBufferSize = buffer_size;
+}
+
+void MemBuffer::Reset() {
+  mBuffer = nullptr;
+  mUsedBufferSize = 0;
+  mUsedScratchPadSize = 0;
+  mBufferSize = 0;
+}
+
+void MemBuffer::Clear() {
+  mUsedBufferSize = 0;
+  mUsedScratchPadSize = 0;
 }
 
 void* MemBuffer::Allocate(size_t allocation_size) {
-  if (allocation_size + mUsedBufferSize + mUsedScratchPadSize > mBufferSize) {
+  if (allocation_size > FreeSpace())
     return nullptr;
-  }
 
   void* allocation = static_cast<uint8_t*>(mBuffer) + mUsedBufferSize;
   mUsedBufferSize += allocation_size;
