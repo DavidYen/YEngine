@@ -1,15 +1,11 @@
 
-group("yengine_all") {
+group("YEngine") {
   deps = [
     "TestDialog",
     "YCore",
+    "YDataLoader",
     "YFramework",
-  ]
-}
-
-static_library("YEngine") {
-  deps = [
-    "YCore",
-    "YFramework",
+    "YRenderDevice",
+    "YRenderer",
   ]
 }
