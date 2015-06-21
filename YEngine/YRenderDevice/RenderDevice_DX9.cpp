@@ -1545,16 +1545,13 @@ void RenderDevice::ActivateConstantBuffer(int start_reg,
   const ConstBuffData& const_buffer = gConstBuffers[constant_buffer];
   const int regs = static_cast<int>(const_buffer.size / (sizeof(float) * 4));
 
-  HRESULT hr = E_FAIL;
-  for (int i = start_reg; i < regs; ++i) {
-    hr = gD3DDevice->SetVertexShaderConstantF(
-        i,
-        static_cast<float*>(const_buffer.buffer_data),
-        4);
-    YASSERT(hr == D3D_OK,
-            "Could not activate constant buffer %d",
-            static_cast<int>(constant_buffer));
-  }
+  HRESULT hr = gD3DDevice->SetVertexShaderConstantF(
+      start_reg,
+      static_cast<float*>(const_buffer.buffer_data),
+      regs);
+  YASSERT(hr == D3D_OK,
+          "Could not activate constant buffer %d",
+          static_cast<int>(constant_buffer));
 }
 
 void RenderDevice::ActivateDrawPrimitive(DrawPrimitive draw_primitive) {
