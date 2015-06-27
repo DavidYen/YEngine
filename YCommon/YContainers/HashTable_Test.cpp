@@ -30,6 +30,19 @@ class BaseHashTableTest : public ::testing::Test {
     hash_table.Insert(hash_key, sizeof(hash_key), hash_value);
   }
 
+  void DoRemovalTest() {
+    ContainedHT hash_table;
+
+    const char hash_key[] = "hash key";
+    int hash_value = 123;
+    hash_table.Insert(hash_key, sizeof(hash_key), hash_value);
+
+    EXPECT_EQ(1, hash_table.GetCurrentSize());
+    EXPECT_TRUE(hash_table.Remove(hash_key, sizeof(hash_key)));
+    EXPECT_EQ(0, hash_table.GetCurrentSize());
+    EXPECT_FALSE(hash_table.Remove(hash_key, sizeof(hash_key)));
+  }
+
   void DoGetValueTest() {
     ContainedHT hash_table;
 
@@ -57,6 +70,18 @@ class BaseHashTableTest : public ::testing::Test {
     const char hash_key[] = "hash key";
     EXPECT_EQ(NULL, hash_table.GetValue(hash_key, sizeof(hash_key)));
   }
+
+  void DoAllocationSizeTest() {
+    const size_t num_entries = 32;
+    const size_t max_value_size = 64;
+
+    const size_t size = BaseHT::GetAllocationSize(num_entries, max_value_size);
+    std::vector<uint8_t> allocation(size);
+
+    BaseHT hash_table;
+    hash_table.Init(allocation.data(), allocation.size(),
+                    num_entries, max_value_size);
+  }
 };
 
 class AtomicHashTableTest : public BaseHashTableTest<
@@ -71,44 +96,15 @@ class HashTableTest : public BaseHashTableTest<
   ContainedHashTable<int, 100>,
   ContainedFullHashTable<int, int, 100> > {};
 
-TEST_F(AtomicHashTableTest, ConstructorTest) {
-  DoConstructorTest();
-}
+#define HASH_TABLE_TEST(NAME) \
+  TEST_F(AtomicHashTableTest, NAME) { Do ## NAME(); } \
+  TEST_F(HashTableTest, NAME) { Do ## NAME(); }
 
-TEST_F(HashTableTest, ConstructorTest) {
-  DoConstructorTest();
-}
-
-TEST_F(AtomicHashTableTest, InsertionTest) {
-  DoInsertionTest();
-}
-
-TEST_F(HashTableTest, InsertionTest) {
-  DoInsertionTest();
-}
-
-TEST_F(AtomicHashTableTest, GetValueTest) {
-  DoGetValueTest();
-}
-
-TEST_F(HashTableTest, GetValueTest) {
-  DoGetValueTest();
-}
-
-TEST_F(AtomicHashTableTest, MultipleValuesTest) {
-  DoMultipleValuesTest();
-}
-
-TEST_F(HashTableTest, MultipleValuesTest) {
-  DoMultipleValuesTest();
-}
-
-TEST_F(AtomicHashTableTest, GetEmptyValueTest) {
-  DoGetEmptyValueTest();
-}
-
-TEST_F(HashTableTest, GetEmptyValueTest) {
-  DoGetEmptyValueTest();
-}
+HASH_TABLE_TEST(ConstructorTest);
+HASH_TABLE_TEST(InsertionTest);
+HASH_TABLE_TEST(GetValueTest);
+HASH_TABLE_TEST(MultipleValuesTest);
+HASH_TABLE_TEST(GetEmptyValueTest);
+HASH_TABLE_TEST(AllocationSizeTest);
 
 }} // namespace YCommon { namespace YContainers {

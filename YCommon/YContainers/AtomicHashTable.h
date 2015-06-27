@@ -11,6 +11,10 @@ namespace YCommon { namespace YContainers {
 
 class AtomicHashTable {
  public:
+  static size_t GetAllocationSize(size_t num_entries, size_t max_value_size) {
+    return (max_value_size + sizeof(uint64_t)) * num_entries;
+  }
+
   AtomicHashTable();
   AtomicHashTable(void* buffer, size_t buffer_size,
                   size_t num_entries, size_t max_value_size);
@@ -19,11 +23,15 @@ class AtomicHashTable {
   void Init(void* buffer, size_t buffer_size,
             size_t num_entries, size_t max_value_size);
   void Reset();
+  void Clear();
 
   uint64_t Insert(const void* key, size_t key_size,
                   const void* value, size_t value_size);
   void Insert(uint64_t hash_key,
               const void* value, size_t value_size);
+
+  bool Remove(const void* key, size_t key_size);
+  bool Remove(uint64_t hash_key);
 
   const void* const GetValue(const void* key, size_t key_size) const;
   const void* const GetValue(uint64_t hash_key) const;
@@ -31,15 +39,22 @@ class AtomicHashTable {
   void* GetValue(const void* key, size_t key_size);
   void* GetValue(uint64_t hash_key);
 
+  int32_t GetCurrentSize() const { return mCurrentEntries; }
+
  private:
   void* mBuffer;
   size_t mNumEntries;
   size_t mMaxValueSize;
+  volatile int32_t mCurrentEntries;
 };
 
 template <typename T>
 class TypedAtomicHashTable : public AtomicHashTable {
  public:
+  static size_t GetAllocationSize(size_t num_entries) {
+    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T));
+  }
+
   TypedAtomicHashTable() : AtomicHashTable() {}
   TypedAtomicHashTable(void* buffer, size_t buffer_size, size_t num_entries)
       : AtomicHashTable(buffer, buffer_size, num_entries, sizeof(T)) {}
@@ -76,6 +91,10 @@ class TypedAtomicHashTable : public AtomicHashTable {
 template <typename T1, typename T2>
 class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
  public:
+  static size_t GetAllocationSize(size_t num_entries) {
+    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T2));
+  }
+
   FullTypedAtomicHashTable() : TypedAtomicHashTable() {}
   FullTypedAtomicHashTable(void* buffer, size_t buffer_size, size_t num_entries)
       : TypedAtomicHashTable(buffer, buffer_size, num_entries) {}
@@ -98,6 +117,10 @@ class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
 template <typename T, size_t entries>
 class ContainedAtomicHashTable : public TypedAtomicHashTable<T> {
  public:
+  static size_t GetAllocationSize() {
+    return AtomicHashTable::GetAllocationSize(entries, sizeof(T));
+  }
+
   ContainedAtomicHashTable()
       : TypedAtomicHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedAtomicHashTable() {}
@@ -114,6 +137,10 @@ class ContainedAtomicHashTable : public TypedAtomicHashTable<T> {
 template <typename T1, typename T2, size_t entries>
 class ContainedFullAtomicHashTable : public FullTypedAtomicHashTable<T1, T2> {
  public:
+  static size_t GetAllocationSize() {
+    return AtomicHashTable::GetAllocationSize(entries, sizeof(T2));
+  }
+
   ContainedFullAtomicHashTable()
       : FullTypedAtomicHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedFullAtomicHashTable() {}

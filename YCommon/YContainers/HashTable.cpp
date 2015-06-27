@@ -6,12 +6,14 @@
 #include <YCommon/YUtils/Hash.h>
 
 #define EMPTY_VALUE static_cast<uint64_t>(0)
+#define REMOVED_VALUE static_cast<uint64_t>(-1)
 #define MAX_TRIES 10
 
 namespace YCommon { namespace YContainers {
 
 HashTable::HashTable()
     : mBuffer(NULL),
+      mCurrentEntries(0),
       mNumEntries(0),
       mMaxValueSize(0) {
 }
@@ -19,6 +21,7 @@ HashTable::HashTable()
 HashTable::HashTable(void* buffer, size_t buffer_size,
                      size_t num_entries, size_t max_value_size)
     : mBuffer(NULL),
+      mCurrentEntries(0),
       mNumEntries(0),
       mMaxValueSize(0) {
   Init(buffer, buffer_size, num_entries, max_value_size);
@@ -47,6 +50,7 @@ void HashTable::Init(void* buffer, size_t buffer_size,
           static_cast<uint32_t>(buffer_size));
 
   mBuffer = buffer;
+  mCurrentEntries = 0;
   mNumEntries = num_entries;
   mMaxValueSize = max_value_size;
 
@@ -55,11 +59,13 @@ void HashTable::Init(void* buffer, size_t buffer_size,
 
 void HashTable::Reset() {
   mBuffer = NULL;
+  mCurrentEntries = 0;
   mNumEntries = 0;
   mMaxValueSize = 0;
 }
 
 void HashTable::Clear() {
+  mCurrentEntries = 0;
   memset(mBuffer, EMPTY_VALUE, sizeof(uint64_t) * mNumEntries);
 }
 
@@ -78,21 +84,46 @@ void HashTable::Insert(uint64_t hash_key,
                static_cast<uint32_t>(value_size));
 
   const size_t key_table_size = sizeof(uint64_t) * mNumEntries;
-  volatile uint64_t* hash_table = static_cast<volatile uint64_t*>(mBuffer);
+  uint64_t* hash_table = static_cast<uint64_t*>(mBuffer);
   uint8_t* hash_value_table = static_cast<uint8_t*>(mBuffer) + key_table_size;
 
   for (uint64_t i = 0; i < MAX_TRIES; ++i) {
     const uint64_t try_index = (hash_key + i) % mNumEntries;
     const uint64_t hash_table_value = hash_table[try_index];
 
-    if (hash_table_value == hash_key || hash_table_value == EMPTY_VALUE) {
+    if (hash_table_value == hash_key ||
+        hash_table_value == REMOVED_VALUE ||
+        hash_table_value == EMPTY_VALUE) {
       hash_table[try_index] = hash_key;
       memcpy(hash_value_table + (try_index * mMaxValueSize), value, value_size);
+      ++mCurrentEntries;
       return;
     }
   }
 
   YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
+}
+
+bool HashTable::Remove(const void* key, size_t key_size) {
+  const uint64_t hash_key = YCommon::YUtils::Hash::Hash64(key, key_size);
+  return Remove(hash_key);
+}
+
+bool HashTable::Remove(uint64_t hash_key) {
+  uint64_t* hash_table = static_cast<uint64_t*>(mBuffer);
+  for (uint64_t i = 0; i < MAX_TRIES; ++i) {
+    const uint64_t try_index = (hash_key + i) % mNumEntries;
+    const uint64_t hash_table_value = hash_table[try_index];
+
+    if (hash_table_value == hash_key) {
+      hash_table[try_index] = REMOVED_VALUE;
+      --mCurrentEntries;
+      return true;
+    } else if (hash_table_value == EMPTY_VALUE) {
+      return false;
+    }
+  }
+  return false;
 }
 
 const void* const HashTable::GetValue(const void* key,
@@ -102,7 +133,7 @@ const void* const HashTable::GetValue(const void* key,
 
 const void* const HashTable::GetValue(uint64_t hash_key) const {
   const size_t key_table_size = sizeof(uint64_t) * mNumEntries;
-  volatile uint64_t* hash_table = static_cast<volatile uint64_t*>(mBuffer);
+  uint64_t* hash_table = static_cast<uint64_t*>(mBuffer);
   const uint8_t* hash_value_table =
       static_cast<const uint8_t*>(mBuffer) + key_table_size;
 
@@ -126,7 +157,7 @@ void* HashTable::GetValue(const void* key, size_t key_size) {
 
 void* HashTable::GetValue(uint64_t hash_key) {
   const size_t key_table_size = sizeof(uint64_t) * mNumEntries;
-  volatile uint64_t* hash_table = static_cast<volatile uint64_t*>(mBuffer);
+  uint64_t* hash_table = static_cast<uint64_t*>(mBuffer);
   uint8_t* hash_value_table = static_cast<uint8_t*>(mBuffer) + key_table_size;
 
   for (uint64_t i = 0; i < MAX_TRIES; ++i) {

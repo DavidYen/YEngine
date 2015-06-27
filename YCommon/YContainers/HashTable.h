@@ -10,6 +10,10 @@ namespace YCommon { namespace YContainers {
 
 class HashTable {
  public:
+  static size_t GetAllocationSize(size_t num_entries, size_t max_value_size) {
+    return (max_value_size + sizeof(uint64_t)) * num_entries;
+  }
+
   HashTable();
   HashTable(void* buffer, size_t buffer_size,
             size_t num_entries, size_t max_value_size);
@@ -25,14 +29,20 @@ class HashTable {
   void Insert(uint64_t hash_key,
               const void* value, size_t value_size);
 
+  bool Remove(const void* key, size_t key_size);
+  bool Remove(uint64_t hash_key);
+
   const void* const GetValue(const void* key, size_t key_size) const;
   const void* const GetValue(uint64_t hash_key) const;
 
   void* GetValue(const void* key, size_t key_size);
   void* GetValue(uint64_t hash_key);
 
+  int32_t GetCurrentSize() const { return mCurrentEntries; }
+
  private:
   void* mBuffer;
+  int32_t mCurrentEntries;
   size_t mNumEntries;
   size_t mMaxValueSize;
 };
@@ -40,6 +50,10 @@ class HashTable {
 template <typename T>
 class TypedHashTable : public HashTable {
  public:
+  static size_t GetAllocationSize(size_t num_entries) {
+    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T));
+  }
+
   TypedHashTable() : HashTable() {}
   TypedHashTable(void* buffer, size_t buffer_size, size_t num_entries)
       : HashTable(buffer, buffer_size, num_entries, sizeof(T)) {}
@@ -76,6 +90,10 @@ class TypedHashTable : public HashTable {
 template <typename T1, typename T2>
 class FullTypedHashTable : public TypedHashTable<T2> {
  public:
+  static size_t GetAllocationSize(size_t num_entries) {
+    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T2));
+  }
+
   FullTypedHashTable() : TypedHashTable() {}
   FullTypedHashTable(void* buffer, size_t buffer_size, size_t num_entries)
       : TypedHashTable(buffer, buffer_size, num_entries) {}
@@ -98,6 +116,10 @@ class FullTypedHashTable : public TypedHashTable<T2> {
 template <typename T, size_t entries>
 class ContainedHashTable : public TypedHashTable<T> {
  public:
+  static size_t GetAllocationSize() {
+    return AtomicHashTable::GetAllocationSize(entries, sizeof(T));
+  }
+
   ContainedHashTable()
       : TypedHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedHashTable() {}
@@ -114,6 +136,10 @@ class ContainedHashTable : public TypedHashTable<T> {
 template <typename T1, typename T2, size_t entries>
 class ContainedFullHashTable : public FullTypedHashTable<T1, T2> {
  public:
+  static size_t GetAllocationSize() {
+    return AtomicHashTable::GetAllocationSize(entries, sizeof(T2));
+  }
+
   ContainedFullHashTable()
       : FullTypedHashTable(mBuffer, sizeof(mBuffer), entries) {}
   ~ContainedFullHashTable() {}
@@ -130,4 +156,3 @@ class ContainedFullHashTable : public FullTypedHashTable<T1, T2> {
 }} // namespace YCommon { namespace YContainers {
 
 #endif // YCOMMON_YCONTAINERS_HASHTABLE_H
-

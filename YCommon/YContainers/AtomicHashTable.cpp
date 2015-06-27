@@ -7,13 +7,15 @@
 #include <YCommon/YUtils/Hash.h>
 
 #define EMPTY_VALUE static_cast<uint64_t>(0)
-#define PLACEHOLDER_VALUE static_cast<uint64_t>(-1)
+#define REMOVED_VALUE static_cast<uint64_t>(-1)
+#define PLACEHOLDER_VALUE static_cast<uint64_t>(-2)
 #define MAX_TRIES 10
 
 namespace YCommon { namespace YContainers {
 
 AtomicHashTable::AtomicHashTable()
     : mBuffer(NULL),
+      mCurrentEntries(0),
       mNumEntries(0),
       mMaxValueSize(0) {
 }
@@ -21,6 +23,7 @@ AtomicHashTable::AtomicHashTable()
 AtomicHashTable::AtomicHashTable(void* buffer, size_t buffer_size,
                                  size_t num_entries, size_t max_value_size)
     : mBuffer(NULL),
+      mCurrentEntries(0),
       mNumEntries(0),
       mMaxValueSize(0) {
   Init(buffer, buffer_size, num_entries, max_value_size);
@@ -49,16 +52,23 @@ void AtomicHashTable::Init(void* buffer, size_t buffer_size,
           static_cast<uint32_t>(buffer_size));
 
   mBuffer = buffer;
+  mCurrentEntries = 0;
   mNumEntries = num_entries;
   mMaxValueSize = max_value_size;
 
-  memset(buffer, EMPTY_VALUE, sizeof(uint64_t) * num_entries);
+  Clear();
 }
 
 void AtomicHashTable::Reset() {
   mBuffer = NULL;
+  mCurrentEntries = 0;
   mNumEntries = 0;
   mMaxValueSize = 0;
+}
+
+void AtomicHashTable::Clear() {
+  mCurrentEntries = 0;
+  memset(mBuffer, EMPTY_VALUE, sizeof(uint64_t) * mNumEntries);
 }
 
 uint64_t AtomicHashTable::Insert(const void* key, size_t key_size,
@@ -87,15 +97,44 @@ void AtomicHashTable::Insert(uint64_t hash_key,
         (hash_table_value == EMPTY_VALUE &&
          YCommon::AtomicCmpSet64(&hash_table[try_index],
                                  EMPTY_VALUE,
+                                 PLACEHOLDER_VALUE)) ||
+        (hash_table_value == REMOVED_VALUE &&
+         YCommon::AtomicCmpSet64(&hash_table[try_index],
+                                 REMOVED_VALUE,
                                  PLACEHOLDER_VALUE))) {
       memcpy(hash_value_table + (try_index * mMaxValueSize), value, value_size);
-      YCommon::MemoryBarrier();
+      YCommon::AtomicAdd32(&mCurrentEntries, 1); // Has implicit memory barrier.
       hash_table[try_index] = hash_key;
       return;
     }
   }
 
   YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
+}
+
+bool AtomicHashTable::Remove(const void* key, size_t key_size) {
+  const uint64_t hash_key = YCommon::YUtils::Hash::Hash64(key, key_size);
+  return Remove(hash_key);
+}
+
+bool AtomicHashTable::Remove(uint64_t hash_key) {
+  volatile uint64_t* hash_table = static_cast<volatile uint64_t*>(mBuffer);
+  for (uint64_t i = 0; i < MAX_TRIES; ++i) {
+    const uint64_t try_index = (hash_key + i) % mNumEntries;
+    const uint64_t hash_table_value = hash_table[try_index];
+
+    if (hash_table_value == hash_key &&
+        YCommon::AtomicCmpSet64(&hash_table[try_index],
+                                hash_key,
+                                REMOVED_VALUE)) {
+      YCommon::AtomicAdd32(&mCurrentEntries, -1);
+      return true;
+    } else if (hash_table_value == EMPTY_VALUE) {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 const void* const AtomicHashTable::GetValue(const void* key,
