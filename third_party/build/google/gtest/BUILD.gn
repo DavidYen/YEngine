@@ -1,7 +1,6 @@
 
 config("gtest_config") {
   include_dirs = [
-    "//third_party/google/gtest",
     "//third_party/google/gtest/include",
   ]
 
@@ -26,14 +25,10 @@ config("gtest_config") {
 static_library("gtest") {
   sources = [
     "//third_party/google/gtest/src/gtest-all.cc",
-    "//third_party/google/gtest/src/gtest-death-test.cc",
-    "//third_party/google/gtest/src/gtest-filepath.cc",
-    "//third_party/google/gtest/src/gtest-internal-inl.h",
-    "//third_party/google/gtest/src/gtest-port.cc",
-    "//third_party/google/gtest/src/gtest-printers.cc",
-    "//third_party/google/gtest/src/gtest-test-part.cc",
-    "//third_party/google/gtest/src/gtest-typed-test.cc",
-    "//third_party/google/gtest/src/gtest.cc",
+  ]
+
+  include_dirs = [
+    "//third_party/google/gtest",
   ]
 
   all_dependent_configs = [ ":gtest_config" ]

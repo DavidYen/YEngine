@@ -5,6 +5,12 @@ vars = {
   "gflags_git": "https://code.google.com/p/gflags.git",
   "gflags_revision": "05b155ff59114735ec8cd089f669c4c3d8f59029",
 
+  "gmock_git": "https://github.com/DavidYen/googlemock.git",
+  "gmock_revision": "9b1a944ec48b7f84ad2f4466ed3babd232a20db5",
+
+  "gtest_git": "https://github.com/DavidYen/googletest.git",
+  "gtest_revision": "1197daf3571161590dce2bc4879512ef7bc1ba67",
+
   "rapidjson_git": "https://github.com/miloyip/rapidjson.git",
   "rapidjson_revision": "879def80f2e466cdf4c86dc7e53ea2dd4cafaea0",
 
@@ -19,6 +25,10 @@ deps = {
     Var("flatbuffers_git") + "@" + Var("flatbuffers_revision"),
   "yengine/third_party/google/gflags":
     Var("gflags_git") + "@" + Var("gflags_revision"),
+  "yengine/third_party/google/gmock":
+    Var("gmock_git") + "@" + Var("gmock_revision"),
+  "yengine/third_party/google/gtest":
+    Var("gtest_git") + "@" + Var("gtest_revision"),
   "yengine/third_party/rapidjson":
     Var("rapidjson_git") + "@" + Var("rapidjson_revision"),
 }

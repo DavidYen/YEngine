@@ -1,0 +1,21 @@
+
+config("gmock_config") {
+  include_dirs = [
+    "//third_party/google/gmock/include",
+  ]
+}
+
+static_library("gmock") {
+  sources = [
+    "//third_party/google/gmock/src/gmock-all.cc",
+  ]
+
+  include_dirs = [
+    "//third_party/google/gmock",
+  ]
+
+  all_dependent_configs = [
+    ":gmock_config",
+    "//third_party/build/google/gtest:gtest_config",
+  ]
+}
