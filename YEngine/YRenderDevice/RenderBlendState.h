@@ -35,7 +35,17 @@ struct RenderBlendState {
   RenderBlend alpha_source;
   RenderBlend alpha_dest;
   RenderBlendOp alpha_blend_op;
-  uint8_t RenderTargetMask;
+  uint8_t render_target_mask;
+
+  bool operator==(const RenderBlendState& other) const {
+    return (source == other.source &&
+            dest == other.dest &&
+            blend_op == other.blend_op &&
+            alpha_source == other.alpha_source &&
+            alpha_dest == other.alpha_dest &&
+            alpha_blend_op == other.alpha_blend_op &&
+            render_target_mask == other.render_target_mask);
+  }
 };
 
 }} // namespace YEngine { namespace YRenderDevice {

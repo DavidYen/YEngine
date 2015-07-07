@@ -29,6 +29,13 @@ struct SamplerState {
   SamplerAddressMode address_mode_u;
   SamplerAddressMode address_mode_v;
   SamplerAddressMode address_mode_w;
+
+  bool operator==(const SamplerState& other) const {
+    return (filter == other.filter &&
+            address_mode_u == other.address_mode_u &&
+            address_mode_v == other.address_mode_v &&
+            address_mode_w == address_mode_w);
+  }
 };
 
 }} // namespace YEngine { namespace YRenderDevice {

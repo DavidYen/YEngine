@@ -1,14 +1,6 @@
 
 static_library("YRenderDevice") {
-  sources = [
-    "DrawPrimitive.h",
-    "PixelFormat.h",
-    "RenderBlendState.h",
-    "RenderDevice.h",
-    "SamplerState.h",
-    "VertexDeclElement.h",
-    "VertexFormat.h",
-  ]
+  sources = []
 
   if (gfx == "dx9") {
     sources += [
@@ -23,5 +15,13 @@ static_library("YRenderDevice") {
 
   configs += [
     "//build/config/gfx/${gfx}:gfx",
+  ]
+}
+
+static_library("YRenderDevice_Mock") {
+  sources = [ "RenderDevice_Mock.cpp" ]
+
+  deps = [
+    "//third_party/build/google/gmock",
   ]
 }
