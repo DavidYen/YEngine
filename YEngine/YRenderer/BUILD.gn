@@ -1,0 +1,29 @@
+
+source_set("YRenderer_Common") {
+  sources = [
+    "Renderer.cpp",
+  ]
+
+  deps = [
+    "//YCommon/YContainers",
+    "//YEngine/YCore",
+  ]
+}
+
+static_library("YRenderer") {
+  deps = [
+    ":YRenderer_Common",
+    "//YEngine/YRenderDevice",
+  ]
+}
+
+unit_test("YRenderer_Test") {
+  sources = [
+    "Renderer_Test.cpp",
+  ]
+
+  deps += [
+    ":YRenderer_Common",
+    "//YEngine/YRenderDevice:YRenderDevice_Mock",
+  ]
+}
