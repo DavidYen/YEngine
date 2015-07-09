@@ -100,6 +100,7 @@ namespace RenderDevice {
                           void* buffer, size_t size);
 
   // Accessors
+  void GetFrameBufferDimensions(uint32_t& width, uint32_t& height);
   void GetViewPort(ViewPortID viewport,
                    uint32_t& top, uint32_t& left,
                    uint32_t& width, uint32_t& height,

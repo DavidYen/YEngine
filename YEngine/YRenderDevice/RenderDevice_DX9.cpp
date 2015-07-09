@@ -81,6 +81,8 @@ namespace {
   void* gMemory = NULL;
   uint64_t gMemorySize = 0;
   volatile uint64_t gUsedMemory = 0;
+  uint32_t gWidth = 0;
+  uint32_t gHeight = 0;
 
   const D3DBLEND kRenderBlendStates[] = {
     D3DBLEND_ZERO,         // kRenderBlend_Zero,
@@ -430,6 +432,8 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   gMemory = buffer;
   gMemorySize = static_cast<uint64_t>(buffer_size);
   gUsedMemory = 0;
+  gWidth = width;
+  gHeight = height;
 
   const YCommon::YPlatform::WinPlatformHandle& win_handle =
       reinterpret_cast<const YCommon::YPlatform::WinPlatformHandle&>(handle);
@@ -1207,6 +1211,11 @@ void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
 }
 
 // Accessors
+void RenderDevice::GetFrameBufferDimensions(uint32_t& width, uint32_t& height) {
+  gWidth = width;
+  gHeight = height;
+}
+
 void RenderDevice::GetViewPort(ViewPortID viewport,
                                uint32_t& top, uint32_t& left,
                                uint32_t& width, uint32_t& height,

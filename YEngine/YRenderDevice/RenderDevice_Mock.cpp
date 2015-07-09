@@ -278,7 +278,7 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   gRenderWidth = width;
   gRenderHeight = height;
 
-  ASSERT_GE(sizeof(MockRenderDevice), buffer_size);
+  ASSERT_LE(sizeof(MockRenderDevice), buffer_size);
   gMockRenderDevice = new (buffer) MockRenderDevice();
 }
 
@@ -432,6 +432,11 @@ void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
 }
 
 // Accessors
+void RenderDevice::GetFrameBufferDimensions(uint32_t& width, uint32_t& height) {
+  width = gRenderWidth;
+  height = gRenderHeight;
+}
+
 void RenderDevice::GetViewPort(ViewPortID viewport,
                                uint32_t& top, uint32_t& left,
                                uint32_t& width, uint32_t& height,
