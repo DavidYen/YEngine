@@ -9,6 +9,7 @@
 namespace YEngine { namespace YCore {
 
 namespace StringTable {
+  size_t GetAllocationSize(size_t max_string_size, size_t table_size);
   void Initialize(size_t max_string_size, size_t table_size,
                   void* buffer, size_t buffer_size);
   void Terminate();

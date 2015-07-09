@@ -24,10 +24,11 @@ class HashTable {
   void Reset(); // Initializes pointers to null.
   void Clear(); // Clears out all entires.
 
-  uint64_t Insert(const void* key, size_t key_size,
-                  const void* value, size_t value_size);
-  void Insert(uint64_t hash_key,
-              const void* value, size_t value_size);
+  void* Insert(const void* key, size_t key_size,
+               const void* value, size_t value_size,
+               uint64_t* hash_key = nullptr);
+  void* Insert(uint64_t hash_key,
+               const void* value, size_t value_size);
 
   bool Remove(const void* key, size_t key_size);
   bool Remove(uint64_t hash_key);
@@ -51,7 +52,7 @@ template <typename T>
 class TypedHashTable : public HashTable {
  public:
   static size_t GetAllocationSize(size_t num_entries) {
-    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T));
+    return HashTable::GetAllocationSize(num_entries, sizeof(T));
   }
 
   TypedHashTable() : HashTable() {}
@@ -63,12 +64,14 @@ class TypedHashTable : public HashTable {
     HashTable::Init(buffer, buffer_size, num_entries, sizeof(T));
   }
 
-  uint64_t Insert(const void* key, size_t key_size, const T& value) {
-    return HashTable::Insert(key, key_size, &value, sizeof(value));
+  T* Insert(const void* key, size_t key_size, const T& value,
+            uint64_t* hash_key = nullptr) {
+    return static_cast<T*>(
+        HashTable::Insert(key, key_size, &value, sizeof(value), hash_key));
   }
 
-  void Insert(uint64_t hash_key, const T& value) {
-    return HashTable::Insert(hash_key, &value, sizeof(value));
+  T* Insert(uint64_t hash_key, const T& value) {
+    return static_cast<T*>(HashTable::Insert(hash_key, &value, sizeof(value)));
   }
 
   const T* const GetValue(const void* key, size_t size) const {
@@ -99,8 +102,8 @@ class FullTypedHashTable : public TypedHashTable<T2> {
       : TypedHashTable(buffer, buffer_size, num_entries) {}
   ~FullTypedHashTable() {}
 
-  uint64_t Insert(const T1& key, const T2& value) {
-    return TypedHashTable::Insert(&key, sizeof(key), value);
+  T2* Insert(const T1& key, const T2& value, uint64_t* hash_key = nullptr) {
+    return TypedHashTable::Insert(&key, sizeof(key), value, hash_key);
   }
 
   const T2* const GetValue(const T1& key) const {

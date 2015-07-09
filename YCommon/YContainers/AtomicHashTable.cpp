@@ -71,15 +71,17 @@ void AtomicHashTable::Clear() {
   memset(mBuffer, EMPTY_VALUE, sizeof(uint64_t) * mNumEntries);
 }
 
-uint64_t AtomicHashTable::Insert(const void* key, size_t key_size,
-                                 const void* value, size_t value_size) {
-  const uint64_t hash_key = YCommon::YUtils::Hash::Hash64(key, key_size);
-  Insert(hash_key, value, value_size);
-  return hash_key;
+void* AtomicHashTable::Insert(const void* key, size_t key_size,
+                              const void* value, size_t value_size,
+                              uint64_t* hash_key) {
+  const uint64_t hash_key_value = YCommon::YUtils::Hash::Hash64(key, key_size);
+  if (hash_key)
+    *hash_key = hash_key_value;
+  return Insert(hash_key_value, value, value_size);
 }
 
-void AtomicHashTable::Insert(uint64_t hash_key,
-                             const void* value, size_t value_size) {
+void* AtomicHashTable::Insert(uint64_t hash_key,
+                              const void* value, size_t value_size) {
   YDEBUG_CHECK(value_size <= mMaxValueSize,
                "Invalid Hash Value size: Maximum size is %u. Supplied %u.",
                static_cast<uint32_t>(mMaxValueSize),
@@ -102,14 +104,16 @@ void AtomicHashTable::Insert(uint64_t hash_key,
          YCommon::AtomicCmpSet64(&hash_table[try_index],
                                  REMOVED_VALUE,
                                  PLACEHOLDER_VALUE))) {
-      memcpy(hash_value_table + (try_index * mMaxValueSize), value, value_size);
+      void* hash_data = hash_value_table + (try_index * mMaxValueSize);
+      memcpy(hash_data, value, value_size);
       YCommon::AtomicAdd32(&mCurrentEntries, 1); // Has implicit memory barrier.
       hash_table[try_index] = hash_key;
-      return;
+      return hash_data;
     }
   }
 
   YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
+  return nullptr;
 }
 
 bool AtomicHashTable::Remove(const void* key, size_t key_size) {

@@ -69,14 +69,16 @@ void HashTable::Clear() {
   memset(mBuffer, EMPTY_VALUE, sizeof(uint64_t) * mNumEntries);
 }
 
-uint64_t HashTable::Insert(const void* key, size_t key_size,
-                           const void* value, size_t value_size) {
-  const uint64_t hash_key = YCommon::YUtils::Hash::Hash64(key, key_size);
-  Insert(hash_key, value, value_size);
-  return hash_key;
+void* HashTable::Insert(const void* key, size_t key_size,
+                        const void* value, size_t value_size,
+                        uint64_t* hash_key) {
+  const uint64_t hash_key_value = YCommon::YUtils::Hash::Hash64(key, key_size);
+  if (hash_key)
+    *hash_key = hash_key_value;
+  return Insert(hash_key_value, value, value_size);
 }
 
-void HashTable::Insert(uint64_t hash_key,
+void* HashTable::Insert(uint64_t hash_key,
                        const void* value, size_t value_size) {
   YDEBUG_CHECK(value_size <= mMaxValueSize,
                "Invalid Hash Value size: Maximum size is %u. Supplied %u.",
@@ -95,13 +97,15 @@ void HashTable::Insert(uint64_t hash_key,
         hash_table_value == REMOVED_VALUE ||
         hash_table_value == EMPTY_VALUE) {
       hash_table[try_index] = hash_key;
-      memcpy(hash_value_table + (try_index * mMaxValueSize), value, value_size);
+      void* hash_data = hash_value_table + (try_index * mMaxValueSize);
+      memcpy(hash_data, value, value_size);
       ++mCurrentEntries;
-      return;
+      return hash_data;
     }
   }
 
   YFATAL("Atomic Hash Table is too full, maximum amount of tries reached!");
+  return nullptr;
 }
 
 bool HashTable::Remove(const void* key, size_t key_size) {

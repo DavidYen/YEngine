@@ -25,10 +25,11 @@ class AtomicHashTable {
   void Reset();
   void Clear();
 
-  uint64_t Insert(const void* key, size_t key_size,
-                  const void* value, size_t value_size);
-  void Insert(uint64_t hash_key,
-              const void* value, size_t value_size);
+  void* Insert(const void* key, size_t key_size,
+               const void* value, size_t value_size,
+               uint64_t* hash_key = nullptr);
+  void* Insert(uint64_t hash_key,
+               const void* value, size_t value_size);
 
   bool Remove(const void* key, size_t key_size);
   bool Remove(uint64_t hash_key);
@@ -64,12 +65,15 @@ class TypedAtomicHashTable : public AtomicHashTable {
     AtomicHashTable::Init(buffer, buffer_size, num_entries, sizeof(T));
   }
 
-  uint64_t Insert(const void* key, size_t key_size, const T& value) {
-    return AtomicHashTable::Insert(key, key_size, &value, sizeof(value));
+  T* Insert(const void* key, size_t key_size, const T& value,
+            uint64_t* hash_key = nullptr) {
+    return static_cast<T*>(AtomicHashTable::Insert(key, key_size, &value,
+                                                   sizeof(value), hash_key));
   }
 
-  void Insert(uint64_t hash_key, const T& value) {
-    return AtomicHashTable::Insert(hash_key, &value, sizeof(value));
+  T* Insert(uint64_t hash_key, const T& value) {
+    return static_cast<T*>(AtomicHashTable::Insert(hash_key,
+                                                   &value, sizeof(value)));
   }
 
   const T* const GetValue(const void* key, size_t size) const {
@@ -100,8 +104,8 @@ class FullTypedAtomicHashTable : public TypedAtomicHashTable<T2> {
       : TypedAtomicHashTable(buffer, buffer_size, num_entries) {}
   ~FullTypedAtomicHashTable() {}
 
-  uint64_t Insert(const T1& key, const T2& value) {
-    return AtomicHashTable::Insert(&key, sizeof(key), &value, sizeof(value));
+  T2* Insert(const T1& key, const T2& value, uint64_t* hash_key = nullptr) {
+    return TypedAtomicHashTable::Insert(&key, sizeof(key), value, hash_key);
   }
 
   const T2* const GetValue(const T1& key) const {
