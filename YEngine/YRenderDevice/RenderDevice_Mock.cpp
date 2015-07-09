@@ -9,6 +9,7 @@
 #include "VertexDeclElement.h"
 
 using ::testing::Return;
+using ::testing::_;
 
 namespace YEngine { namespace YRenderDevice {
 
@@ -280,9 +281,69 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
 
   ASSERT_LE(sizeof(MockRenderDevice), buffer_size);
   gMockRenderDevice = new (buffer) MockRenderDevice();
+
+  // Disallow all mock calls.
+  EXPECT_CALL(*gMockRenderDevice, GetNullRenderTarget()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, GetBackBufferRenderTarget()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, GetRenderTargetTexture(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateViewPort(_, _, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateRenderBlendState(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateRenderTarget(_, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateVertexDeclaration(_,_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateVertexShader(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreatePixelShader(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateSamplerState(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateTexture(_, _, _, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateVertexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateIndexBuffer(_, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, CreateConstantBuffer(_, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, SetViewPort(_, _, _, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillTexture(_, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillTextureMip(_, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ResetVertexBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, AppendVertexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillVertexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ResetIndexBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, AppendIndexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillIndexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillConstantBuffer(_, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, GetViewPort(_, _, _, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, GetVertexBufferCount(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, GetIndexBufferCount(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseViewPort(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderBlendState(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderTarget(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexDeclaration(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexShader(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleasePixelShader(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseSamplerState(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseTexture(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseIndexBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseConstantBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateViewPort(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateRenderBlendState(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateRenderTarget(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexDeclaration(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexShader(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelShader(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateSamplerState(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateTexture(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexStream(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateIndexStream(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateConstantBuffer(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateDrawPrimitive(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, Draw(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, DrawInstanced(_, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, DrawIndexed(_, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, DrawIndexedInstanced(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, Begin()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, End()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, Present()).Times(0);
 }
 
 void RenderDevice::Terminate() {
+  gMockRenderDevice->~MockRenderDevice();
   gMockRenderDevice = nullptr;
   memset(&gPlatformHandle, 0, sizeof(gPlatformHandle));
   gRenderWidth = 0;
@@ -590,17 +651,20 @@ void RenderDevice::Present() {
 
 void RenderDeviceMock::ExpectGetNullRenderTarget(RenderTargetID ret) {
   EXPECT_CALL(*gMockRenderDevice, GetNullRenderTarget())
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectGetBackBufferRenderTarget(RenderTargetID ret) {
   EXPECT_CALL(*gMockRenderDevice, GetBackBufferRenderTarget())
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectGetRenderTargetTexture(
     TextureID ret, RenderTargetID render_target) {
   EXPECT_CALL(*gMockRenderDevice, GetRenderTargetTexture(render_target))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -610,12 +674,14 @@ void RenderDeviceMock::ExpectCreateViewPort(ViewPortID ret,
                                             float min_z, float max_z) {
   EXPECT_CALL(*gMockRenderDevice, CreateViewPort(top, left, width, height,
                                                 min_z, max_z))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectCreateRenderBlendState(
     RenderBlendStateID ret, const RenderBlendState& state) {
   EXPECT_CALL(*gMockRenderDevice, CreateRenderBlendState(state))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -623,6 +689,7 @@ void RenderDeviceMock::ExpectCreateRenderTarget(RenderTargetID ret,
                                                 uint32_t width, uint32_t height,
                                                 PixelFormat format) {
   EXPECT_CALL(*gMockRenderDevice, CreateRenderTarget(width, height, format))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -630,6 +697,7 @@ void RenderDeviceMock::ExpectCreateVertexDeclaration(
     VertexDeclID ret, VertexDeclElement* elements, size_t num_elements) {
   EXPECT_CALL(*gMockRenderDevice, CreateVertexDeclaration(elements,
                                                          num_elements))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -637,6 +705,7 @@ void RenderDeviceMock::ExpectCreateVertexShader(VertexShaderID ret,
                                                 const void* shader_data,
                                                 size_t shader_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateVertexShader(shader_data, shader_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -644,12 +713,14 @@ void RenderDeviceMock::ExpectCreatePixelShader(PixelShaderID ret,
                                                const void* shader_data,
                                                size_t shader_size) {
   EXPECT_CALL(*gMockRenderDevice, CreatePixelShader(shader_data, shader_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectCreateSamplerState(SamplerStateID ret,
                                                 const SamplerState& state) {
   EXPECT_CALL(*gMockRenderDevice, CreateSamplerState(state))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -660,6 +731,7 @@ void RenderDeviceMock::ExpectCreateTexture(TextureID ret,
                                            void* buffer, size_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateTexture(type, width, height, mips,
                                                format, buffer, buffer_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -669,6 +741,7 @@ void RenderDeviceMock::ExpectCreateVertexBuffer(VertexBufferID ret,
                                                 size_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateVertexBuffer(type, stride, count,
                                                     buffer, buffer_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -677,6 +750,7 @@ void RenderDeviceMock::ExpectCreateIndexBuffer(IndexBufferID ret,
                                                void* buffer, size_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateIndexBuffer(type, count,
                                                    buffer, buffer_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -686,6 +760,7 @@ void RenderDeviceMock::ExpectCreateConstantBuffer(ConstantBufferID ret,
                                                   size_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateConstantBuffer(type, size,
                                                       buffer, buffer_size))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
@@ -695,21 +770,25 @@ void RenderDeviceMock::ExpectSetViewPort(ViewPortID viewport,
                                          float min_z, float max_z) {
   EXPECT_CALL(*gMockRenderDevice, SetViewPort(viewport,
                                               top, left, width, height,
-                                              min_z, max_z));
+                                              min_z, max_z))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillTexture(TextureID texture,
                                          void* buffer, size_t size) {
-  EXPECT_CALL(*gMockRenderDevice, FillTexture(texture, buffer, size));
+  EXPECT_CALL(*gMockRenderDevice, FillTexture(texture, buffer, size))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillTextureMip(TextureID texture, uint32_t mip,
                                             void* buffer, size_t size) {
-  EXPECT_CALL(*gMockRenderDevice, FillTextureMip(texture, mip, buffer, size));
+  EXPECT_CALL(*gMockRenderDevice, FillTextureMip(texture, mip, buffer, size))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectResetVertexBuffer(VertexBufferID vertex_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ResetVertexBuffer(vertex_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ResetVertexBuffer(vertex_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectAppendVertexBuffer(VertexBufferID vertex_buffer,
@@ -719,7 +798,8 @@ void RenderDeviceMock::ExpectAppendVertexBuffer(VertexBufferID vertex_buffer,
                                                 uint32_t* starting_offset) {
   EXPECT_CALL(*gMockRenderDevice, AppendVertexBuffer(vertex_buffer, count,
                                                     buffer, buffer_size,
-                                                    starting_offset));
+                                                    starting_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillVertexBuffer(VertexBufferID vertex_buffer,
@@ -728,11 +808,13 @@ void RenderDeviceMock::ExpectFillVertexBuffer(VertexBufferID vertex_buffer,
                                               uint32_t index_offset) {
   EXPECT_CALL(*gMockRenderDevice, FillVertexBuffer(vertex_buffer, count,
                                                   buffer, buffer_size,
-                                                  index_offset));
+                                                  index_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectResetIndexBuffer(IndexBufferID index_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ResetIndexBuffer(index_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ResetIndexBuffer(index_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectAppendIndexBuffer(IndexBufferID index_buffer,
@@ -741,7 +823,8 @@ void RenderDeviceMock::ExpectAppendIndexBuffer(IndexBufferID index_buffer,
                                                uint32_t* starting_offset) {
   EXPECT_CALL(*gMockRenderDevice, AppendIndexBuffer(index_buffer, count,
                                                    buffer, buffer_size,
-                                                   starting_offset));
+                                                   starting_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillIndexBuffer(IndexBufferID index_buffer,
@@ -750,13 +833,15 @@ void RenderDeviceMock::ExpectFillIndexBuffer(IndexBufferID index_buffer,
                                              uint32_t index_offset) {
   EXPECT_CALL(*gMockRenderDevice, FillIndexBuffer(index_buffer, count,
                                                  buffer, buffer_size,
-                                                 index_offset));
+                                                 index_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillConstantBuffer(
     ConstantBufferID constant_buffer, void* buffer, size_t size) {
   EXPECT_CALL(*gMockRenderDevice, FillConstantBuffer(constant_buffer,
-                                                    buffer, size));
+                                                    buffer, size))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectGetViewPort(ViewPortID viewport,
@@ -764,125 +849,152 @@ void RenderDeviceMock::ExpectGetViewPort(ViewPortID viewport,
                                          uint32_t& width, uint32_t& height,
                                          float& min_z, float& max_z) {
   EXPECT_CALL(*gMockRenderDevice, GetViewPort(viewport, top, left,
-                                             width, height, min_z, max_z));
+                                             width, height, min_z, max_z))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectGetVertexBufferCount(
     uint32_t ret, VertexBufferID vertex_buffer) {
   EXPECT_CALL(*gMockRenderDevice, GetVertexBufferCount(vertex_buffer))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectGetIndexBufferCount(uint32_t ret,
                                                  IndexBufferID index_buffer) {
   EXPECT_CALL(*gMockRenderDevice, GetIndexBufferCount(index_buffer))
+      .Times(1)
       .WillOnce(Return(ret));
 }
 
 void RenderDeviceMock::ExpectReleaseViewPort(ViewPortID viewport) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseViewPort(viewport));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseViewPort(viewport))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseRenderBlendState(RenderBlendStateID state) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderBlendState(state));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderBlendState(state))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseRenderTarget(RenderTargetID render_target) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderTarget(render_target));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseRenderTarget(render_target))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseVertexDeclaration(
     VertexDeclID vertex_decl) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexDeclaration(vertex_decl));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexDeclaration(vertex_decl))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseVertexShader(VertexShaderID shader) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexShader(shader));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexShader(shader))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleasePixelShader(PixelShaderID shader) {
-  EXPECT_CALL(*gMockRenderDevice, ReleasePixelShader(shader));
+  EXPECT_CALL(*gMockRenderDevice, ReleasePixelShader(shader))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseSamplerState(SamplerStateID state) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseSamplerState(state));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseSamplerState(state))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseTexture(TextureID texture) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseTexture(texture));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseTexture(texture))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseVertexBuffer(VertexBufferID vertex_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexBuffer(vertex_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseVertexBuffer(vertex_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseIndexBuffer(IndexBufferID index_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseIndexBuffer(index_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseIndexBuffer(index_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectReleaseConstantBuffer(
     ConstantBufferID constant_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ReleaseConstantBuffer(constant_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ReleaseConstantBuffer(constant_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateViewPort(ViewPortID viewport) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateViewPort(viewport));
+  EXPECT_CALL(*gMockRenderDevice, ActivateViewPort(viewport))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateRenderBlendState(
     RenderBlendStateID blend_state) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateRenderBlendState(blend_state));
+  EXPECT_CALL(*gMockRenderDevice, ActivateRenderBlendState(blend_state))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateRenderTarget(
     int target, RenderTargetID render_target) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateRenderTarget(target, render_target));
+  EXPECT_CALL(*gMockRenderDevice, ActivateRenderTarget(target, render_target))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateVertexDeclaration(
     VertexDeclID vertex_decl) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateVertexDeclaration(vertex_decl));
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexDeclaration(vertex_decl))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateVertexShader(VertexShaderID shader) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateVertexShader(shader));
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexShader(shader))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivatePixelShader(PixelShaderID shader) {
-  EXPECT_CALL(*gMockRenderDevice, ActivatePixelShader(shader));
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelShader(shader))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateSamplerState(
     int sampler, SamplerStateID sampler_state) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateSamplerState(sampler, sampler_state));
+  EXPECT_CALL(*gMockRenderDevice, ActivateSamplerState(sampler, sampler_state))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateTexture(int sampler, TextureID texture) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateTexture(sampler, texture));
+  EXPECT_CALL(*gMockRenderDevice, ActivateTexture(sampler, texture))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateVertexStream(
     uint32_t stream, VertexBufferID vertex_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateVertexStream(stream, vertex_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexStream(stream, vertex_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateIndexStream(IndexBufferID index_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateIndexStream(index_buffer));
+  EXPECT_CALL(*gMockRenderDevice, ActivateIndexStream(index_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateConstantBuffer(
     int start_reg, ConstantBufferID constant_buffer) {
   EXPECT_CALL(*gMockRenderDevice, ActivateConstantBuffer(start_reg,
-                                                         constant_buffer));
+                                                         constant_buffer))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectActivateDrawPrimitive(
     DrawPrimitive draw_primitive) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateDrawPrimitive(draw_primitive));
+  EXPECT_CALL(*gMockRenderDevice, ActivateDrawPrimitive(draw_primitive))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectDraw(uint32_t start_vertex, uint32_t num_verts) {
-  EXPECT_CALL(*gMockRenderDevice, Draw(start_vertex, num_verts));
+  EXPECT_CALL(*gMockRenderDevice, Draw(start_vertex, num_verts))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectDrawInstanced(uint32_t start_vertex,
@@ -890,13 +1002,15 @@ void RenderDeviceMock::ExpectDrawInstanced(uint32_t start_vertex,
                                            uint32_t start_instance,
                                            uint32_t num_instances) {
   EXPECT_CALL(*gMockRenderDevice, DrawInstanced(start_vertex, verts_per_instance,
-                                               start_instance, num_instances));
+                                               start_instance, num_instances))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectDrawIndexed(uint32_t start_index, uint32_t num_indexes,
                                          uint32_t vertex_offset) {
   EXPECT_CALL(*gMockRenderDevice, DrawIndexed(start_index, num_indexes,
-                                             vertex_offset));
+                                             vertex_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectDrawIndexedInstanced(uint32_t start_index,
@@ -908,19 +1022,20 @@ void RenderDeviceMock::ExpectDrawIndexedInstanced(uint32_t start_index,
                                                       index_per_instance,
                                                       start_instance,
                                                       num_instances,
-                                                      vertex_offset));
+                                                      vertex_offset))
+      .Times(1);
 }
 
 void RenderDeviceMock::ExpectBegin() {
-  EXPECT_CALL(*gMockRenderDevice, Begin());
+  EXPECT_CALL(*gMockRenderDevice, Begin()).Times(1);
 }
 
 void RenderDeviceMock::ExpectEnd() {
-  EXPECT_CALL(*gMockRenderDevice, End());
+  EXPECT_CALL(*gMockRenderDevice, End()).Times(1);
 }
 
 void RenderDeviceMock::ExpectPresent() {
-  EXPECT_CALL(*gMockRenderDevice, Present());
+  EXPECT_CALL(*gMockRenderDevice, Present()).Times(1);
 }
 
 }} // namespace YEngine { namespace YRenderDevice {
