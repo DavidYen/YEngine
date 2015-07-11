@@ -44,33 +44,41 @@ namespace Renderer {
                           const YRenderDevice::RenderBlendState& blend_state,
                           const char** render_targets, size_t* target_sizes,
                           size_t num_targets);
-  void RegisterVertexDecl(const char* name,
+  void RegisterVertexDecl(const char* name, size_t name_size,
                           const YRenderDevice::VertexDeclElement* elements,
                           size_t num_elements);
-  void RegisterShaderFloatParam(const char* name, uint8_t num_floats,
+  void RegisterShaderFloatParam(const char* name, size_t name_size,
+                                uint8_t num_floats,
                                 uint8_t reg, uint8_t reg_offset);
-  void RegisterShaderTextureParam(const char* name, uint8_t slot,
+  void RegisterShaderTextureParam(const char* name, size_t name_size,
+                                  uint8_t slot,
                                   const YRenderDevice::SamplerState& sampler);
-  void RegisterShaderData(const char* shader_name, const char* variant_name,
+  void RegisterShaderData(const char* shader_name, size_t shader_name_size,
+                          const char* variant_name, size_t variant_name_size,
                           const char** vertex_params, size_t num_vertex_params,
                           const void* vertex_shader_data,
                           size_t vertex_shader_size,
                           const char** pixel_params, size_t num_pixel_params,
                           const void* pixel_shader_data,
                           size_t pixel_shader_size);
-  void RegisterRenderPasses(const char* name,
+  void RegisterRenderPasses(const char* name, size_t name_size,
                             const char** render_passes, size_t num_passes);
-  void RegisterRenderType(const char* name, const char* shader);
-  void RegisterVertexData(const char* name, size_t num_vertex_elements,
+  void RegisterRenderType(const char* name, size_t name_size,
+                          const char* shader, size_t shader_size);
+  void RegisterVertexData(const char* name, size_t name_size,
+                          size_t num_vertex_elements,
                           const YRenderDevice::VertexElementType* data_types,
                           const YRenderDevice::VertexElementUsage* data_usages,
                           const size_t* vertex_data_sizes,
                           const void** vertex_datas);
-  void RegisterShaderArgs(const char* name, size_t num_args,
-                          const char** param_names, const char** arg_names);
-  void RegisterRenderObject(const char* name, const char* view_port,
-                            const char* render_type, const char* shader_args,
-                            const char* vertex_data);
+  void RegisterShaderArgs(const char* name, size_t name_size, size_t num_args,
+                          const char** param_names, size_t* param_name_sizes,
+                          const char** arg_names, size_t* arg_name_sizes);
+  void RegisterRenderObject(const char* name, size_t name_size,
+                            const char* view_port, size_t view_port_size,
+                            const char* render_type, size_t render_type_size,
+                            const char* shader_args, size_t shader_args_size,
+                            const char* vertex_data, size_t vertex_data_size);
 
   // Release
   bool ReleaseViewPort(const char* name, size_t name_size);

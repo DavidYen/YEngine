@@ -115,6 +115,15 @@ TEST_F(RendererTest, RenderPassTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderPass(name, sizeof(name)));
 }
 
+TEST_F(RendererTest, VertexDeclTest) {
+  const char name[] = "test_vertex_decl";
+  Renderer::RegisterVertexDecl(name, sizeof(name), nullptr, 0);
+  Renderer::RegisterVertexDecl(name, sizeof(name), nullptr, 0);
+
+  EXPECT_FALSE(Renderer::ReleaseVertexDecl(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseVertexDecl(name, sizeof(name)));
+}
+
 TEST_F(RendererTest, BasicActivationTest) {
   const char viewport_name[] = "test";
   const YRenderDevice::ViewPortID viewport_id = 123;

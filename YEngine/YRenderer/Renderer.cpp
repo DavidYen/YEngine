@@ -14,14 +14,16 @@
 #define BACKBUFFERNAMES_SIZE 12
 #define BLENDSTATES_SIZE 32
 #define RENDERPASSES_SIZE 32
-#define RENDERTYPES_SIZE 32
+#define VERTEXDECLS_SIZE 32
 
 #define MAX_RENDERTARGETS_PER_PASS 4
 #define MAX_SHADER_VARIANT_NAME 16
+#define MAX_VERTEX_ELEMENTS 8
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
 #define INVALID_BLEND_STATE static_cast<YRenderDevice::RenderBlendStateID>(-1)
+#define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
 
 namespace YEngine { namespace YRenderer {
 
@@ -110,9 +112,9 @@ namespace {
         mNumRenderTargets(num_render_targets),
         mShaderVariantSize(shader_variant_size) {
       YASSERT(num_render_targets < ARRAY_SIZE(mRenderTargets),
-                   "Maximum render targets exceeded");
+              "Maximum render targets exceeded");
       YASSERT(shader_variant_size < ARRAY_SIZE(mShaderVariant),
-                   "Maximum render targets exceeded");
+              "Maximum render targets exceeded");
       memset(mRenderTargets, 0, sizeof(mRenderTargets));
       memcpy(mRenderTargets, render_targets,
              num_render_targets * sizeof(RenderTargetInternal*));
@@ -127,6 +129,26 @@ namespace {
     uint8_t mShaderVariantSize;
   };
   YCommon::YContainers::TypedHashTable<RenderPassInternal> gRenderPasses;
+
+  struct VertexDeclInternal : public RefCountBase {
+    VertexDeclInternal(const YRenderDevice::VertexDeclElement* elements,
+                       uint8_t num_elements)
+      : RefCountBase(),
+        mNumVertexElements(num_elements),
+        mVertexDeclID(INVALID_VERTEX_DECL) {
+      YASSERT(num_elements < MAX_VERTEX_ELEMENTS,
+              "Maximum vertex elements (%d) exceeded: %d",
+              static_cast<int>(MAX_VERTEX_ELEMENTS),
+              static_cast<int>(num_elements));
+      memset(mVertexElements, 0, sizeof(mVertexElements));
+      memcpy(mVertexElements, elements, num_elements * sizeof(elements[0]));
+    }
+
+    YRenderDevice::VertexDeclElement mVertexElements[MAX_VERTEX_ELEMENTS];
+    uint8_t mNumVertexElements;
+    YRenderDevice::VertexDeclID mVertexDeclID;
+  };
+  YCommon::YContainers::TypedHashTable<VertexDeclInternal> gVertexDecls;
 }
 
 uint32_t GetDimensionValue(uint32_t frame_value,
@@ -180,9 +202,19 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
           "Not enough space to allocate back buffer name table.");
   gRenderPasses.Init(renderpasses_buffer, renderpasses_size,
                      RENDERPASSES_SIZE);
+
+  // Vertex Declarations
+  const size_t vertexdecls_size =
+      gVertexDecls.GetAllocationSize(VERTEXDECLS_SIZE);
+  void* vertexdecls_buffer = gMemBuffer.Allocate(vertexdecls_size);
+  YASSERT(vertexdecls_buffer,
+          "Not enough space to allocate vertex declaration table.");
+  gVertexDecls.Init(vertexdecls_buffer, vertexdecls_size,
+                    VERTEXDECLS_SIZE);
 }
 
 void Renderer::Terminate() {
+  gVertexDecls.Reset();
   gRenderPasses.Reset();
   gBlendStates.Reset();
   gBackBufferNames.Reset();
@@ -282,6 +314,20 @@ void Renderer::RegisterRenderPass(
   render_pass->IncRef();
 }
 
+void Renderer::RegisterVertexDecl(
+    const char* name, size_t name_size,
+    const YRenderDevice::VertexDeclElement* elements,
+    size_t num_elements) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  VertexDeclInternal* vertex_decl = gVertexDecls.GetValue(name_hash);
+  if (vertex_decl == nullptr) {
+    VertexDeclInternal new_vertex_decl(elements,
+                                       static_cast<uint8_t>(num_elements));
+    vertex_decl = gVertexDecls.Insert(name_hash, new_vertex_decl);
+  }
+  vertex_decl->IncRef();
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -345,6 +391,20 @@ bool Renderer::ReleaseRenderPass(const char* name, size_t name_size) {
     }
 
     return gRenderPasses.Remove(name_hash);
+  }
+  return false;
+}
+
+bool Renderer::ReleaseVertexDecl(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  VertexDeclInternal* vertex_decl = gVertexDecls.GetValue(name_hash);
+  YASSERT(vertex_decl, "Releasing an invalid Vertex Declaration: %s", name);
+  if (vertex_decl->DecRef()) {
+    if (vertex_decl->mVertexDeclID != INVALID_VERTEX_DECL) {
+      YRenderDevice::RenderDevice::ReleaseVertexDeclaration(
+          vertex_decl->mVertexDeclID);
+    }
+    return gVertexDecls.Remove(name_hash);
   }
   return false;
 }
