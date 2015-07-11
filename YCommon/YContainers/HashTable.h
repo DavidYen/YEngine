@@ -94,7 +94,7 @@ template <typename T1, typename T2>
 class FullTypedHashTable : public TypedHashTable<T2> {
  public:
   static size_t GetAllocationSize(size_t num_entries) {
-    return AtomicHashTable::GetAllocationSize(num_entries, sizeof(T2));
+    return HashTable::GetAllocationSize(num_entries, sizeof(T2));
   }
 
   FullTypedHashTable() : TypedHashTable() {}
@@ -106,13 +106,28 @@ class FullTypedHashTable : public TypedHashTable<T2> {
     return TypedHashTable::Insert(&key, sizeof(key), value, hash_key);
   }
 
+  T2* Insert(uint64_t hash_key, const T2& value) {
+    return TypedHashTable::Insert(hash_key, value);
+  }
+
   const T2* const GetValue(const T1& key) const {
-    return static_cast<const T2* const>(TypedHashTable::GetValue(&key,
-                                                                 sizeof(T1)));
+    return TypedHashTable::GetValue(&key, sizeof(key));
+  }
+
+  T2* GetValue(uint64_t hash_key) const {
+    return TypedHashTable::GetValue(hash_key);
   }
 
   T2* GetValue(T1& key) {
-    return static_cast<T2*>(TypedHashTable::GetValue(&key, sizeof(T1)));
+    return TypedHashTable::GetValue(&key, sizeof(key));
+  }
+
+  T2* GetValue(uint64_t hash_key) {
+    return TypedHashTable::GetValue(hash_key);
+  }
+
+  bool Remove(const T1& key) {
+    return TypedHashTable::Remove(&key, sizeof(key));
   }
 };
 
@@ -120,7 +135,7 @@ template <typename T, size_t entries>
 class ContainedHashTable : public TypedHashTable<T> {
  public:
   static size_t GetAllocationSize() {
-    return AtomicHashTable::GetAllocationSize(entries, sizeof(T));
+    return HashTable::GetAllocationSize(entries, sizeof(T));
   }
 
   ContainedHashTable()
@@ -140,7 +155,7 @@ template <typename T1, typename T2, size_t entries>
 class ContainedFullHashTable : public FullTypedHashTable<T1, T2> {
  public:
   static size_t GetAllocationSize() {
-    return AtomicHashTable::GetAllocationSize(entries, sizeof(T2));
+    return HashTable::GetAllocationSize(entries, sizeof(T2));
   }
 
   ContainedFullHashTable()
