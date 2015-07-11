@@ -30,6 +30,13 @@ struct SamplerState {
   SamplerAddressMode address_mode_v;
   SamplerAddressMode address_mode_w;
 
+  SamplerState()
+    : filter(kSamplerFilter_MinMagMipPoint),
+      address_mode_u(kSamplerAddressMode_Clamp),
+      address_mode_v(kSamplerAddressMode_Clamp),
+      address_mode_w(kSamplerAddressMode_Clamp) {
+  }
+
   bool operator==(const SamplerState& other) const {
     return (filter == other.filter &&
             address_mode_u == other.address_mode_u &&
