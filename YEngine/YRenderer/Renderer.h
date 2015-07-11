@@ -22,17 +22,28 @@ namespace Renderer {
   void Initialize(void* buffer, size_t buffer_size);
   void Terminate();
 
+  enum DimensionType {
+    kDimensionType_Absolute, // Use absolute numbers.
+    kDimensionType_Percentage, // Use percentage of frame buffer dimensions.
+  };
+
+  // Register renderer options
   void RegisterViewPort(const char* name, size_t name_size,
-                        uint32_t top, uint32_t left,
-                        uint32_t width, uint32_t height,
+                        DimensionType top_type, float top,
+                        DimensionType left_type, float left,
+                        DimensionType width_type, float width,
+                        DimensionType height_type, float height,
                         float min_z, float max_z);
   void RegisterRenderTarget(const char* name, size_t name_size,
                             YRenderDevice::PixelFormat format,
-                            float width_percentage, float height_percentage);
+                            DimensionType width_type, float width,
+                            DimensionType height_type, float height);
   void RegisterBackBufferName(const char* name, size_t name_size);
-  void RegisterRenderPass(const char* name, const char* shader_variant,
+  void RegisterRenderPass(const char* name, size_t name_size,
+                          const char* shader_variant, size_t variant_size,
                           const YRenderDevice::RenderBlendState& blend_state,
-                          const char** render_targets, size_t num_targets);
+                          const char** render_targets, size_t* target_sizes,
+                          size_t num_targets);
   void RegisterVertexDecl(const char* name,
                           const YRenderDevice::VertexDeclElement* elements,
                           size_t num_elements);
@@ -47,7 +58,7 @@ namespace Renderer {
                           const char** pixel_params, size_t num_pixel_params,
                           const void* pixel_shader_data,
                           size_t pixel_shader_size);
-  void RegisterShaderPasses(const char* name,
+  void RegisterRenderPasses(const char* name,
                             const char** render_passes, size_t num_passes);
   void RegisterRenderType(const char* name, const char* shader);
   void RegisterVertexData(const char* name, size_t num_vertex_elements,
@@ -76,6 +87,9 @@ namespace Renderer {
   bool ReleaseVertexData(const char* name, size_t name_size);
   bool ReleaseShaderArgs(const char* name, size_t name_size);
   bool ReleaseRenderObject(const char* name, size_t name_size);
+
+  // Activate Render Options
+  void ActivateRenderPasses(const char* name, size_t name_size);
 
   // Enqueue Render Command
   void EnqueueRenderObject(uint64_t render_object_hash);

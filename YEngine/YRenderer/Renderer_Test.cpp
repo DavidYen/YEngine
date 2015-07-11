@@ -6,6 +6,7 @@
 #include <YCommon/YContainers/MemBuffer.h>
 #include <YCommon/YPlatform/PlatformHandle.h>
 #include <YEngine/YCore/StringTable.h>
+#include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/RenderDevice.h>
 #include <YEngine/YRenderDevice/RenderDevice_Mock.h>
 
@@ -56,44 +57,115 @@ TEST_F(RendererTest, FixtureInitialization) {
 
 TEST_F(RendererTest, ViewportTest) {
   const char name[] = "test_viewport";
-  const size_t name_size = sizeof(name);
-  YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(123, 2, 3, 4, 5,
-                                                        0.1f, 0.5f);
-  YRenderer::Renderer::RegisterViewPort(name, name_size,
-                                        2, 3, 4, 5, 0.1f, 0.5f);
+  Renderer::RegisterViewPort(name, sizeof(name),
+                             Renderer::kDimensionType_Absolute, 1.0f,
+                             Renderer::kDimensionType_Absolute, 2.0f,
+                             Renderer::kDimensionType_Absolute, 3.0f,
+                             Renderer::kDimensionType_Absolute, 4.0f,
+                             0.1f, 1.0f);
+  Renderer::RegisterViewPort(name, sizeof(name),
+                             Renderer::kDimensionType_Absolute, 1.0f,
+                             Renderer::kDimensionType_Absolute, 2.0f,
+                             Renderer::kDimensionType_Absolute, 3.0f,
+                             Renderer::kDimensionType_Absolute, 4.0f,
+                             0.1f, 1.0f);
 
-  // Same hash should produce same viewport.
-  YRenderer::Renderer::RegisterViewPort(name, name_size,
-                                        3, 4, 5, 6, 0.1f, 0.5f);
-
-  // 1st Release should not do anything.
-  YRenderer::Renderer::ReleaseViewPort(name, name_size);
-
-  YRenderDevice::RenderDeviceMock::ExpectReleaseViewPort(123);
-  EXPECT_TRUE(YRenderer::Renderer::ReleaseViewPort(name, name_size));
+  EXPECT_FALSE(Renderer::ReleaseViewPort(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseViewPort(name, sizeof(name)));
 }
 
 TEST_F(RendererTest, RenderTargetTest) {
   const char name[] = "test_render_target";
-  const size_t name_size = sizeof(name);
   const YRenderDevice::PixelFormat format =
       static_cast<YRenderDevice::PixelFormat>(123);
-  YRenderDevice::RenderDeviceMock::ExpectCreateRenderTarget(
-      234, gTestWidth / 2, gTestHeight / 2, format);
-  YRenderer::Renderer::RegisterRenderTarget(name, name_size,
-                                            format, 0.5f, 0.5f);
+  Renderer::RegisterRenderTarget(name, sizeof(name), format,
+                                 Renderer::kDimensionType_Absolute, 1.0f,
+                                 Renderer::kDimensionType_Absolute, 2.0f);
+  Renderer::RegisterRenderTarget(name, sizeof(name), format,
+                                 Renderer::kDimensionType_Absolute, 1.0f,
+                                 Renderer::kDimensionType_Absolute, 2.0f);
 
-  // Same hash should produce same viewport.
-  YRenderer::Renderer::RegisterRenderTarget(name, name_size,
-                                            format, 1.0f, 1.0f);
-
-  // 1st Release should not do anything.
-  YRenderer::Renderer::ReleaseRenderTarget(name, name_size);
-
-  YRenderDevice::RenderDeviceMock::ExpectReleaseRenderTarget(234);
-  EXPECT_TRUE(YRenderer::Renderer::ReleaseRenderTarget(name, name_size));
+  EXPECT_FALSE(Renderer::ReleaseRenderTarget(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseRenderTarget(name, sizeof(name)));
 }
 
+TEST_F(RendererTest, BackBufferNameTest) {
+  const char name[] = "test_back_buffer";
+  Renderer::RegisterBackBufferName(name, sizeof(name));
+  Renderer::RegisterBackBufferName(name, sizeof(name));
 
+  EXPECT_FALSE(Renderer::ReleaseBackBufferName(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseBackBufferName(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, RenderPassTest) {
+  const char name[] = "test_render_pass";
+  const char variant[] = "test_variant";
+  YRenderDevice::RenderBlendState blend_state;
+  Renderer::RegisterRenderPass(name, sizeof(name),
+                               variant, sizeof(variant),
+                               blend_state,
+                               nullptr, nullptr, 0);
+  Renderer::RegisterRenderPass(name, sizeof(name),
+                               variant, sizeof(variant),
+                               blend_state,
+                               nullptr, nullptr, 0);
+
+  EXPECT_FALSE(Renderer::ReleaseRenderPass(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseRenderPass(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, BasicActivationTest) {
+  const char viewport_name[] = "test";
+  const YRenderDevice::ViewPortID viewport_id = 123;
+  Renderer::RegisterViewPort(viewport_name, sizeof(viewport_name),
+                             Renderer::kDimensionType_Absolute, 1.0f,
+                             Renderer::kDimensionType_Percentage, 0.25f,
+                             Renderer::kDimensionType_Absolute, 3.0f,
+                             Renderer::kDimensionType_Percentage, 0.5f,
+                             0.1f, 1.0f);
+  YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(viewport_id,
+                                                        1, gTestWidth / 4,
+                                                        3, gTestHeight / 2,
+                                                        0.1f, 1.0f);
+
+  const char render_target_name[] = "test_render_target";
+  const YRenderDevice::PixelFormat format =
+      static_cast<YRenderDevice::PixelFormat>(456);
+  const YRenderDevice::RenderTargetID render_target_id = 12;
+  Renderer::RegisterRenderTarget(render_target_name,
+                                 sizeof(render_target_name), format,
+                                 Renderer::kDimensionType_Absolute, 1.0f,
+                                 Renderer::kDimensionType_Percentage, 0.5f);
+  YRenderDevice::RenderDeviceMock::ExpectCreateRenderTarget(render_target_id,
+                                                            1, gTestWidth / 2,
+                                                            format);
+
+  const char render_pass_name[] = "test";
+  const char shader_variant[] = "test_variant";
+  YRenderDevice::RenderBlendState blend_state;
+  const char* render_targets[] = { render_target_name };
+  size_t render_target_sizes[] = { sizeof(render_target_name) };
+  const YRenderDevice::RenderBlendStateID blend_state_id = 10;
+  Renderer::RegisterRenderPass(render_pass_name, sizeof(render_pass_name),
+                               shader_variant, sizeof(shader_variant),
+                               blend_state,
+                               render_targets, render_target_sizes, 1);
+  YRenderDevice::RenderDeviceMock::ExpectCreateRenderBlendState(
+      blend_state_id, blend_state);
+
+  const char passes_name[] = "test";
+
+  Renderer::ActivateRenderPasses(passes_name, sizeof(passes_name));
+
+  YRenderDevice::RenderDeviceMock::ExpectReleaseRenderBlendState(
+      blend_state_id);
+  EXPECT_TRUE(Renderer::ReleaseRenderPass(render_pass_name,
+                                          sizeof(render_pass_name)));
+  YRenderDevice::RenderDeviceMock::ExpectReleaseRenderTarget(render_target_id);
+  Renderer::ReleaseRenderTarget(render_target_name, sizeof(render_target_name));
+  YRenderDevice::RenderDeviceMock::ExpectReleaseViewPort(viewport_id);
+  Renderer::ReleaseViewPort(viewport_name, sizeof(viewport_name));
+}
 
 }} // namespace YEngine { namespace YRenderer {
