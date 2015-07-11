@@ -37,6 +37,16 @@ struct RenderBlendState {
   RenderBlendOp alpha_blend_op;
   uint8_t render_target_mask;
 
+  RenderBlendState()
+    : source(kRenderBlend_Zero),
+      dest(kRenderBlend_One),
+      blend_op(kRenderBlendOp_Add),
+      alpha_source(kRenderBlend_SrcAlpha),
+      alpha_dest(kRenderBlend_DestAlpha),
+      alpha_blend_op(kRenderBlendOp_Add),
+      render_target_mask(0xFF) {
+  }
+
   bool operator==(const RenderBlendState& other) const {
     return (source == other.source &&
             dest == other.dest &&
