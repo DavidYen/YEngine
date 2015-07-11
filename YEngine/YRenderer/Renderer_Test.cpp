@@ -9,6 +9,7 @@
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/RenderDevice.h>
 #include <YEngine/YRenderDevice/RenderDevice_Mock.h>
+#include <YEngine/YRenderDevice/SamplerState.h>
 
 namespace YEngine { namespace YRenderer {
 
@@ -30,13 +31,13 @@ class RendererTest : public ::testing::Test {
 
   virtual void SetUp() {
     delete [] mBuffer;
-    mBuffer = new uint8_t[10240 * 10];
-    mMemBuffer.Init(mBuffer, 10240 * 10);
+    mBuffer = new uint8_t[10240 * 20];
+    mMemBuffer.Init(mBuffer, 10240 * 20);
 
     YCore::StringTable::Initialize(32, 128, mMemBuffer.Allocate(10240), 10240);
     YRenderDevice::RenderDevice::Initialize(mHandle, gTestWidth, gTestHeight,
                                             mMemBuffer.Allocate(10240), 10240);
-    Renderer::Initialize(mMemBuffer.Allocate(10240), 10240);
+    Renderer::Initialize(mMemBuffer.Allocate(10240 * 10), 10240 * 10);
   }
 
   virtual void TearDown() {
@@ -122,6 +123,27 @@ TEST_F(RendererTest, VertexDeclTest) {
 
   EXPECT_FALSE(Renderer::ReleaseVertexDecl(name, sizeof(name)));
   EXPECT_TRUE(Renderer::ReleaseVertexDecl(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, ShaderFloatParamTest) {
+  const char name[] = "test_float_param";
+  Renderer::RegisterShaderFloatParam(name, sizeof(name),
+                                     4, 0, 1);
+  Renderer::RegisterShaderFloatParam(name, sizeof(name),
+                                     4, 0, 1);
+
+  EXPECT_FALSE(Renderer::ReleaseShaderFloatParam(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderFloatParam(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, ShaderTextureParamTest) {
+  const char name[] = "test_texture_param";
+  YRenderDevice::SamplerState sampler_state;
+  Renderer::RegisterShaderTextureParam(name, sizeof(name), 0, sampler_state);
+  Renderer::RegisterShaderTextureParam(name, sizeof(name), 0, sampler_state);
+
+  EXPECT_FALSE(Renderer::ReleaseShaderTextureParam(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(name, sizeof(name)));
 }
 
 TEST_F(RendererTest, BasicActivationTest) {
