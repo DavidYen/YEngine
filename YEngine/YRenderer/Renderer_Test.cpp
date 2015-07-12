@@ -181,8 +181,18 @@ TEST_F(RendererTest, ShaderDataTest) {
                                           variant_name, sizeof(variant_name)));
 }
 
+TEST_F(RendererTest, RenderPassesTest) {
+  const char name[] = "test_render_passes_name";
+
+  Renderer::RegisterRenderPasses(name, sizeof(name), nullptr, nullptr, 0);
+  Renderer::RegisterRenderPasses(name, sizeof(name), nullptr, nullptr, 0);
+
+  EXPECT_FALSE(Renderer::ReleaseRenderPasses(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseRenderPasses(name, sizeof(name)));
+}
+
 TEST_F(RendererTest, BasicActivationTest) {
-  const char viewport_name[] = "test";
+  const char viewport_name[] = "test_render_passes";
   const YRenderDevice::ViewPortID viewport_id = 123;
   Renderer::RegisterViewPort(viewport_name, sizeof(viewport_name),
                              Renderer::kDimensionType_Absolute, 1.0f,
@@ -207,7 +217,7 @@ TEST_F(RendererTest, BasicActivationTest) {
                                                             1, gTestWidth / 2,
                                                             format);
 
-  const char render_pass_name[] = "test";
+  const char render_pass_name[] = "test_render_pass";
   const char shader_variant[] = "test_variant";
   YRenderDevice::RenderBlendState blend_state;
   const char* render_targets[] = { render_target_name };
@@ -220,18 +230,25 @@ TEST_F(RendererTest, BasicActivationTest) {
   YRenderDevice::RenderDeviceMock::ExpectCreateRenderBlendState(
       blend_state_id, blend_state);
 
-  const char passes_name[] = "test";
+  const char passes_name[] = "test_render_passes";
+  const char* passes_names[] = { render_pass_name };
+  size_t passes_sizes[] = { sizeof(render_pass_name) };
+  Renderer::RegisterRenderPasses(passes_name, sizeof(passes_name),
+                                 passes_names, passes_sizes, 1);
 
   Renderer::ActivateRenderPasses(passes_name, sizeof(passes_name));
+  Renderer::DeactivateRenderPasses();
 
+  EXPECT_TRUE(Renderer::ReleaseRenderPasses(passes_name, sizeof(passes_name)));
   YRenderDevice::RenderDeviceMock::ExpectReleaseRenderBlendState(
       blend_state_id);
   EXPECT_TRUE(Renderer::ReleaseRenderPass(render_pass_name,
                                           sizeof(render_pass_name)));
   YRenderDevice::RenderDeviceMock::ExpectReleaseRenderTarget(render_target_id);
-  Renderer::ReleaseRenderTarget(render_target_name, sizeof(render_target_name));
+  EXPECT_TRUE(Renderer::ReleaseRenderTarget(render_target_name,
+                                            sizeof(render_target_name)));
   YRenderDevice::RenderDeviceMock::ExpectReleaseViewPort(viewport_id);
-  Renderer::ReleaseViewPort(viewport_name, sizeof(viewport_name));
+  EXPECT_TRUE(Renderer::ReleaseViewPort(viewport_name, sizeof(viewport_name)));
 }
 
 }} // namespace YEngine { namespace YRenderer {

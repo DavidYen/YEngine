@@ -65,7 +65,8 @@ namespace Renderer {
                           const void* pixel_shader_data,
                           size_t pixel_shader_size);
   void RegisterRenderPasses(const char* name, size_t name_size,
-                            const char** render_passes, size_t num_passes);
+                            const char** render_passes,
+                            const size_t* render_pass_sizes, size_t num_passes);
   void RegisterRenderType(const char* name, size_t name_size,
                           const char* shader, size_t shader_size);
   void RegisterVertexData(const char* name, size_t name_size,
@@ -93,14 +94,15 @@ namespace Renderer {
   bool ReleaseShaderTextureParam(const char* name, size_t name_size);
   bool ReleaseShaderData(const char* shader_name, size_t shader_name_size,
                          const char* variant_name, size_t variant_name_size);
-  bool ReleaseShaderPasses(const char* name, size_t name_size);
+  bool ReleaseRenderPasses(const char* name, size_t name_size);
   bool ReleaseRenderType(const char* name, size_t name_size);
   bool ReleaseVertexData(const char* name, size_t name_size);
   bool ReleaseShaderArgs(const char* name, size_t name_size);
   bool ReleaseRenderObject(const char* name, size_t name_size);
 
-  // Activate Render Options
+  // Activate/Deactivate Render Options
   void ActivateRenderPasses(const char* name, size_t name_size);
+  void DeactivateRenderPasses();
 
   // Enqueue Render Command
   void EnqueueRenderObject(uint64_t render_object_hash);

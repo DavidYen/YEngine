@@ -10,24 +10,28 @@
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <Yengine/YRenderDevice/SamplerState.h>
 
+// Hash Table Sizes (~2x maximum)
 #define VIEWPORTS_SIZE 16
 #define RENDERTARGETS_SIZE 16
 #define BACKBUFFERNAMES_SIZE 12
 #define BLENDSTATES_SIZE 32
-#define RENDERPASSES_SIZE 32
+#define RENDERPASSES_SIZE 64
 #define VERTEXDECLS_SIZE 32
 #define FLOATPARAMS_SIZE 256
 #define TEXTUREPARAMS_SIZE 256
 #define VERTEX_SHADERS_SIZE 256
 #define PIXEL_SHADERS_SIZE 256
 #define SHADER_COMBINATIONS_SIZE 512
+#define ACTIVE_PASSES_SIZE 16
 
+// Maximum active
 #define MAX_RENDERTARGETS_PER_PASS 4
 #define MAX_SHADER_BASE_NAME 32
 #define MAX_SHADER_VARIANT_NAME 32
 #define MAX_VERTEX_ELEMENTS 8
 #define MAX_FLOAT_PARAMS_PER_SHADER 16
 #define MAX_TEX_PARAMS_PER_SHADER 8
+#define MAX_ACTIVE_RENDERPASSES 8
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
@@ -246,6 +250,22 @@ namespace {
     PixelShaderInternal* mPixelShader;
   };
   YCommon::YContainers::TypedHashTable<ShaderDataInternal> gShaderDatas;
+
+  struct ActivePassesInternal : public RefCountBase {
+    ActivePassesInternal(RenderPassInternal** render_passes,
+                         uint8_t num_render_passes)
+      : RefCountBase(),
+        mNumRenderPasses(num_render_passes) {
+      memset(mRenderPasses, 0, sizeof(mRenderPasses));
+      memcpy(mRenderPasses, render_passes,
+             num_render_passes * sizeof(render_passes[0]));
+    }
+    uint8_t mNumRenderPasses;
+    RenderPassInternal* mRenderPasses[MAX_ACTIVE_RENDERPASSES];
+  };
+  YCommon::YContainers::TypedHashTable<ActivePassesInternal> gActivePasses;
+
+  ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
 
 uint32_t GetDimensionValue(uint32_t frame_value,
@@ -279,9 +299,15 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gVertexShaders, VERTEX_SHADERS_SIZE, "Vertex Shader");
   INITIALIZE_TABLE(gPixelShaders, PIXEL_SHADERS_SIZE, "Pixel Shader");
   INITIALIZE_TABLE(gShaderDatas, SHADER_COMBINATIONS_SIZE, "Shader Data");
+  INITIALIZE_TABLE(gActivePasses, ACTIVE_PASSES_SIZE, "Active Render Passes");
+
+  gActiveRenderPasses = nullptr;
 }
 
 void Renderer::Terminate() {
+  gActiveRenderPasses = nullptr;
+
+  gActivePasses.Reset();
   gShaderDatas.Reset();
   gPixelShaders.Reset();
   gVertexShaders.Reset();
@@ -560,6 +586,35 @@ void Renderer::RegisterShaderData(
   shader_data->IncRef();
 }
 
+void Renderer::RegisterRenderPasses(const char* name, size_t name_size,
+                                    const char** render_passes,
+                                    const size_t* render_pass_sizes,
+                                    size_t num_passes) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  ActivePassesInternal* active_passes = gActivePasses.GetValue(name_hash);
+  if (nullptr == active_passes) {
+    YASSERT(num_passes < MAX_ACTIVE_RENDERPASSES,
+            "Maximum number of active render passes (%u) exceeded (%u): %s",
+            static_cast<uint32_t>(MAX_ACTIVE_RENDERPASSES),
+            static_cast<uint32_t>(num_passes), name);
+
+    RenderPassInternal* internal_render_passes[MAX_ACTIVE_RENDERPASSES];
+    for (size_t i = 0; i < num_passes; ++i) {
+      internal_render_passes[i] = gRenderPasses.GetValue(render_passes[i],
+                                                         render_pass_sizes[i]);
+      YASSERT(internal_render_passes[i],
+              "Render pass (%s) could not be found for \"%s\"",
+              render_passes[i], name);
+      internal_render_passes[i]->IncRef();
+    }
+
+    ActivePassesInternal new_active_pass(internal_render_passes,
+                                         static_cast<uint8_t>(num_passes));
+    active_passes = gActivePasses.Insert(name_hash, new_active_pass);
+  }
+  active_passes->IncRef();
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -691,71 +746,94 @@ bool Renderer::ReleaseShaderData(const char* shader_name,
       YRenderDevice::RenderDevice::ReleaseVertexShader(
           vertex_shader->mVertexShaderID);
       const bool removed = gVertexShaders.Remove(vertex_shader->mShaderHash);
-      YDEBUG_CHECK(removed, "Vertex shader removal sanity checked failed.");
+      YASSERT(removed, "Vertex shader removal sanity checked failed.");
     }
 
     const uint8_t pixel_texture_params = shader_data->mNumPixelShdrTexParams;
     for (uint8_t i = 0; i < pixel_texture_params; ++i) {
       bool empty = shader_data->mPixelShdrTexParams[i]->DecRef();
-      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
+      YASSERT(!empty, "Shader parameter released before shader data: %s",
                    full_shader_name);
     }
     const uint8_t pixel_float_params = shader_data->mNumPixelShdrFloatParams;
     for (uint8_t i = 0; i < pixel_float_params; ++i) {
       bool empty = shader_data->mPixelShdrFloatParams[i]->DecRef();
-      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
-                   full_shader_name);
+      YASSERT(!empty, "Shader parameter released before shader data: %s",
+              full_shader_name);
     }
 
     const uint8_t vertex_tex_params = shader_data->mNumVertexShdrFloatParams;
     for (uint8_t i = 0; i < vertex_tex_params; ++i) {
       bool empty = shader_data->mVertexShdrTexParams[i]->DecRef();
-      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
-                   full_shader_name);
+      YASSERT(!empty, "Shader parameter released before shader data: %s",
+              full_shader_name);
     }
     const uint8_t vertex_float_params = shader_data->mNumVertexShdrTexParams;
     for (uint8_t i = 0; i < vertex_float_params; ++i) {
       bool empty = shader_data->mVertexShdrFloatParams[i]->DecRef();
-      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
-                   full_shader_name);
+      YASSERT(!empty, "Shader parameter released before shader data: %s",
+              full_shader_name);
     }
     return gShaderDatas.Remove(full_shader_hash);
   }
   return false;
 }
 
+bool Renderer::ReleaseRenderPasses(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  ActivePassesInternal* active_passes = gActivePasses.GetValue(name_hash);
+  YASSERT(active_passes, "Releasing an invalid Render Passes Name: %s", name);
+  if (active_passes->DecRef()) {
+    const uint8_t num_passes = active_passes->mNumRenderPasses;
+    for (uint8_t i = 0; i < num_passes; ++i) {
+      const bool empty = active_passes->mRenderPasses[i]->DecRef();
+      YASSERT(!empty, "Render pass %u released before render passes name: %s",
+              static_cast<uint32_t>(i), name);
+    }
+    return gActivePasses.Remove(name_hash);
+  }
+  return false;
+}
+
 void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
+  DeactivateRenderPasses();
   uint32_t frame_width, frame_height;
   YRenderDevice::RenderDevice::GetFrameBufferDimensions(frame_width,
                                                         frame_height);
 
-  // Setup Render Passes
-  RenderPassInternal* render_pass = gRenderPasses.GetValue(name, name_size);
+  ActivePassesInternal* active_passes = gActivePasses.GetValue(name, name_size);
+  YASSERT(active_passes, "Unknown Render Passes Name: %s", name);
+  const uint8_t num_passes = active_passes->mNumRenderPasses;
+  for (uint8_t i = 0; i < num_passes; ++i) {
+    RenderPassInternal* render_pass = active_passes->mRenderPasses[i];
 
-  BlendStateInternal* blend_state = render_pass->mBlendState;
-  if (blend_state->mBlendStateID == INVALID_BLEND_STATE) {
-    YDEBUG_CHECK(blend_state = gBlendStates.GetValue(blend_state->mBlendState),
-                 "Sanity blend state existance check failed.");
-    blend_state->mBlendStateID =
-        YRenderDevice::RenderDevice::CreateRenderBlendState(
-            blend_state->mBlendState);
-  }
+    BlendStateInternal* blend_state = render_pass->mBlendState;
+    if (blend_state->mBlendStateID == INVALID_BLEND_STATE) {
+      YDEBUG_CHECK(blend_state = gBlendStates.GetValue(blend_state->mBlendState),
+                   "Sanity blend state existance check failed.");
+      blend_state->mBlendStateID =
+          YRenderDevice::RenderDevice::CreateRenderBlendState(
+              blend_state->mBlendState);
+    }
 
-  const uint8_t num_render_targets = render_pass->mNumRenderTargets;
-  for (uint8_t i = 0; i < num_render_targets; ++i) {
-    RenderTargetInternal* render_target = render_pass->mRenderTargets[i];
-    if (render_target->mRenderTargetID == INVALID_RENDER_TARGET) {
-      render_target->mRenderTargetID =
-          YRenderDevice::RenderDevice::CreateRenderTarget(
-              GetDimensionValue(frame_width,
-                                render_target->mWidthType,
-                                render_target->mWidth),
-              GetDimensionValue(frame_width,
-                                render_target->mHeightType,
-                                render_target->mHeight),
-              render_target->mFormat);
+    const uint8_t num_render_targets = render_pass->mNumRenderTargets;
+    for (uint8_t n = 0; n < num_render_targets; ++n) {
+      RenderTargetInternal* render_target = render_pass->mRenderTargets[n];
+      if (render_target->mRenderTargetID == INVALID_RENDER_TARGET) {
+        render_target->mRenderTargetID =
+            YRenderDevice::RenderDevice::CreateRenderTarget(
+                GetDimensionValue(frame_width,
+                                  render_target->mWidthType,
+                                  render_target->mWidth),
+                GetDimensionValue(frame_width,
+                                  render_target->mHeightType,
+                                  render_target->mHeight),
+                render_target->mFormat);
+      }
     }
   }
+  active_passes->IncRef();
+  gActiveRenderPasses = active_passes;
 
   // Setup Render Objects
   ViewPortInternal* viewport = gViewPorts.GetValue(name, name_size);
@@ -775,6 +853,14 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
                               viewport->mHeightType,
                               viewport->mHeight),
             viewport->mMinZ, viewport->mMaxZ);
+  }
+}
+
+void Renderer::DeactivateRenderPasses() {
+  if (gActiveRenderPasses) {
+    const bool empty = gActiveRenderPasses->DecRef();
+    YASSERT(!empty, "Active render passes was released before deactivated.");
+    gActiveRenderPasses = nullptr;
   }
 }
 
