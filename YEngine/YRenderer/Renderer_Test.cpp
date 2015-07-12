@@ -31,13 +31,13 @@ class RendererTest : public ::testing::Test {
 
   virtual void SetUp() {
     delete [] mBuffer;
-    mBuffer = new uint8_t[10240 * 20];
-    mMemBuffer.Init(mBuffer, 10240 * 20);
+    mBuffer = new uint8_t[1024000];
+    mMemBuffer.Init(mBuffer, 1024000);
 
     YCore::StringTable::Initialize(32, 128, mMemBuffer.Allocate(10240), 10240);
     YRenderDevice::RenderDevice::Initialize(mHandle, gTestWidth, gTestHeight,
                                             mMemBuffer.Allocate(10240), 10240);
-    Renderer::Initialize(mMemBuffer.Allocate(10240 * 10), 10240 * 10);
+    Renderer::Initialize(mMemBuffer.Allocate(10240 * 30), 10240 * 30);
   }
 
   virtual void TearDown() {
@@ -144,6 +144,41 @@ TEST_F(RendererTest, ShaderTextureParamTest) {
 
   EXPECT_FALSE(Renderer::ReleaseShaderTextureParam(name, sizeof(name)));
   EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, ShaderDataTest) {
+  const char shader_name[] = "test_shader_name";
+  const char variant_name[] = "test_variant_name";
+  const char vertex_shader[] = "test vertex shader";
+  const char pixel_shader[] = "test pixel shader";
+
+  const YRenderDevice::VertexShaderID vertex_shader_id = 10;
+  const YRenderDevice::PixelShaderID pixel_shader_id = 20;
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      vertex_shader_id, vertex_shader, sizeof(vertex_shader));
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      pixel_shader_id, pixel_shader, sizeof(pixel_shader));
+
+  Renderer::RegisterShaderData(shader_name, sizeof(shader_name),
+                               variant_name, sizeof(variant_name),
+                               0, nullptr, nullptr,
+                               vertex_shader, sizeof(vertex_shader),
+                               0, nullptr, nullptr,
+                               pixel_shader, sizeof(pixel_shader));
+  Renderer::RegisterShaderData(shader_name, sizeof(shader_name),
+                               variant_name, sizeof(variant_name),
+                               0, nullptr, nullptr,
+                               vertex_shader, sizeof(vertex_shader),
+                               0, nullptr, nullptr,
+                               pixel_shader, sizeof(pixel_shader));
+
+  EXPECT_FALSE(Renderer::ReleaseShaderData(shader_name, sizeof(shader_name),
+                                           variant_name, sizeof(variant_name)));
+
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(pixel_shader_id);
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(vertex_shader_id);
+  EXPECT_TRUE(Renderer::ReleaseShaderData(shader_name, sizeof(shader_name),
+                                          variant_name, sizeof(variant_name)));
 }
 
 TEST_F(RendererTest, BasicActivationTest) {

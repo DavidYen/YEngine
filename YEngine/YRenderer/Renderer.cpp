@@ -18,10 +18,16 @@
 #define VERTEXDECLS_SIZE 32
 #define FLOATPARAMS_SIZE 256
 #define TEXTUREPARAMS_SIZE 256
+#define VERTEX_SHADERS_SIZE 256
+#define PIXEL_SHADERS_SIZE 256
+#define SHADER_COMBINATIONS_SIZE 512
 
 #define MAX_RENDERTARGETS_PER_PASS 4
-#define MAX_SHADER_VARIANT_NAME 16
+#define MAX_SHADER_BASE_NAME 32
+#define MAX_SHADER_VARIANT_NAME 32
 #define MAX_VERTEX_ELEMENTS 8
+#define MAX_FLOAT_PARAMS_PER_SHADER 16
+#define MAX_TEX_PARAMS_PER_SHADER 8
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
@@ -182,28 +188,60 @@ namespace {
   YCommon::YContainers::TypedHashTable<ShdrTexParamInternal> gShdrTexParams;
 
   struct VertexShaderInternal : public RefCountBase {
-    VertexShaderInternal(YRenderDevice::VertexShaderID shader_id)
+    VertexShaderInternal(uint64_t shader_hash,
+                         YRenderDevice::VertexShaderID shader_id)
       : RefCountBase(),
+        mShaderHash(shader_hash),
         mVertexShaderID(shader_id) {}
+    uint64_t mShaderHash;
     YRenderDevice::VertexShaderID mVertexShaderID;
   };
   YCommon::YContainers::TypedHashTable<VertexShaderInternal> gVertexShaders;
 
   struct PixelShaderInternal : public RefCountBase {
-    PixelShaderInternal(YRenderDevice::PixelShaderID shader_id)
+    PixelShaderInternal(uint64_t shader_hash,
+                        YRenderDevice::PixelShaderID shader_id)
       : RefCountBase(),
+        mShaderHash(shader_hash),
         mPixelShaderID(shader_id) {}
+    uint64_t mShaderHash;
     YRenderDevice::PixelShaderID mPixelShaderID;
   };
   YCommon::YContainers::TypedHashTable<PixelShaderInternal> gPixelShaders;
 
   struct ShaderDataInternal : public RefCountBase {
     ShaderDataInternal(VertexShaderInternal* vertex_shader,
-                       PixelShaderInternal* pixel_shader)
+                       ShdrFloatParamInternal** vertex_shader_float_params,
+                       uint8_t num_vertex_shdr_float_params,
+                       ShdrTexParamInternal** vertex_shader_texture_params,
+                       uint8_t num_vertex_shdr_texture_params,
+                       PixelShaderInternal* pixel_shader,
+                       ShdrFloatParamInternal** pixel_shader_float_params,
+                       uint8_t num_pixel_shdr_float_params,
+                       ShdrTexParamInternal** pixel_shader_texture_params,
+                       uint8_t num_pixel_shdr_texture_params)
       : RefCountBase(),
+        mNumVertexShdrFloatParams(num_vertex_shdr_float_params),
+        mNumPixelShdrFloatParams(num_pixel_shdr_float_params),
+        mNumVertexShdrTexParams(num_vertex_shdr_texture_params),
+        mNumPixelShdrTexParams(num_pixel_shdr_texture_params),
         mVertexShader(vertex_shader),
         mPixelShader(pixel_shader) {
+      memcpy(mVertexShdrFloatParams, vertex_shader_float_params,
+             num_vertex_shdr_float_params * sizeof(mVertexShdrFloatParams[0]));
+      memcpy(mPixelShdrFloatParams, pixel_shader_float_params,
+             num_pixel_shdr_float_params * sizeof(mPixelShdrFloatParams[0]));
+      memcpy(mVertexShdrTexParams, vertex_shader_texture_params,
+             num_vertex_shdr_texture_params * sizeof(mVertexShdrTexParams[0]));
+      memcpy(mPixelShdrTexParams, pixel_shader_texture_params,
+             num_pixel_shdr_texture_params * sizeof(mPixelShdrTexParams[0]));
     }
+    ShdrFloatParamInternal* mVertexShdrFloatParams[MAX_FLOAT_PARAMS_PER_SHADER];
+    ShdrFloatParamInternal* mPixelShdrFloatParams[MAX_FLOAT_PARAMS_PER_SHADER];
+    ShdrTexParamInternal* mVertexShdrTexParams[MAX_TEX_PARAMS_PER_SHADER];
+    ShdrTexParamInternal* mPixelShdrTexParams[MAX_TEX_PARAMS_PER_SHADER];
+    uint8_t mNumVertexShdrFloatParams, mNumPixelShdrFloatParams;
+    uint8_t mNumVertexShdrTexParams, mNumPixelShdrTexParams;
     VertexShaderInternal* mVertexShader;
     PixelShaderInternal* mPixelShader;
   };
@@ -217,75 +255,36 @@ uint32_t GetDimensionValue(uint32_t frame_value,
          std::min(frame_value, static_cast<uint32_t>(value));
 }
 
+#define INITIALIZE_TABLE(HASHTABLE, TABLESIZE, NAME) \
+  do { \
+    const size_t table_buffer_size = \
+        HASHTABLE.GetAllocationSize(TABLESIZE); \
+    void* table_buffer = gMemBuffer.Allocate(table_buffer_size); \
+    YASSERT(table_buffer, \
+            "Not enough space to allocate " NAME " table."); \
+    HASHTABLE.Init(table_buffer, table_buffer_size, TABLESIZE); \
+  } while(0)
+
 void Renderer::Initialize(void* buffer, size_t buffer_size) {
   gMemBuffer.Init(buffer, buffer_size);
 
-  // View Ports
-  const size_t viewports_size =
-      gViewPorts.GetAllocationSize(VIEWPORTS_SIZE);
-  void* viewports_buffer = gMemBuffer.Allocate(viewports_size);
-  YASSERT(viewports_buffer,
-          "Not enough space to allocate viewports table.");
-  gViewPorts.Init(viewports_buffer, viewports_size, VIEWPORTS_SIZE);
-
-  // Render Targets
-  const size_t targets_size =
-      gRenderTargets.GetAllocationSize(RENDERTARGETS_SIZE);
-  void* targets_buffer = gMemBuffer.Allocate(targets_size);
-  YASSERT(targets_buffer,
-          "Not enough space to allocate render targets table.");
-  gRenderTargets.Init(targets_buffer, targets_size, RENDERTARGETS_SIZE);
-
-  // Back Buffer Names
-  const size_t backbuffers_size =
-      gBackBufferNames.GetAllocationSize(BACKBUFFERNAMES_SIZE);
-  void* backbuffers_buffer = gMemBuffer.Allocate(backbuffers_size);
-  YASSERT(backbuffers_buffer,
-          "Not enough space to allocate back buffer name table.");
-  gBackBufferNames.Init(backbuffers_buffer, backbuffers_size,
-                        BACKBUFFERNAMES_SIZE);
-
-  const size_t blendstates_size =
-      gBlendStates.GetAllocationSize(BLENDSTATES_SIZE);
-  void* blendstates_buffer = gMemBuffer.Allocate(blendstates_size);
-  YASSERT(blendstates_buffer,
-          "Not enough space to allocate blend states table.");
-  gBlendStates.Init(blendstates_buffer, blendstates_size, BLENDSTATES_SIZE);
-
-  // Render Passes
-  const size_t renderpasses_size =
-      gRenderPasses.GetAllocationSize(RENDERPASSES_SIZE);
-  void* renderpasses_buffer = gMemBuffer.Allocate(renderpasses_size);
-  YASSERT(renderpasses_buffer,
-          "Not enough space to allocate back buffer name table.");
-  gRenderPasses.Init(renderpasses_buffer, renderpasses_size, RENDERPASSES_SIZE);
-
-  // Vertex Declarations
-  const size_t vertexdecls_size =
-      gVertexDecls.GetAllocationSize(VERTEXDECLS_SIZE);
-  void* vertexdecls_buffer = gMemBuffer.Allocate(vertexdecls_size);
-  YASSERT(vertexdecls_buffer,
-          "Not enough space to allocate vertex declaration table.");
-  gVertexDecls.Init(vertexdecls_buffer, vertexdecls_size, VERTEXDECLS_SIZE);
-
-  // Shader Float Params
-  const size_t floatparams_size =
-      gShdrFloatParams.GetAllocationSize(FLOATPARAMS_SIZE);
-  void* floatparams_buffer = gMemBuffer.Allocate(floatparams_size);
-  YASSERT(floatparams_buffer,
-          "Not enough space to allocate shader float param table.");
-  gShdrFloatParams.Init(floatparams_buffer, floatparams_size, FLOATPARAMS_SIZE);
-
-  // Shader Texture Params
-  const size_t texparams_size =
-      gShdrTexParams.GetAllocationSize(TEXTUREPARAMS_SIZE);
-  void* texparams_buffer = gMemBuffer.Allocate(texparams_size);
-  YASSERT(texparams_buffer,
-          "Not enough space to allocate shader float param table.");
-  gShdrTexParams.Init(texparams_buffer, texparams_size, TEXTUREPARAMS_SIZE);
+  INITIALIZE_TABLE(gViewPorts, VIEWPORTS_SIZE, "ViewPorts");
+  INITIALIZE_TABLE(gRenderTargets, RENDERTARGETS_SIZE, "Render Targets");
+  INITIALIZE_TABLE(gBackBufferNames, BACKBUFFERNAMES_SIZE, "Back Buffer Names");
+  INITIALIZE_TABLE(gBlendStates, BLENDSTATES_SIZE, "Blend States");
+  INITIALIZE_TABLE(gRenderPasses, RENDERPASSES_SIZE, "Render Pass");
+  INITIALIZE_TABLE(gVertexDecls, VERTEXDECLS_SIZE, "Vertex Declaration");
+  INITIALIZE_TABLE(gShdrFloatParams, FLOATPARAMS_SIZE, "Shader Float Params");
+  INITIALIZE_TABLE(gShdrTexParams, TEXTUREPARAMS_SIZE, "Shader Texture Params");
+  INITIALIZE_TABLE(gVertexShaders, VERTEX_SHADERS_SIZE, "Vertex Shader");
+  INITIALIZE_TABLE(gPixelShaders, PIXEL_SHADERS_SIZE, "Pixel Shader");
+  INITIALIZE_TABLE(gShaderDatas, SHADER_COMBINATIONS_SIZE, "Shader Data");
 }
 
 void Renderer::Terminate() {
+  gShaderDatas.Reset();
+  gPixelShaders.Reset();
+  gVertexShaders.Reset();
   gShdrTexParams.Reset();
   gShdrFloatParams.Reset();
   gVertexDecls.Reset();
@@ -426,6 +425,141 @@ void Renderer::RegisterShaderTextureParam(
   tex_param->IncRef();
 }
 
+void Renderer::RegisterShaderData(
+    const char* shader_name, size_t shader_name_size,
+    const char* variant_name, size_t variant_name_size,
+    size_t num_vertex_params,
+    const char** vertex_params, size_t* vertex_param_sizes,
+    const void* vertex_shader_data, size_t vertex_shader_size,
+    size_t num_pixel_params,
+    const char** pixel_params, size_t* pizel_param_sizes,
+    const void* pixel_shader_data, size_t pixel_shader_size) {
+  YASSERT(shader_name_size < MAX_SHADER_BASE_NAME,
+          "Shader base name (%s) maximum length (%u) exceeded: %u",
+          shader_name, static_cast<uint32_t>(MAX_SHADER_BASE_NAME),
+          static_cast<uint32_t>(shader_name_size));
+  YASSERT(variant_name_size < MAX_SHADER_VARIANT_NAME,
+          "Shader variant name (%s) maximum length (%u) exceeded: %u",
+          variant_name, static_cast<uint32_t>(MAX_SHADER_VARIANT_NAME),
+          static_cast<uint32_t>(variant_name_size));
+  char full_shader_name[MAX_SHADER_BASE_NAME + MAX_SHADER_VARIANT_NAME];
+  memcpy(full_shader_name, shader_name, shader_name_size);
+  full_shader_name[shader_name_size] = ':';
+  memcpy(&full_shader_name[shader_name_size+1],
+         variant_name, variant_name_size);
+
+  const size_t full_shader_size = shader_name_size + variant_name_size;
+  const uint64_t full_shader_hash =
+      YCore::StringTable::AddString(full_shader_name, full_shader_size);
+
+  ShaderDataInternal* shader_data = gShaderDatas.GetValue(full_shader_hash);
+  if (nullptr == shader_data) {
+    ShdrFloatParamInternal* vertex_float_params[MAX_FLOAT_PARAMS_PER_SHADER];
+    ShdrTexParamInternal* vertex_tex_params[MAX_TEX_PARAMS_PER_SHADER];
+    uint8_t num_vertex_float_params = 0;
+    uint8_t num_vertex_tex_params = 0;
+    for (size_t i = 0; i < num_vertex_params; ++i) {
+      // Vertex Shader Parameters
+      ShdrFloatParamInternal* float_param =
+          gShdrFloatParams.GetValue(vertex_params[i], vertex_param_sizes[i]);
+      if (float_param) {
+        YASSERT(num_vertex_float_params + 1 < MAX_FLOAT_PARAMS_PER_SHADER,
+                "Maximum number of float parameters (%u) exceeded: %s",
+                static_cast<uint8_t>(MAX_FLOAT_PARAMS_PER_SHADER),
+                full_shader_name);
+        float_param->IncRef();
+        vertex_float_params[num_vertex_float_params++] = float_param;
+        continue;
+      }
+
+      ShdrTexParamInternal* tex_param =
+          gShdrTexParams.GetValue(vertex_params[i], vertex_param_sizes[i]);
+      if (tex_param) {
+        YASSERT(num_vertex_tex_params + 1 < MAX_TEX_PARAMS_PER_SHADER,
+                "Maximum number of texture parameters (%u) exceeded: %s",
+                static_cast<uint8_t>(MAX_TEX_PARAMS_PER_SHADER),
+                full_shader_name);
+        tex_param->IncRef();
+        vertex_tex_params[num_vertex_tex_params++] = tex_param;
+        continue;
+      }
+
+      YASSERT(false, "Unknown Vertex Shader Parameter: %s", vertex_params[i]);
+    }
+
+    // Pixel Shader Parameters
+    ShdrFloatParamInternal* pixel_float_params[MAX_FLOAT_PARAMS_PER_SHADER];
+    ShdrTexParamInternal* pixel_tex_params[MAX_TEX_PARAMS_PER_SHADER];
+    uint8_t num_pixel_float_params = 0;
+    uint8_t num_pixel_tex_params = 0;
+    for (size_t i = 0; i < num_pixel_params; ++i) {
+      ShdrFloatParamInternal* float_param =
+          gShdrFloatParams.GetValue(pixel_params[i], pizel_param_sizes[i]);
+      if (float_param) {
+        YASSERT(num_pixel_float_params + 1 < MAX_FLOAT_PARAMS_PER_SHADER,
+                "Maximum number of float parameters (%u) exceeded: %s",
+                static_cast<uint8_t>(MAX_FLOAT_PARAMS_PER_SHADER),
+                full_shader_name);
+        float_param->IncRef();
+        pixel_float_params[num_pixel_float_params++] = float_param;
+        continue;
+      }
+
+      ShdrTexParamInternal* tex_param =
+          gShdrTexParams.GetValue(pixel_params[i], pizel_param_sizes[i]);
+      if (tex_param) {
+        YASSERT(num_pixel_tex_params + 1 < MAX_TEX_PARAMS_PER_SHADER,
+                "Maximum number of texture parameters (%u) exceeded: %s",
+                static_cast<uint8_t>(MAX_TEX_PARAMS_PER_SHADER),
+                full_shader_name);
+        tex_param->IncRef();
+        pixel_tex_params[num_pixel_tex_params++] = tex_param;
+        continue;
+      }
+
+      YASSERT(false, "Unknown Vertex Shader Parameter: %s", vertex_params[i]);
+    }
+
+    // Vertex Shader
+    const uint64_t vertex_shader_hash =
+        YCommon::YUtils::Hash::Hash64(vertex_shader_data, vertex_shader_size);
+    VertexShaderInternal* vertex_shader =
+        gVertexShaders.GetValue(vertex_shader_hash);
+    if (nullptr == vertex_shader) {
+      VertexShaderInternal new_vertex_shader(
+          vertex_shader_hash,
+          YRenderDevice::RenderDevice::CreateVertexShader(vertex_shader_data,
+                                                          vertex_shader_size));
+      vertex_shader = gVertexShaders.Insert(vertex_shader_hash,
+                                            new_vertex_shader);
+    }
+    vertex_shader->IncRef();
+
+    // Pixel Shader
+    const uint64_t pixel_shader_hash =
+        YCommon::YUtils::Hash::Hash64(pixel_shader_data, pixel_shader_size);
+    PixelShaderInternal* pixel_shader =
+        gPixelShaders.GetValue(pixel_shader_hash);
+    if (nullptr == pixel_shader) {
+      PixelShaderInternal new_pixel_shader(
+          pixel_shader_hash,
+          YRenderDevice::RenderDevice::CreatePixelShader(pixel_shader_data,
+                                                         pixel_shader_size));
+      pixel_shader = gPixelShaders.Insert(pixel_shader_hash, new_pixel_shader);
+    }
+    pixel_shader->IncRef();
+
+    // Full Shader Data
+    ShaderDataInternal new_shader_data(
+        vertex_shader, vertex_float_params, num_vertex_float_params,
+        vertex_tex_params, num_vertex_tex_params,
+        pixel_shader, pixel_float_params, num_pixel_float_params,
+        pixel_tex_params, num_pixel_tex_params);
+    shader_data = gShaderDatas.Insert(full_shader_hash, new_shader_data);
+  }
+  shader_data->IncRef();
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -523,6 +657,69 @@ bool Renderer::ReleaseShaderTextureParam(const char* name, size_t name_size) {
   YASSERT(tex_param, "Releasing an invalid Shader Texture Param: %s", name);
   if (tex_param->DecRef()) {
     return gShdrTexParams.Remove(name_hash);
+  }
+  return false;
+}
+
+bool Renderer::ReleaseShaderData(const char* shader_name,
+                                 size_t shader_name_size,
+                                 const char* variant_name,
+                                 size_t variant_name_size) {
+  char full_shader_name[MAX_SHADER_BASE_NAME + MAX_SHADER_VARIANT_NAME];
+  memcpy(full_shader_name, shader_name, shader_name_size);
+  full_shader_name[shader_name_size] = ':';
+  memcpy(&full_shader_name[shader_name_size+1],
+         variant_name, variant_name_size);
+
+  const size_t full_shader_size = shader_name_size + variant_name_size;
+  const uint64_t full_shader_hash =
+      YCore::StringTable::AddString(full_shader_name, full_shader_size);
+
+  ShaderDataInternal* shader_data = gShaderDatas.GetValue(full_shader_hash);
+  YASSERT(shader_data, "Releasing an invalid Shader: %s", full_shader_name);
+  if (shader_data->DecRef()) {
+    PixelShaderInternal* pixel_shader = shader_data->mPixelShader;
+    if (pixel_shader->DecRef()) {
+      YRenderDevice::RenderDevice::ReleasePixelShader(
+          pixel_shader->mPixelShaderID);
+      const bool removed = gPixelShaders.Remove(pixel_shader->mShaderHash);
+      YDEBUG_CHECK(removed, "Pixel shader removal sanity checked failed.");
+    }
+
+    VertexShaderInternal* vertex_shader = shader_data->mVertexShader;
+    if (vertex_shader->DecRef()) {
+      YRenderDevice::RenderDevice::ReleaseVertexShader(
+          vertex_shader->mVertexShaderID);
+      const bool removed = gVertexShaders.Remove(vertex_shader->mShaderHash);
+      YDEBUG_CHECK(removed, "Vertex shader removal sanity checked failed.");
+    }
+
+    const uint8_t pixel_texture_params = shader_data->mNumPixelShdrTexParams;
+    for (uint8_t i = 0; i < pixel_texture_params; ++i) {
+      bool empty = shader_data->mPixelShdrTexParams[i]->DecRef();
+      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
+                   full_shader_name);
+    }
+    const uint8_t pixel_float_params = shader_data->mNumPixelShdrFloatParams;
+    for (uint8_t i = 0; i < pixel_float_params; ++i) {
+      bool empty = shader_data->mPixelShdrFloatParams[i]->DecRef();
+      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
+                   full_shader_name);
+    }
+
+    const uint8_t vertex_tex_params = shader_data->mNumVertexShdrFloatParams;
+    for (uint8_t i = 0; i < vertex_tex_params; ++i) {
+      bool empty = shader_data->mVertexShdrTexParams[i]->DecRef();
+      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
+                   full_shader_name);
+    }
+    const uint8_t vertex_float_params = shader_data->mNumVertexShdrTexParams;
+    for (uint8_t i = 0; i < vertex_float_params; ++i) {
+      bool empty = shader_data->mVertexShdrFloatParams[i]->DecRef();
+      YDEBUG_CHECK(!empty, "Shader parameter released before shader data: %s",
+                   full_shader_name);
+    }
+    return gShaderDatas.Remove(full_shader_hash);
   }
   return false;
 }

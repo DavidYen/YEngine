@@ -55,10 +55,13 @@ namespace Renderer {
                                   const YRenderDevice::SamplerState& sampler);
   void RegisterShaderData(const char* shader_name, size_t shader_name_size,
                           const char* variant_name, size_t variant_name_size,
-                          const char** vertex_params, size_t num_vertex_params,
+                          size_t num_vertex_params,
+                          const char** vertex_params,
+                          size_t* vertex_param_sizes,
                           const void* vertex_shader_data,
                           size_t vertex_shader_size,
-                          const char** pixel_params, size_t num_pixel_params,
+                          size_t num_pixel_params,
+                          const char** pixel_params, size_t* pizel_param_sizes,
                           const void* pixel_shader_data,
                           size_t pixel_shader_size);
   void RegisterRenderPasses(const char* name, size_t name_size,
