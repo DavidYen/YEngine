@@ -23,6 +23,7 @@
 #define PIXEL_SHADERS_SIZE 256
 #define SHADER_COMBINATIONS_SIZE 512
 #define ACTIVE_PASSES_SIZE 16
+#define RENDER_TYPES_SIZE 128
 
 // Maximum active
 #define MAX_RENDERTARGETS_PER_PASS 4
@@ -265,6 +266,22 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<ActivePassesInternal> gActivePasses;
 
+  struct RenderTypeInternal : public RefCountBase {
+    RenderTypeInternal(const char* shader, size_t shader_size)
+      : RefCountBase(),
+        mShaderBaseSize(shader_size) {
+      memset(mShaderBase, 0, sizeof(mShaderBase));
+      YASSERT(shader_size < MAX_SHADER_BASE_NAME,
+              "Maximum Shader Size %u exceeded: %u",
+              static_cast<uint32_t>(MAX_SHADER_BASE_NAME),
+              static_cast<uint32_t>(shader_size));
+      memcpy(mShaderBase, shader, shader_size);
+    }
+    char mShaderBase[MAX_SHADER_BASE_NAME];
+    size_t mShaderBaseSize;
+  };
+  YCommon::YContainers::TypedHashTable<RenderTypeInternal> gRenderTypes;
+
   ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
 
@@ -300,6 +317,7 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gPixelShaders, PIXEL_SHADERS_SIZE, "Pixel Shader");
   INITIALIZE_TABLE(gShaderDatas, SHADER_COMBINATIONS_SIZE, "Shader Data");
   INITIALIZE_TABLE(gActivePasses, ACTIVE_PASSES_SIZE, "Active Render Passes");
+  INITIALIZE_TABLE(gRenderTypes, RENDER_TYPES_SIZE, "Render Types");
 
   gActiveRenderPasses = nullptr;
 }
@@ -307,6 +325,7 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
 void Renderer::Terminate() {
   gActiveRenderPasses = nullptr;
 
+  gRenderTypes.Reset();
   gActivePasses.Reset();
   gShaderDatas.Reset();
   gPixelShaders.Reset();
@@ -615,6 +634,17 @@ void Renderer::RegisterRenderPasses(const char* name, size_t name_size,
   active_passes->IncRef();
 }
 
+void Renderer::RegisterRenderType(const char* name, size_t name_size,
+                                  const char* shader, size_t shader_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  RenderTypeInternal* render_type = gRenderTypes.GetValue(name_hash);
+  if (nullptr == render_type) {
+    RenderTypeInternal new_render_type(shader, shader_size);
+    render_type = gRenderTypes.Insert(name_hash, new_render_type);
+  }
+  render_type->IncRef();
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -791,6 +821,16 @@ bool Renderer::ReleaseRenderPasses(const char* name, size_t name_size) {
               static_cast<uint32_t>(i), name);
     }
     return gActivePasses.Remove(name_hash);
+  }
+  return false;
+}
+
+bool Renderer::ReleaseRenderType(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  RenderTypeInternal* render_type = gRenderTypes.GetValue(name_hash);
+  YASSERT(render_type, "Releasing an invalid Render Type Name: %s", name);
+  if (render_type->DecRef()) {
+    return gRenderTypes.Remove(name_hash);
   }
   return false;
 }

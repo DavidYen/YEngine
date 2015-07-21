@@ -25,5 +25,6 @@ unit_test("YRenderer_Test") {
   deps += [
     ":YRenderer_Common",
     "//YEngine/YRenderDevice:YRenderDevice_Mock",
+    "//YCommon/YUtils:YUtils_Test",
   ]
 }

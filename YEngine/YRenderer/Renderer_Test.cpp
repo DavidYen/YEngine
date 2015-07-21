@@ -191,6 +191,17 @@ TEST_F(RendererTest, RenderPassesTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderPasses(name, sizeof(name)));
 }
 
+TEST_F(RendererTest, RenderTypeTest) {
+  const char name[] = "test_render_type_name";
+  const char shader[] = "test_shader_name";
+
+  Renderer::RegisterRenderType(name, sizeof(name), shader, sizeof(shader));
+  Renderer::RegisterRenderType(name, sizeof(name), shader, sizeof(shader));
+
+  EXPECT_FALSE(Renderer::ReleaseRenderType(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseRenderType(name, sizeof(name)));
+}
+
 TEST_F(RendererTest, BasicActivationTest) {
   const char viewport_name[] = "test_render_passes";
   const YRenderDevice::ViewPortID viewport_id = 123;
