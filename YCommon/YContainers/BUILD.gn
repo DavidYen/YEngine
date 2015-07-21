@@ -20,7 +20,6 @@ static_library("YContainers") {
   ]
 
   deps = [
-    "//YCommon/YUtils",
     "//YCommon/YPlatform",
   ]
 }
@@ -36,6 +35,7 @@ unit_test("YContainers_Test") {
 
   deps += [
     ":YContainers",
+
   ]
 }
 

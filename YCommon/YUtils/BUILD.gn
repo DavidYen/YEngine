@@ -1,10 +1,16 @@
 
-static_library("YUtils") {
+source_set("YUtils_Common") {
   sources = [
-    "Assert.h",
     "Hash.cpp",
-    "Hash.h",
   ]
+
+  deps = [
+    "//third_party/build/google/cityhash",
+  ]
+}
+
+static_library("YUtils") {
+  sources = []
 
   if (is_win) {
     sources += [
@@ -13,6 +19,16 @@ static_library("YUtils") {
   }
 
   deps = [
-    "//third_party/build/google/cityhash",
+    ":YUtils_Common",
+  ]
+}
+
+static_library("YUtils_Test") {
+  sources = [
+    "Assert_GTest.cpp",
+  ]
+
+  deps = [
+    "//third_party/build/google/gtest",
   ]
 }
