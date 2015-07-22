@@ -8,6 +8,7 @@ static_library("YContainers") {
     "HashTable.cpp",
     "MemBuffer.cpp",
     "MemPool.cpp",
+    "RefPointer.cpp",
     "ThreadPool.cpp",
   ]
 

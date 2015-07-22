@@ -1,88 +1,24 @@
-#ifndef YCOMMON_YCONTAINERS_REFPOINTER_H
-#define YCOMMON_YCONTAINERS_REFPOINTER_H
+#include <YCommon/Headers/stdincludes.h>
+#include "RefPointer.h"
 
 #include <YCommon/Headers/Macros.h>
 
 namespace YCommon { namespace YContainers {
 
-class ReadRefData;
-class WriteRefData;
-class ReadWriteRefData;
+ReadRefData RefPointer::GetReadRef() {
+  return ReadRefData(this);
+}
 
-class RefPointer {
+WriteRefData RefPointer::GetWriteRef() {
+  return WriteRefData(this);
+}
+
+ReadWriteRefData RefPointer::GetReadWriteRef() {
+  return ReadWriteRefData(this);
+}
+
+/*class BaseRefData {
  public:
-  RefPointer()
-    : mReadRefs(0),
-      mWriteRefs(0),
-      mReadWriteRefs(0),
-      mPointer(nullptr) {
-  }
-
-  RefPointer(void* pointer)
-    : mReadRefs(0),
-      mWriteRefs(0),
-      mReadWriteRefs(0),
-      mPointer(pointer) {
-  }
-
-  ~RefPointer() {
-    Reset();
-  }
-
-  void Reset() {
-    YASSERT(mReadRefs == 0, "Read references not zero: %u", mReadRefs);
-    YASSERT(mWriteRefs == 0, "Write references not zero: %u", mWriteRefs);
-    YASSERT(mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", mReadWriteRefs);
-    mPointer = nullptr;
-  }
-
-  void Set(void* pointer) {
-    Reset();
-    mPointer = pointer;
-  }
-
-  ReadRefData GetReadRef();
-  WriteRefData GetWriteRef();
-  ReadWriteRefData GetReadWriteRef();
-
-  RefPointer& operator=(void* rhs) {
-    Reset();
-    mPointer = rhs;
-    return *this;
-  }
-
-  bool operator==(const void* rhs) const {
-    return mPointer == rhs;
-  }
-
-  bool operator!=(const void* rhs) const {
-    return mPointer != rhs;
-  }
-
- private:
-  friend class BaseRefData;
-  friend class ReadRefData;
-  friend class WriteRefData;
-  friend class ReadWriteRefData;
-
-  uint8_t mReadRefs;
-  uint8_t mWriteRefs;
-  uint8_t mReadWriteRefs;
-  void* mPointer;
-};
-
-class BaseRefData {
- public:
-  bool operator==(const void* rhs) const {
-    return mPointer == rhs;
-  }
-
-  bool operator!=(const void* rhs) const {
-    return mPointer != rhs;
-  }
-
- protected:
   BaseRefData(RefPointer* ref_pointer)
     : mRefPointer(ref_pointer),
       mPointer(ref_pointer->mPointer) {
@@ -94,7 +30,7 @@ class BaseRefData {
   RefPointer* mRefPointer;
 };
 
-class ReadRefData : public BaseRefData {
+class ReadRefData : private BaseRefData {
  public:
   ~ReadRefData() {
     YASSERT(mRefPointer->mReadRefs != 0, "Read references is zero");
@@ -112,9 +48,9 @@ class ReadRefData : public BaseRefData {
   ReadRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
     YASSERT(ref_pointer->mWriteRefs == 0,
-            "Write references not zero: %u", ref_pointer->mWriteRefs);
+            "Write references not zero: %u", mWriteRefs);
     YASSERT(ref_pointer->mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", ref_pointer->mReadWriteRefs);
+            "Read/Write references not zero: %u", mReadWriteRefs);
     mRefPointer->mReadRefs++;
   }
 };
@@ -125,11 +61,11 @@ class TypedReadRefData : public ReadRefData {
   const T* GetData() { return static_cast<const T*>(ReadRefData::GetData()); }
 };
 
-class WriteRefData : public BaseRefData {
+class WriteRefData {
  public:
   ~WriteRefData() {
     YASSERT(mRefPointer->mWriteRefs != 0, "Write references is zero");
-    mRefPointer->mWriteRefs--;
+    mRefPointer->mReadRefs--;
   }
 
   void* GetData() {
@@ -143,9 +79,9 @@ class WriteRefData : public BaseRefData {
   WriteRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
     YASSERT(ref_pointer->mReadRefs == 0,
-            "Read references not zero: %u", ref_pointer->mReadRefs);
+            "Read references not zero: %u", mReadRefs);
     YASSERT(ref_pointer->mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", ref_pointer->mReadWriteRefs);
+            "Read/Write references not zero: %u", mReadWriteRefs);
     ref_pointer->mWriteRefs++;
   }
 };
@@ -156,7 +92,7 @@ class TypedWriteRefData : public WriteRefData {
   T* GetData() { return static_cast<T*>(WriteRefData::GetData()); }
 };
 
-class ReadWriteRefData : public BaseRefData {
+class ReadWriteRefData {
  public:
   ~ReadWriteRefData() {
     YASSERT(mRefPointer->mReadWriteRefs != 0, "Read/Write references is zero");
@@ -174,11 +110,11 @@ class ReadWriteRefData : public BaseRefData {
   ReadWriteRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
     YASSERT(ref_pointer->mReadRefs == 0,
-            "Read references not zero: %u", ref_pointer->mReadRefs);
+            "Read references not zero: %u", mReadRefs);
     YASSERT(ref_pointer->mWriteRefs == 0,
-            "Write references not zero: %u", ref_pointer->mWriteRefs);
+            "Write references not zero: %u", mWriteRefs);
     YASSERT(ref_pointer->mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", ref_pointer->mReadWriteRefs);
+            "Read/Write references not zero: %u", mReadWriteRefs);
     ref_pointer->mReadWriteRefs++;
   }
 };
@@ -197,8 +133,6 @@ class TypedRefPointer : public RefPointer {
   TypedReadWriteRefData<T> GetReadWriteRef() {
     return TypedReadWriteRefData<T>(this);
   }
-};
+};*/
 
 }} // namespace YCommon { namespace YContainers {
-
-#endif // YCOMMON_YCONTAINERS_REFPOINTER_H
