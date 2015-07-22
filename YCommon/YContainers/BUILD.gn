@@ -2,21 +2,13 @@
 static_library("YContainers") {
   sources = [
     "AtomicHashTable.cpp",
-    "AtomicHashTable.h",
     "AtomicMemPool.cpp",
-    "AtomicMemPool.h",
     "AtomicQueue.cpp",
-    "AtomicQueue.h",
     "CommandTree.cpp",
-    "CommandTree.h",
-    "HashTable.h",
     "HashTable.cpp",
     "MemBuffer.cpp",
-    "MemBuffer.h",
     "MemPool.cpp",
-    "MemPool.h",
     "ThreadPool.cpp",
-    "ThreadPool.h",
   ]
 
   deps = [
@@ -30,12 +22,13 @@ unit_test("YContainers_Test") {
     "CommandTree_Test.cpp",
     "HashTable_Test.cpp",
     "MemPool_Test.cpp",
+    "RefPointer_Test.cpp",
     "ThreadPool_Test.cpp",
   ]
 
   deps += [
     ":YContainers",
-
+    "//YCommon/YUtils:YUtils_TestLib",
   ]
 }
 

@@ -24,10 +24,6 @@ static_library("YPlatform") {
       "Timer_Win.cpp",
     ]
   }
-
-  deps = [
-    "//YCommon/YUtils",
-  ]
 }
 
 unit_test("YPlatform_Test") {

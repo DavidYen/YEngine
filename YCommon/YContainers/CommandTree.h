@@ -129,4 +129,4 @@ class CommandTree {
 
 }} // namespace YCommon { namespace YContainers {
 
-#endif //YCOMMON_YCONTAINERS_COMMANDTREE_H
+#endif // YCOMMON_YCONTAINERS_COMMANDTREE_H

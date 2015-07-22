@@ -1,0 +1,13 @@
+#ifndef YCOMMON_HEADERS_TESTHELPERS_H
+#define YCOMMON_HEADERS_TESTHELPERS_H
+
+#include <gtest/gtest-spi.h>
+
+#define TEST_FAILURE(BASE, TEST_NAME, FAILURE_STR) \
+  void BASE ## _ ## TEST_NAME ## _FAILURE(); \
+  TEST(BASE, TEST_NAME) { \
+    EXPECT_FATAL_FAILURE(BASE ## _ ## TEST_NAME ## _FAILURE(), FAILURE_STR); \
+  } \
+  void BASE ## _ ## TEST_NAME ## _FAILURE()
+
+#endif // YCOMMON_HEADERS_TESTHELPERS_H

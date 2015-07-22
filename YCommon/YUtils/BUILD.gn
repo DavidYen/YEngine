@@ -23,12 +23,13 @@ static_library("YUtils") {
   ]
 }
 
-static_library("YUtils_Test") {
+static_library("YUtils_TestLib") {
   sources = [
     "Assert_GTest.cpp",
   ]
 
   deps = [
+    ":YUtils_Common",
     "//third_party/build/google/gtest",
   ]
 }
