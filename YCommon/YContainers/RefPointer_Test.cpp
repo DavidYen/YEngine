@@ -1,6 +1,7 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "RefPointer.h"
 
+#include <utility>
 #include <gtest/gtest.h>
 
 #include <YCommon/Headers/TestHelpers.h>
@@ -17,12 +18,65 @@ TEST(RefPointerTest, BasicConstructorTest) {
   EXPECT_EQ(basic_ref_pointer, &basic);
 }
 
+TEST(RefPointerTest, BasicReadCounterTest) {
+  uint8_t basic = 1;
+  RefPointer basic_ref_pointer(&basic);
+  EXPECT_EQ(0u, basic_ref_pointer.ReadRefCount());
+  ReadRefData read_ref = basic_ref_pointer.GetReadRef();
+  EXPECT_EQ(1u, basic_ref_pointer.ReadRefCount());
+}
+
+TEST(RefPointerTest, BasicWriteCounterTest) {
+  uint8_t basic = 1;
+  RefPointer basic_ref_pointer(&basic);
+  EXPECT_EQ(0u, basic_ref_pointer.WriteRefCount());
+  WriteRefData write_ref = basic_ref_pointer.GetWriteRef();
+  EXPECT_EQ(1u, basic_ref_pointer.WriteRefCount());
+}
+
+TEST(RefPointerTest, BasicReadWriteCounterTest) {
+  uint8_t basic = 1;
+  RefPointer basic_ref_pointer(&basic);
+  EXPECT_EQ(0u, basic_ref_pointer.ReadWriteRefCount());
+  ReadWriteRefData read_write_ref = basic_ref_pointer.GetReadWriteRef();
+  EXPECT_EQ(1u, basic_ref_pointer.ReadWriteRefCount());
+}
+
 TEST(RefPointerTest, BasicAssignmentTest) {
   uint8_t basic = 1;
   RefPointer basic_ref_pointer;
   EXPECT_NE(basic_ref_pointer, &basic);
   basic_ref_pointer = &basic;
   EXPECT_EQ(basic_ref_pointer, &basic);
+}
+
+TEST(RefPointerTest, BasicMoveTest) {
+  uint8_t basic = 1;
+  RefPointer basic_ref_pointer1(&basic);
+  RefPointer basic_ref_pointer2;
+
+  EXPECT_EQ(basic_ref_pointer1, &basic);
+  EXPECT_EQ(basic_ref_pointer2, nullptr);
+
+  basic_ref_pointer2 = std::move(basic_ref_pointer1);
+}
+
+TEST(RefPointerTest, BasicCopyConstructorTest) {
+  uint8_t basic = 1;
+  RefPointer basic_ref_pointer1(&basic);
+
+  ReadRefData read_ref = basic_ref_pointer1.GetReadRef();
+
+  RefPointer basic_ref_pointer2(basic_ref_pointer1);
+
+  EXPECT_EQ(basic_ref_pointer1, &basic);
+  EXPECT_EQ(basic_ref_pointer2, &basic);
+
+  // first one should still have references.
+  EXPECT_EQ(1u, basic_ref_pointer1.ReadRefCount());
+
+  // Copied should have no references yet 
+  EXPECT_EQ(0u, basic_ref_pointer2.ReadRefCount());
 }
 
 TEST(RefPointerTest, ReadRefTest) {

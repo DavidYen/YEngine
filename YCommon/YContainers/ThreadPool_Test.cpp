@@ -157,8 +157,8 @@ TEST(BasicThreadPoolTest, StartStopFailTest) {
   ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore2));
 
   // Wait for threads to begin
-  ASSERT_TRUE(semaphore1.Wait(100));
-  ASSERT_TRUE(semaphore2.Wait(100));
+  ASSERT_TRUE(semaphore1.Wait(500));
+  ASSERT_TRUE(semaphore2.Wait(500));
 
   // Release semaphore 1
   semaphore1.Release();

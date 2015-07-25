@@ -25,6 +25,21 @@ class RefPointer {
       mPointer(pointer) {
   }
 
+  RefPointer(RefPointer&& other)
+    : mReadRefs(0),
+      mWriteRefs(0),
+      mReadWriteRefs(0),
+      mPointer(other.mPointer) {
+    other.Reset();
+  }
+
+  RefPointer(const RefPointer& other)
+    : mReadRefs(0),
+      mWriteRefs(0),
+      mReadWriteRefs(0),
+      mPointer(other.mPointer) {
+  }
+
   ~RefPointer() {
     Reset();
   }
@@ -41,6 +56,10 @@ class RefPointer {
     Reset();
     mPointer = pointer;
   }
+
+  uint8_t ReadRefCount() const { return mReadRefs; }
+  uint8_t WriteRefCount() const { return mWriteRefs; }
+  uint8_t ReadWriteRefCount() const { return mReadWriteRefs; }
 
   ReadRefData GetReadRef();
   WriteRefData GetWriteRef();
