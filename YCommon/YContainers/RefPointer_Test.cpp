@@ -34,6 +34,22 @@ TEST(RefPointerTest, ReadRefTest) {
   EXPECT_EQ(ref2, &basic);
 }
 
+TEST(RefPointerTest, ReadRefCopyTest) {
+  RefPointer basic_ref_pointer;
+  ReadRefData read_ref = basic_ref_pointer.GetReadRef();
+  ReadRefData read_ref2(read_ref);
+}
+
+TEST(RefPointerTest, ReadRefAssignmentTest) {
+  RefPointer basic_ref_pointer1;
+  ReadRefData read_ref1 = basic_ref_pointer1.GetReadRef();
+
+  RefPointer basic_ref_pointer2;
+  ReadRefData read_ref2 = basic_ref_pointer2.GetReadRef();
+
+  read_ref2 = read_ref1;
+}
+
 TEST_FAILURE(RefPointerTest, ReadRefUnreleasedFail,
              "Read references not zero") {
   RefPointer basic_ref_pointer;
@@ -64,6 +80,22 @@ TEST(RefPointerTest, WriteRefTest) {
   EXPECT_EQ(ref2, &basic);
 }
 
+TEST(RefPointerTest, WriteRefCopyTest) {
+  RefPointer basic_ref_pointer;
+  WriteRefData write_ref = basic_ref_pointer.GetWriteRef();
+  WriteRefData write_ref2(write_ref);
+}
+
+TEST(RefPointerTest, WriteRefAssignmentTest) {
+  RefPointer basic_ref_pointer1;
+  WriteRefData write_ref1 = basic_ref_pointer1.GetWriteRef();
+
+  RefPointer basic_ref_pointer2;
+  WriteRefData write_ref2 = basic_ref_pointer2.GetWriteRef();
+
+  write_ref2 = write_ref1;
+}
+
 TEST_FAILURE(RefPointerTest, WriteRefUnreleasedFail,
              "Write references not zero") {
   RefPointer basic_ref_pointer;
@@ -90,6 +122,22 @@ TEST(RefPointerTest, ReadWriteRefTest) {
   RefPointer basic_ref_pointer(&basic);
   ReadWriteRefData ref = basic_ref_pointer.GetReadWriteRef();
   EXPECT_EQ(ref, &basic);
+}
+
+TEST(RefPointerTest, ReadWriteRefCopyTest) {
+  RefPointer basic_ref_pointer;
+  ReadWriteRefData read_write_ref = basic_ref_pointer.GetReadWriteRef();
+  ReadWriteRefData read_write_ref2(read_write_ref);
+}
+
+TEST(RefPointerTest, ReadWriteRefAssignmentTest) {
+  RefPointer basic_ref_pointer1;
+  ReadWriteRefData read_write_ref1 = basic_ref_pointer1.GetReadWriteRef();
+
+  RefPointer basic_ref_pointer2;
+  ReadWriteRefData read_write_ref2 = basic_ref_pointer2.GetReadWriteRef();
+
+  read_write_ref2 = read_write_ref1;
 }
 
 TEST_FAILURE(RefPointerTest, ReadWriteRefUnreleasedFail,

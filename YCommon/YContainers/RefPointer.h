@@ -66,6 +66,48 @@ class RefPointer {
   friend class WriteRefData;
   friend class ReadWriteRefData;
 
+  void IncReadRefs() {
+    YASSERT(mWriteRefs == 0,
+            "Write references not zero: %u", mWriteRefs);
+    YASSERT(mReadWriteRefs == 0,
+            "Read/Write references not zero: %u", mReadWriteRefs);
+    mReadRefs++;
+  }
+
+  void DecReadRefs() {
+    YASSERT(mReadRefs != 0, "Read references is zero");
+    mReadRefs--;
+  }
+
+  void IncWriteRefs() {
+    YASSERT(mReadRefs == 0,
+            "Read references not zero: %u", mReadRefs);
+    YASSERT(mReadWriteRefs == 0,
+            "Read/Write references not zero: %u", mReadWriteRefs);
+    mWriteRefs++;
+  }
+
+  void DecWriteRefs() {
+    YASSERT(mWriteRefs != 0, "Write references is zero");
+    mWriteRefs--;
+  }
+
+  void IncReadWriteRefs() {
+    YASSERT(mReadRefs == 0,
+            "Read references not zero: %u", mReadRefs);
+    YASSERT(mWriteRefs == 0,
+            "Write references not zero: %u", mWriteRefs);
+    YASSERT(mReadWriteRefs == 0,
+            "Read/Write references not zero: %u", mReadWriteRefs);
+    mReadWriteRefs++;
+  }
+
+  void DecReadWriteRefs() {
+    YASSERT(mReadWriteRefs != 0,
+            "Read/Write references is zero");
+    mReadWriteRefs--;
+  }
+
   uint8_t mReadRefs;
   uint8_t mWriteRefs;
   uint8_t mReadWriteRefs;
@@ -88,7 +130,24 @@ class BaseRefData {
       mPointer(ref_pointer->mPointer) {
   }
 
+  BaseRefData(const BaseRefData& copy)
+    : mRefPointer(copy.mRefPointer),
+      mPointer(copy.mPointer) {
+  }
+
+  BaseRefData(BaseRefData&& other)
+    : mRefPointer(other.mRefPointer),
+      mPointer(other.mPointer) {
+    other.mRefPointer = nullptr;
+    other.mPointer = nullptr;
+  }
+
   ~BaseRefData() {}
+
+  void Reset() {
+    mPointer = nullptr;
+    mRefPointer = nullptr;
+  }
 
   void* mPointer;
   RefPointer* mRefPointer;
@@ -96,26 +155,47 @@ class BaseRefData {
 
 class ReadRefData : public BaseRefData {
  public:
+  ReadRefData(const ReadRefData& copy)
+    : BaseRefData(copy) {
+    if (mRefPointer) {
+      mRefPointer->IncReadRefs();
+    }
+  }
+
+  ReadRefData(ReadRefData&& other)
+    : BaseRefData(other) {
+  }
+
   ~ReadRefData() {
-    YASSERT(mRefPointer->mReadRefs != 0, "Read references is zero");
-    mRefPointer->mReadRefs--;
+    Reset();
+  }
+
+  void Reset() {
+    if (mRefPointer)
+      mRefPointer->DecReadRefs();
+    BaseRefData::Reset();
   }
 
   const void* GetData() {
-    YDEBUG_CHECK(mRefPointer->mPointer == mPointer,
+    YDEBUG_CHECK(mRefPointer == nullptr || mRefPointer->mPointer == mPointer,
                  "Reference Pointer out of date.");
     return mPointer;
+  }
+
+  ReadRefData& operator=(const ReadRefData& other) {
+    Reset();
+    mPointer = other.mPointer;
+    mRefPointer = other.mRefPointer;
+    if (mRefPointer)
+      mRefPointer->IncReadRefs();
+    return *this;
   }
 
  private:
   friend class RefPointer;
   ReadRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
-    YASSERT(ref_pointer->mWriteRefs == 0,
-            "Write references not zero: %u", ref_pointer->mWriteRefs);
-    YASSERT(ref_pointer->mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", ref_pointer->mReadWriteRefs);
-    mRefPointer->mReadRefs++;
+    ref_pointer->IncReadRefs();
   }
 };
 
@@ -127,26 +207,48 @@ class TypedReadRefData : public ReadRefData {
 
 class WriteRefData : public BaseRefData {
  public:
+  WriteRefData(const WriteRefData& copy)
+    : BaseRefData(copy) {
+    if (mRefPointer) {
+      mRefPointer->IncWriteRefs();
+    }
+  }
+
+  WriteRefData(WriteRefData&& other)
+    : BaseRefData(other) {
+  }
+
   ~WriteRefData() {
-    YASSERT(mRefPointer->mWriteRefs != 0, "Write references is zero");
-    mRefPointer->mWriteRefs--;
+    Reset();
+  }
+
+  void Reset() {
+    if (mRefPointer)
+      mRefPointer->DecWriteRefs();
+    BaseRefData::Reset();
   }
 
   void* GetData() {
-    YDEBUG_CHECK(mRefPointer->mPointer == mPointer,
+    YDEBUG_CHECK(mRefPointer == nullptr || mRefPointer->mPointer == mPointer,
                  "Reference Pointer out of date.");
     return mPointer;
+  }
+
+  WriteRefData& operator=(const WriteRefData& other) {
+    Reset();
+    mPointer = other.mPointer;
+    mRefPointer = other.mRefPointer;
+    if (mRefPointer)
+      mRefPointer->IncWriteRefs();
+    return *this;
   }
 
  private:
   friend class RefPointer;
   WriteRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
-    YASSERT(ref_pointer->mReadRefs == 0,
-            "Read references not zero: %u", ref_pointer->mReadRefs);
-    YASSERT(ref_pointer->mReadWriteRefs == 0,
-            "Read/Write references not zero: %u", ref_pointer->mReadWriteRefs);
-    ref_pointer->mWriteRefs++;
+    YDEBUG_CHECK(ref_pointer, "Cannot construct a reference to NULL.");
+    ref_pointer->IncWriteRefs();
   }
 };
 
@@ -158,15 +260,41 @@ class TypedWriteRefData : public WriteRefData {
 
 class ReadWriteRefData : public BaseRefData {
  public:
+  ReadWriteRefData(ReadWriteRefData& copy)
+    : BaseRefData(copy) {
+    // Simulate a move
+    copy.mPointer = nullptr;
+    copy.mRefPointer = nullptr;
+  }
+
+  ReadWriteRefData(ReadWriteRefData&& other)
+    : BaseRefData(other) {
+  }
+
   ~ReadWriteRefData() {
-    YASSERT(mRefPointer->mReadWriteRefs != 0, "Read/Write references is zero");
-    mRefPointer->mReadWriteRefs--;
+    Reset();
+  }
+
+  void Reset() {
+    if (mRefPointer)
+      mRefPointer->DecReadWriteRefs();
+    BaseRefData::Reset();
   }
 
   void* GetData() {
-    YDEBUG_CHECK(mRefPointer->mPointer == mPointer,
+    YDEBUG_CHECK(mRefPointer == nullptr || mRefPointer->mPointer == mPointer,
                  "Reference Pointer out of date.");
     return mPointer;
+  }
+
+  ReadWriteRefData& operator=(ReadWriteRefData& other) {
+    // Simulate a "move"
+    Reset();
+    mPointer = other.mPointer;
+    mRefPointer = other.mRefPointer;
+    other.mPointer = nullptr;
+    other.mRefPointer = nullptr;
+    return *this;
   }
 
  private:
