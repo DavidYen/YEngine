@@ -37,7 +37,7 @@ class RendererTest : public ::testing::Test {
     YCore::StringTable::Initialize(32, 128, mMemBuffer.Allocate(10240), 10240);
     YRenderDevice::RenderDevice::Initialize(mHandle, gTestWidth, gTestHeight,
                                             mMemBuffer.Allocate(10240), 10240);
-    Renderer::Initialize(mMemBuffer.Allocate(10240 * 30), 10240 * 30);
+    Renderer::Initialize(mMemBuffer.Allocate(10240 * 50), 10240 * 50);
   }
 
   virtual void TearDown() {
@@ -56,7 +56,7 @@ class RendererTest : public ::testing::Test {
 TEST_F(RendererTest, FixtureInitialization) {
 }
 
-TEST_F(RendererTest, ViewportTest) {
+TEST_F(RendererTest, RegisterViewportTest) {
   const char name[] = "test_viewport";
   Renderer::RegisterViewPort(name, sizeof(name),
                              Renderer::kDimensionType_Absolute, 1.0f,
@@ -75,7 +75,7 @@ TEST_F(RendererTest, ViewportTest) {
   EXPECT_TRUE(Renderer::ReleaseViewPort(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, RenderTargetTest) {
+TEST_F(RendererTest, RegisterRenderTargetTest) {
   const char name[] = "test_render_target";
   const YRenderDevice::PixelFormat format =
       static_cast<YRenderDevice::PixelFormat>(123);
@@ -90,7 +90,7 @@ TEST_F(RendererTest, RenderTargetTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderTarget(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, BackBufferNameTest) {
+TEST_F(RendererTest, RegisterBackBufferNameTest) {
   const char name[] = "test_back_buffer";
   Renderer::RegisterBackBufferName(name, sizeof(name));
   Renderer::RegisterBackBufferName(name, sizeof(name));
@@ -99,7 +99,7 @@ TEST_F(RendererTest, BackBufferNameTest) {
   EXPECT_TRUE(Renderer::ReleaseBackBufferName(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, RenderPassTest) {
+TEST_F(RendererTest, RegisterRenderPassTest) {
   const char name[] = "test_render_pass";
   const char variant[] = "test_variant";
   YRenderDevice::RenderBlendState blend_state;
@@ -116,7 +116,7 @@ TEST_F(RendererTest, RenderPassTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderPass(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, VertexDeclTest) {
+TEST_F(RendererTest, RegisterVertexDeclTest) {
   const char name[] = "test_vertex_decl";
   Renderer::RegisterVertexDecl(name, sizeof(name), nullptr, 0);
   Renderer::RegisterVertexDecl(name, sizeof(name), nullptr, 0);
@@ -125,7 +125,7 @@ TEST_F(RendererTest, VertexDeclTest) {
   EXPECT_TRUE(Renderer::ReleaseVertexDecl(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, ShaderFloatParamTest) {
+TEST_F(RendererTest, RegisterShaderFloatParamTest) {
   const char name[] = "test_float_param";
   Renderer::RegisterShaderFloatParam(name, sizeof(name),
                                      4, 0, 1);
@@ -136,7 +136,7 @@ TEST_F(RendererTest, ShaderFloatParamTest) {
   EXPECT_TRUE(Renderer::ReleaseShaderFloatParam(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, ShaderTextureParamTest) {
+TEST_F(RendererTest, RegisterShaderTextureParamTest) {
   const char name[] = "test_texture_param";
   YRenderDevice::SamplerState sampler_state;
   Renderer::RegisterShaderTextureParam(name, sizeof(name), 0, sampler_state);
@@ -146,9 +146,10 @@ TEST_F(RendererTest, ShaderTextureParamTest) {
   EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, ShaderDataTest) {
+TEST_F(RendererTest, RegisterShaderDataTest) {
   const char shader_name[] = "test_shader_name";
   const char variant_name[] = "test_variant_name";
+  const char vertex_decl_name[] = "vertex_decl_name";
   const char vertex_shader[] = "test vertex shader";
   const char pixel_shader[] = "test pixel shader";
 
@@ -159,14 +160,19 @@ TEST_F(RendererTest, ShaderDataTest) {
   YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
       pixel_shader_id, pixel_shader, sizeof(pixel_shader));
 
+  Renderer::RegisterVertexDecl(vertex_decl_name, sizeof(vertex_decl_name),
+                               nullptr, 0);
+
   Renderer::RegisterShaderData(shader_name, sizeof(shader_name),
                                variant_name, sizeof(variant_name),
+                               vertex_decl_name, sizeof(vertex_decl_name),
                                0, nullptr, nullptr,
                                vertex_shader, sizeof(vertex_shader),
                                0, nullptr, nullptr,
                                pixel_shader, sizeof(pixel_shader));
   Renderer::RegisterShaderData(shader_name, sizeof(shader_name),
                                variant_name, sizeof(variant_name),
+                               vertex_decl_name, sizeof(vertex_decl_name),
                                0, nullptr, nullptr,
                                vertex_shader, sizeof(vertex_shader),
                                0, nullptr, nullptr,
@@ -179,9 +185,11 @@ TEST_F(RendererTest, ShaderDataTest) {
   YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(vertex_shader_id);
   EXPECT_TRUE(Renderer::ReleaseShaderData(shader_name, sizeof(shader_name),
                                           variant_name, sizeof(variant_name)));
+  EXPECT_TRUE(Renderer::ReleaseVertexDecl(vertex_decl_name, 
+                                          sizeof(vertex_decl_name)));
 }
 
-TEST_F(RendererTest, RenderPassesTest) {
+TEST_F(RendererTest, RegisterRenderPassesTest) {
   const char name[] = "test_render_passes_name";
 
   Renderer::RegisterRenderPasses(name, sizeof(name), nullptr, nullptr, 0);
@@ -191,7 +199,7 @@ TEST_F(RendererTest, RenderPassesTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderPasses(name, sizeof(name)));
 }
 
-TEST_F(RendererTest, RenderTypeTest) {
+TEST_F(RendererTest, RegisterRenderTypeTest) {
   const char name[] = "test_render_type_name";
   const char shader[] = "test_shader_name";
 
@@ -200,6 +208,45 @@ TEST_F(RendererTest, RenderTypeTest) {
 
   EXPECT_FALSE(Renderer::ReleaseRenderType(name, sizeof(name)));
   EXPECT_TRUE(Renderer::ReleaseRenderType(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, RegisterVertexDataTest) {
+  const char name[] = "test_vertex_data_name";
+
+  Renderer::RegisterVertexData(name, sizeof(name));
+  Renderer::RegisterVertexData(name, sizeof(name));
+
+  EXPECT_FALSE(Renderer::ReleaseVertexData(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseVertexData(name, sizeof(name)));
+}
+
+TEST_F(RendererTest, RegisterShaderFloatArgTest) {
+  const char name[] = "test_float_arg";
+  const char param[] = "test_float_param";
+  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0, 1);
+
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+
+  EXPECT_FALSE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+
+  EXPECT_TRUE(Renderer::ReleaseShaderFloatParam(param, sizeof(param)));
+}
+
+TEST_F(RendererTest, RegisterShaderTextureArgTest) {
+  const char name[] = "test_texture_arg";
+  const char param[] = "test_texture_param";
+  YRenderDevice::SamplerState sampler_state;
+  Renderer::RegisterShaderTextureParam(param, sizeof(param), 0, sampler_state);
+
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+
+  EXPECT_FALSE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+
+  EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(param, sizeof(param)));
 }
 
 TEST_F(RendererTest, BasicActivationTest) {

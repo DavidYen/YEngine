@@ -24,6 +24,9 @@
 #define SHADER_COMBINATIONS_SIZE 512
 #define ACTIVE_PASSES_SIZE 16
 #define RENDER_TYPES_SIZE 128
+#define VERTEX_DATA_SIZE 256
+#define FLOATARGS_SIZE 512
+#define TEXARGS_SIZE 1024
 
 // Maximum active
 #define MAX_RENDERTARGETS_PER_PASS 4
@@ -38,6 +41,8 @@
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
 #define INVALID_BLEND_STATE static_cast<YRenderDevice::RenderBlendStateID>(-1)
 #define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
+#define INVALID_INDEX_BUFFER static_cast<YRenderDevice::IndexBufferID>(-1)
+#define INVALID_VERTEX_BUFFER static_cast<YRenderDevice::VertexBufferID>(-1)
 
 namespace YEngine { namespace YRenderer {
 
@@ -215,7 +220,8 @@ namespace {
   YCommon::YContainers::TypedHashTable<PixelShaderInternal> gPixelShaders;
 
   struct ShaderDataInternal : public RefCountBase {
-    ShaderDataInternal(VertexShaderInternal* vertex_shader,
+    ShaderDataInternal(VertexDeclInternal* vertex_decl,
+                       VertexShaderInternal* vertex_shader,
                        ShdrFloatParamInternal** vertex_shader_float_params,
                        uint8_t num_vertex_shdr_float_params,
                        ShdrTexParamInternal** vertex_shader_texture_params,
@@ -230,6 +236,7 @@ namespace {
         mNumPixelShdrFloatParams(num_pixel_shdr_float_params),
         mNumVertexShdrTexParams(num_vertex_shdr_texture_params),
         mNumPixelShdrTexParams(num_pixel_shdr_texture_params),
+        mVertexDecl(vertex_decl),
         mVertexShader(vertex_shader),
         mPixelShader(pixel_shader) {
       memcpy(mVertexShdrFloatParams, vertex_shader_float_params,
@@ -247,6 +254,7 @@ namespace {
     ShdrTexParamInternal* mPixelShdrTexParams[MAX_TEX_PARAMS_PER_SHADER];
     uint8_t mNumVertexShdrFloatParams, mNumPixelShdrFloatParams;
     uint8_t mNumVertexShdrTexParams, mNumPixelShdrTexParams;
+    VertexDeclInternal* mVertexDecl;
     VertexShaderInternal* mVertexShader;
     PixelShaderInternal* mPixelShader;
   };
@@ -281,6 +289,45 @@ namespace {
     size_t mShaderBaseSize;
   };
   YCommon::YContainers::TypedHashTable<RenderTypeInternal> gRenderTypes;
+
+  struct VertexDataInternal : public RefCountBase { 
+    VertexDataInternal()
+      : RefCountBase(),
+        mCurrentIndex(0) {
+      memset(mIndexBufferIDs, -1, sizeof(mIndexBufferIDs));
+      memset(mVertexBufferIDs, -1, sizeof(mVertexBufferIDs));
+    }
+    uint8_t mCurrentIndex;
+    YRenderDevice::IndexBufferID mIndexBufferIDs[2];
+    YRenderDevice::VertexBufferID mVertexBufferIDs[2];
+  };
+  YCommon::YContainers::TypedHashTable<VertexDataInternal> gVertexDatas;
+
+  struct ShdrFloatArgInternal : public RefCountBase {
+    ShdrFloatArgInternal(ShdrFloatParamInternal* float_param)
+      : RefCountBase(),
+        mFloatParam(float_param),
+        mCurrentIndex(0) {
+      memset(mConstantBufferIDs, -1, sizeof(mConstantBufferIDs));
+    }
+    ShdrFloatParamInternal* mFloatParam;
+    uint8_t mCurrentIndex;
+    YRenderDevice::ConstantBufferID mConstantBufferIDs[2];
+  };
+  YCommon::YContainers::TypedHashTable<ShdrFloatArgInternal> gShdrFloatArgs;
+
+  struct ShdrTexArgInternal : public RefCountBase {
+    ShdrTexArgInternal(ShdrTexParamInternal* tex_param)
+      : RefCountBase(),
+        mTexParam(tex_param),
+        mCurrentIndex(0) {
+      memset(mTextureIDs, -1, sizeof(mTextureIDs));
+    }
+    ShdrTexParamInternal* mTexParam;
+    uint8_t mCurrentIndex;
+    YRenderDevice::TextureID mTextureIDs[2];
+  };
+  YCommon::YContainers::TypedHashTable<ShdrTexArgInternal> gShdrTexArgs;
 
   ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
@@ -318,6 +365,9 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gShaderDatas, SHADER_COMBINATIONS_SIZE, "Shader Data");
   INITIALIZE_TABLE(gActivePasses, ACTIVE_PASSES_SIZE, "Active Render Passes");
   INITIALIZE_TABLE(gRenderTypes, RENDER_TYPES_SIZE, "Render Types");
+  INITIALIZE_TABLE(gVertexDatas, VERTEX_DATA_SIZE, "Vertex Datas");
+  INITIALIZE_TABLE(gShdrFloatArgs, FLOATARGS_SIZE, "Shader Float Args");
+  INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Float Args");
 
   gActiveRenderPasses = nullptr;
 }
@@ -325,6 +375,9 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
 void Renderer::Terminate() {
   gActiveRenderPasses = nullptr;
 
+  gShdrTexArgs.Reset();
+  gShdrFloatArgs.Reset();
+  gVertexDatas.Reset();
   gRenderTypes.Reset();
   gActivePasses.Reset();
   gShaderDatas.Reset();
@@ -473,6 +526,7 @@ void Renderer::RegisterShaderTextureParam(
 void Renderer::RegisterShaderData(
     const char* shader_name, size_t shader_name_size,
     const char* variant_name, size_t variant_name_size,
+    const char* vertex_decl, size_t vertex_decl_size,
     size_t num_vertex_params,
     const char** vertex_params, size_t* vertex_param_sizes,
     const void* vertex_shader_data, size_t vertex_shader_size,
@@ -499,6 +553,12 @@ void Renderer::RegisterShaderData(
 
   ShaderDataInternal* shader_data = gShaderDatas.GetValue(full_shader_hash);
   if (nullptr == shader_data) {
+    VertexDeclInternal* vertex_decl_internal =
+        gVertexDecls.GetValue(vertex_decl, vertex_decl_size);
+    YASSERT(vertex_decl_internal,
+            "Unknown Vertex Declaration: %s", vertex_decl);
+    vertex_decl_internal->IncRef();
+
     ShdrFloatParamInternal* vertex_float_params[MAX_FLOAT_PARAMS_PER_SHADER];
     ShdrTexParamInternal* vertex_tex_params[MAX_TEX_PARAMS_PER_SHADER];
     uint8_t num_vertex_float_params = 0;
@@ -596,6 +656,7 @@ void Renderer::RegisterShaderData(
 
     // Full Shader Data
     ShaderDataInternal new_shader_data(
+        vertex_decl_internal,
         vertex_shader, vertex_float_params, num_vertex_float_params,
         vertex_tex_params, num_vertex_tex_params,
         pixel_shader, pixel_float_params, num_pixel_float_params,
@@ -643,6 +704,50 @@ void Renderer::RegisterRenderType(const char* name, size_t name_size,
     render_type = gRenderTypes.Insert(name_hash, new_render_type);
   }
   render_type->IncRef();
+}
+
+void Renderer::RegisterVertexData(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  VertexDataInternal* vertex_data_internal = gVertexDatas.GetValue(name_hash);
+  if (nullptr == vertex_data_internal) {
+    VertexDataInternal new_vertex_data;
+    vertex_data_internal = gVertexDatas.Insert(name_hash, new_vertex_data);
+  }
+  vertex_data_internal->IncRef();
+}
+
+void Renderer::RegisterShaderArg(const char* name, size_t name_size,
+                                 const char* param, size_t param_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  const uint64_t param_hash = YCore::StringTable::AddString(param, param_size);
+
+  // Check if this is a float parameter.
+  ShdrFloatParamInternal* float_param = gShdrFloatParams.GetValue(param_hash);
+  if (float_param) {
+    ShdrFloatArgInternal* float_arg = gShdrFloatArgs.GetValue(name_hash);
+    if (nullptr == float_arg) {
+      float_param->IncRef();
+      ShdrFloatArgInternal new_float_arg(float_param);
+      float_arg = gShdrFloatArgs.Insert(name_hash, new_float_arg);
+    }
+    float_arg->IncRef();
+    return;
+  }
+
+  // Check if this is a texture parameter.
+  ShdrTexParamInternal* tex_param = gShdrTexParams.GetValue(param_hash);
+  if (tex_param) {
+    ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(name_hash);
+    if (nullptr == tex_arg) {
+      tex_param->IncRef();
+      ShdrTexArgInternal new_float_arg(tex_param);
+      tex_arg = gShdrTexArgs.Insert(name_hash, new_float_arg);
+    }
+    tex_arg->IncRef();
+    return;
+  }
+
+  YASSERT(false, "Invalid Shader Parameter: %s", param);
 }
 
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
@@ -783,7 +888,7 @@ bool Renderer::ReleaseShaderData(const char* shader_name,
     for (uint8_t i = 0; i < pixel_texture_params; ++i) {
       bool empty = shader_data->mPixelShdrTexParams[i]->DecRef();
       YASSERT(!empty, "Shader parameter released before shader data: %s",
-                   full_shader_name);
+              full_shader_name);
     }
     const uint8_t pixel_float_params = shader_data->mNumPixelShdrFloatParams;
     for (uint8_t i = 0; i < pixel_float_params; ++i) {
@@ -804,6 +909,14 @@ bool Renderer::ReleaseShaderData(const char* shader_name,
       YASSERT(!empty, "Shader parameter released before shader data: %s",
               full_shader_name);
     }
+
+    VertexDeclInternal* vertex_decl_internal = shader_data->mVertexDecl;
+    {
+      bool empty = vertex_decl_internal->DecRef();
+      YASSERT(!empty, "Vertex Declaration released before shader data: %s",
+              full_shader_name);
+    }
+
     return gShaderDatas.Remove(full_shader_hash);
   }
   return false;
@@ -832,6 +945,45 @@ bool Renderer::ReleaseRenderType(const char* name, size_t name_size) {
   if (render_type->DecRef()) {
     return gRenderTypes.Remove(name_hash);
   }
+  return false;
+}
+
+bool Renderer::ReleaseVertexData(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  VertexDataInternal* vertex_data = gVertexDatas.GetValue(name_hash);
+  YASSERT(vertex_data, "Releasing an invalid vertex data name: %s", name);
+  if (vertex_data->DecRef()) {
+    return gVertexDatas.Remove(name_hash);
+  }
+  return false;
+}
+
+bool Renderer::ReleaseShaderArg(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+
+  // Check if this is a float arg.
+  ShdrFloatArgInternal* float_arg = gShdrFloatArgs.GetValue(name_hash);
+  if (float_arg) {
+    if (float_arg->DecRef()) {
+      bool empty = float_arg->mFloatParam->DecRef();
+      YASSERT(!empty, "Shader parameter released before argument: %s", name);
+      return gShdrFloatArgs.Remove(name_hash);
+    }
+    return false;
+  }
+
+  // Check if this is a texture arg.
+  ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(name_hash);
+  if (tex_arg) {
+    if (tex_arg->DecRef()) {
+      bool empty = tex_arg->mTexParam->DecRef();
+      YASSERT(!empty, "Shader parameter released before argument: %s", name);
+      return gShdrTexArgs.Remove(name_hash);
+    }
+    return false;
+  }
+
+  YASSERT(false, "Releasing an Invalid Shader Argument name: %s", name);
   return false;
 }
 

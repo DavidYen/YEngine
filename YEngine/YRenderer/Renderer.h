@@ -1,9 +1,13 @@
 #ifndef YENGINE_YRENDERER_RENDERER_H
 #define YENGINE_YRENDERER_RENDERER_H
 
+#include <YCommon/YContainers/RefPointer.h>
 #include <YEngine/YRenderDevice/PixelFormat.h>
 #include <YEngine/YRenderDevice/RenderDevice.h>
 #include <YEngine/YRenderDevice/VertexDeclElement.h>
+
+using YCommon::YContainers::ReadRefData;
+using YCommon::YContainers::TypedReadRefData;
 
 namespace YEngine { namespace YRenderDevice {
   struct RenderBlendState;
@@ -27,7 +31,7 @@ namespace Renderer {
     kDimensionType_Percentage, // Use percentage of frame buffer dimensions.
   };
 
-  // Register renderer options
+  // Register renderer options, default values do not overwrite settings.
   void RegisterViewPort(const char* name, size_t name_size,
                         DimensionType top_type, float top,
                         DimensionType left_type, float left,
@@ -55,6 +59,7 @@ namespace Renderer {
                                   const YRenderDevice::SamplerState& sampler);
   void RegisterShaderData(const char* shader_name, size_t shader_name_size,
                           const char* variant_name, size_t variant_name_size,
+                          const char* vertex_decl, size_t vertex_decl_size,
                           size_t num_vertex_params,
                           const char** vertex_params,
                           size_t* vertex_param_sizes,
@@ -69,20 +74,15 @@ namespace Renderer {
                             const size_t* render_pass_sizes, size_t num_passes);
   void RegisterRenderType(const char* name, size_t name_size,
                           const char* shader, size_t shader_size);
-  void RegisterVertexData(const char* name, size_t name_size,
-                          size_t num_vertex_elements,
-                          const YRenderDevice::VertexElementType* data_types,
-                          const YRenderDevice::VertexElementUsage* data_usages,
-                          const size_t* vertex_data_sizes,
-                          const void** vertex_datas);
-  void RegisterShaderArgs(const char* name, size_t name_size, size_t num_args,
-                          const char** param_names, size_t* param_name_sizes,
-                          const char** arg_names, size_t* arg_name_sizes);
+  void RegisterVertexData(const char* name, size_t name_size);
+  void RegisterShaderArg(const char* name, size_t name_size,
+                         const char* param, size_t param_size);
   void RegisterRenderObject(const char* name, size_t name_size,
                             const char* view_port, size_t view_port_size,
                             const char* render_type, size_t render_type_size,
-                            const char* shader_args, size_t shader_args_size,
-                            const char* vertex_data, size_t vertex_data_size);
+                            const char* vertex_data, size_t vertex_data_size,
+                            size_t num_shader_args,
+                            const char** shader_args, size_t* shader_arg_sizes);
 
   // Release
   bool ReleaseViewPort(const char* name, size_t name_size);
@@ -97,8 +97,31 @@ namespace Renderer {
   bool ReleaseRenderPasses(const char* name, size_t name_size);
   bool ReleaseRenderType(const char* name, size_t name_size);
   bool ReleaseVertexData(const char* name, size_t name_size);
-  bool ReleaseShaderArgs(const char* name, size_t name_size);
+  bool ReleaseShaderArg(const char* name, size_t name_size);
   bool ReleaseRenderObject(const char* name, size_t name_size);
+
+  // Set Render Data Here, these store the pointers and uploads data.
+  void SetVertexData(
+      uint64_t vertex_data_hash,
+      YRenderDevice::UsageType usage_type,
+      size_t num_vertex_elements,
+      TypedReadRefData<YRenderDevice::VertexElementType> data_types,
+      TypedReadRefData<YRenderDevice::VertexElementUsage> data_usages,
+      TypedReadRefData<size_t> data_sizes,
+      ReadRefData* vertex_datas);
+  void AppendVertexData(
+      uint64_t vertex_data_hash,
+      YRenderDevice::UsageType usage_type,
+      size_t num_vertex_elements,
+      TypedReadRefData<YRenderDevice::VertexElementType> data_types,
+      TypedReadRefData<YRenderDevice::VertexElementUsage> data_usages,
+      TypedReadRefData<size_t> data_sizes,
+      ReadRefData* vertex_datas);
+  void SetShaderArg(
+      uint64_t shader_arg_hash,
+      YRenderDevice::UsageType usage_type,
+      size_t shader_arg_size,
+      ReadRefData shader_arg_data);
 
   // Activate/Deactivate Render Options
   void ActivateRenderPasses(const char* name, size_t name_size);
@@ -107,7 +130,9 @@ namespace Renderer {
   // Enqueue Render Command
   void EnqueueRenderObject(uint64_t render_object_hash);
 
-  // 
+  // Execution Commands
+  void ExecuteUploads();
+  void ExecuteDraws();
 }
 
 }} // namespace YEngine { namespace YRenderer {
