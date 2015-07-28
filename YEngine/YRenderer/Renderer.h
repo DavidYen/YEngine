@@ -77,6 +77,8 @@ namespace Renderer {
   void RegisterVertexData(const char* name, size_t name_size);
   void RegisterShaderArg(const char* name, size_t name_size,
                          const char* param, size_t param_size);
+  void RegisterGlobalArg(const char* param, size_t param_size,
+                         const char* arg, size_t arg_size);
   void RegisterRenderObject(const char* name, size_t name_size,
                             const char* view_port, size_t view_port_size,
                             const char* render_type, size_t render_type_size,
@@ -98,6 +100,7 @@ namespace Renderer {
   bool ReleaseRenderType(const char* name, size_t name_size);
   bool ReleaseVertexData(const char* name, size_t name_size);
   bool ReleaseShaderArg(const char* name, size_t name_size);
+  bool ReleaseGlobalArg(const char* param, size_t param_size);
   bool ReleaseRenderObject(const char* name, size_t name_size);
 
   // Set Render Data Here, these store the pointers and uploads data.

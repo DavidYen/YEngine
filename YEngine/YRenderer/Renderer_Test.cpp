@@ -249,6 +249,39 @@ TEST_F(RendererTest, RegisterShaderTextureArgTest) {
   EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(param, sizeof(param)));
 }
 
+TEST_F(RendererTest, RegisterGlobalFloatArgTest) {
+  const char name[] = "global_float_arg";
+  const char param[] = "test_float_param";
+  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0, 1);
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+
+  Renderer::RegisterGlobalArg(param, sizeof(param), name, sizeof(name));
+  Renderer::RegisterGlobalArg(param, sizeof(param), name, sizeof(name));
+
+  EXPECT_FALSE(Renderer::ReleaseGlobalArg(param, sizeof(param)));
+  EXPECT_TRUE(Renderer::ReleaseGlobalArg(param, sizeof(param)));
+
+  EXPECT_TRUE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderFloatParam(param, sizeof(param)));
+}
+
+TEST_F(RendererTest, RegisterGlobalTextureArgTest) {
+  const char name[] = "global_texture_arg";
+  const char param[] = "test_texture_param";
+  YRenderDevice::SamplerState sampler_state;
+  Renderer::RegisterShaderTextureParam(param, sizeof(param), 0, sampler_state);
+  Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
+
+  Renderer::RegisterGlobalArg(param, sizeof(param), name, sizeof(name));
+  Renderer::RegisterGlobalArg(param, sizeof(param), name, sizeof(name));
+
+  EXPECT_FALSE(Renderer::ReleaseGlobalArg(param, sizeof(param)));
+  EXPECT_TRUE(Renderer::ReleaseGlobalArg(param, sizeof(param)));
+
+  EXPECT_TRUE(Renderer::ReleaseShaderArg(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(param, sizeof(param)));
+}
+
 TEST_F(RendererTest, BasicActivationTest) {
   const char viewport_name[] = "test_render_passes";
   const YRenderDevice::ViewPortID viewport_id = 123;

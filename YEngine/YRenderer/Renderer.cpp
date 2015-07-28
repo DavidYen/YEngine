@@ -26,7 +26,9 @@
 #define RENDER_TYPES_SIZE 128
 #define VERTEX_DATA_SIZE 256
 #define FLOATARGS_SIZE 512
+#define GLOBALFLOATARGS_SIZE 128
 #define TEXARGS_SIZE 1024
+#define GLOBALTEXARGS_SIZE 128
 
 // Maximum active
 #define MAX_RENDERTARGETS_PER_PASS 4
@@ -329,6 +331,22 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<ShdrTexArgInternal> gShdrTexArgs;
 
+  struct GlobalFloatArgInternal : public RefCountBase {
+    GlobalFloatArgInternal(ShdrFloatArgInternal* float_arg)
+      : RefCountBase(),
+        mFloatArg(float_arg) {}
+    ShdrFloatArgInternal* mFloatArg;
+  };
+  YCommon::YContainers::TypedHashTable<GlobalFloatArgInternal> gGlobalFloatArgs;
+
+  struct GlobalTexArgInternal : public RefCountBase {
+    GlobalTexArgInternal(ShdrTexArgInternal* tex_arg)
+      : RefCountBase(),
+        mTexArg(tex_arg) {}
+    ShdrTexArgInternal* mTexArg;
+  };
+  YCommon::YContainers::TypedHashTable<GlobalTexArgInternal> gGlobalTexArgs;
+
   ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
 
@@ -367,7 +385,9 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gRenderTypes, RENDER_TYPES_SIZE, "Render Types");
   INITIALIZE_TABLE(gVertexDatas, VERTEX_DATA_SIZE, "Vertex Datas");
   INITIALIZE_TABLE(gShdrFloatArgs, FLOATARGS_SIZE, "Shader Float Args");
-  INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Float Args");
+  INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Texture Args");
+  INITIALIZE_TABLE(gGlobalFloatArgs, GLOBALFLOATARGS_SIZE, "Global Float Args");
+  INITIALIZE_TABLE(gGlobalTexArgs, GLOBALTEXARGS_SIZE, "Global Texture Args");
 
   gActiveRenderPasses = nullptr;
 }
@@ -375,6 +395,8 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
 void Renderer::Terminate() {
   gActiveRenderPasses = nullptr;
 
+  gGlobalTexArgs.Reset();
+  gGlobalFloatArgs.Reset();
   gShdrTexArgs.Reset();
   gShdrFloatArgs.Reset();
   gVertexDatas.Reset();
@@ -750,6 +772,46 @@ void Renderer::RegisterShaderArg(const char* name, size_t name_size,
   YASSERT(false, "Invalid Shader Parameter: %s", param);
 }
 
+void Renderer::RegisterGlobalArg(const char* param, size_t param_size,
+                                 const char* arg, size_t arg_size) {
+  const uint64_t param_hash = YCore::StringTable::AddString(param, param_size);
+  const uint64_t arg_hash = YCore::StringTable::AddString(arg, arg_size);
+
+  // Check if this is a float arg.
+  ShdrFloatArgInternal* float_arg = gShdrFloatArgs.GetValue(arg_hash);
+  if (float_arg) {
+    GlobalFloatArgInternal* global_arg = gGlobalFloatArgs.GetValue(param_hash);
+    if (nullptr == global_arg) {
+      float_arg->IncRef();
+      GlobalFloatArgInternal new_global_arg(float_arg);
+      global_arg = gGlobalFloatArgs.Insert(param_hash, new_global_arg);
+    }
+    YASSERT(global_arg->mFloatArg == float_arg,
+            "Global argument (%s) cannot be set to already set parameter (%s).",
+            arg, param);
+    global_arg->IncRef();
+    return;
+  }
+
+  // Check if this is a texture arg.
+  ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(arg_hash);
+  if (tex_arg) {
+    GlobalTexArgInternal* global_arg = gGlobalTexArgs.GetValue(param_hash);
+    if (nullptr == global_arg) {
+      tex_arg->IncRef();
+      GlobalTexArgInternal new_global_arg(tex_arg);
+      global_arg = gGlobalTexArgs.Insert(param_hash, new_global_arg);
+    }
+    YASSERT(global_arg->mTexArg == tex_arg,
+            "Global argument (%s) cannot be set to already set parameter (%s).",
+            arg, param);
+    global_arg->IncRef();
+    return;
+  }
+
+  YASSERT(false, "Invalid Global Shader Argument name: %s", arg);
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -984,6 +1046,37 @@ bool Renderer::ReleaseShaderArg(const char* name, size_t name_size) {
   }
 
   YASSERT(false, "Releasing an Invalid Shader Argument name: %s", name);
+  return false;
+}
+
+bool Renderer::ReleaseGlobalArg(const char* param, size_t param_size) {
+  const uint64_t param_hash = YCore::StringTable::AddString(param, param_size);
+
+  // Check if this is a float arg.
+  GlobalFloatArgInternal* float_arg = gGlobalFloatArgs.GetValue(param_hash);
+  if (float_arg) {
+    if (float_arg->DecRef()) {
+      bool empty = float_arg->mFloatArg->DecRef();
+      YASSERT(!empty, "Float argument released before global argument: %s",
+              param);
+      return gGlobalFloatArgs.Remove(param_hash);
+    }
+    return false;
+  }
+
+  // Check if this is a texture arg.
+  GlobalTexArgInternal* tex_arg = gGlobalTexArgs.GetValue(param_hash);
+  if (tex_arg) {
+    if (tex_arg->DecRef()) {
+      bool empty = tex_arg->mTexArg->DecRef();
+      YASSERT(!empty, "Float argument released before global argument: %s",
+              param);
+      return gGlobalTexArgs.Remove(param_hash);
+    }
+    return false;
+  }
+
+  YASSERT(false, "Releasing invalid Global Argument parameter: %s", param);
   return false;
 }
 
