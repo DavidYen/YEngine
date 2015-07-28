@@ -95,10 +95,12 @@ TEST(RefPointerTest, ReadRefCopyTest) {
 }
 
 TEST(RefPointerTest, ReadRefAssignmentTest) {
-  RefPointer basic_ref_pointer1;
+  uint8_t basic1 = 1;
+  RefPointer basic_ref_pointer1(&basic1);
   ReadRefData read_ref1 = basic_ref_pointer1.GetReadRef();
 
-  RefPointer basic_ref_pointer2;
+  uint8_t basic2 = 2;
+  RefPointer basic_ref_pointer2(&basic2);
   ReadRefData read_ref2 = basic_ref_pointer2.GetReadRef();
 
   read_ref2 = read_ref1;
@@ -141,10 +143,12 @@ TEST(RefPointerTest, WriteRefCopyTest) {
 }
 
 TEST(RefPointerTest, WriteRefAssignmentTest) {
-  RefPointer basic_ref_pointer1;
+  uint8_t basic1 = 1;
+  RefPointer basic_ref_pointer1(&basic1);
   WriteRefData write_ref1 = basic_ref_pointer1.GetWriteRef();
 
-  RefPointer basic_ref_pointer2;
+  uint8_t basic2 = 2;
+  RefPointer basic_ref_pointer2(&basic2);
   WriteRefData write_ref2 = basic_ref_pointer2.GetWriteRef();
 
   write_ref2 = write_ref1;
@@ -185,10 +189,12 @@ TEST(RefPointerTest, ReadWriteRefCopyTest) {
 }
 
 TEST(RefPointerTest, ReadWriteRefAssignmentTest) {
-  RefPointer basic_ref_pointer1;
+  uint8_t basic1 = 1;
+  RefPointer basic_ref_pointer1(&basic1);
   ReadWriteRefData read_write_ref1 = basic_ref_pointer1.GetReadWriteRef();
 
-  RefPointer basic_ref_pointer2;
+  uint8_t basic2 = 2;
+  RefPointer basic_ref_pointer2(&basic2);
   ReadWriteRefData read_write_ref2 = basic_ref_pointer2.GetReadWriteRef();
 
   read_write_ref2 = read_write_ref1;
