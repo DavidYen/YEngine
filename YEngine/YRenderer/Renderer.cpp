@@ -10,6 +10,8 @@
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <Yengine/YRenderDevice/SamplerState.h>
 
+#include "RenderKeyField.h"
+
 // Hash Table Sizes (~2x maximum)
 #define VIEWPORTS_SIZE 16
 #define RENDERTARGETS_SIZE 16
@@ -29,15 +31,24 @@
 #define GLOBALFLOATARGS_SIZE 128
 #define TEXARGS_SIZE 1024
 #define GLOBALTEXARGS_SIZE 128
+#define RENDEROBJECTS_SIZE 128
 
-// Maximum active
+// Maximum Registered Render Items
 #define MAX_RENDERTARGETS_PER_PASS 4
 #define MAX_SHADER_BASE_NAME 32
 #define MAX_SHADER_VARIANT_NAME 32
 #define MAX_VERTEX_ELEMENTS 8
 #define MAX_FLOAT_PARAMS_PER_SHADER 16
 #define MAX_TEX_PARAMS_PER_SHADER 8
+#define MAX_FLOAT_ARGS_PER_OBJ 8
+#define MAX_TEXTURE_ARGS_PER_OBJ 8
+
+// Maximum Actives
+#define MAX_ACTIVE_VIEWPORTS 8
 #define MAX_ACTIVE_RENDERPASSES 8
+#define MAX_ACTIVE_VERTEX_DECLS 64
+#define MAX_ACTIVE_SHADERS 512
+#define MAX_ACTIVE_VERTEX_BUFFERS 512
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
@@ -347,6 +358,41 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<GlobalTexArgInternal> gGlobalTexArgs;
 
+  struct RenderObjectInternal : public RefCountBase {
+    RenderObjectInternal(ViewPortInternal* view_port,
+                         RenderTypeInternal* render_type,
+                         VertexDataInternal* vertex_data,
+                         uint8_t num_float_args,
+                         ShdrFloatArgInternal** float_args,
+                         uint8_t num_tex_args,
+                         ShdrTexArgInternal** tex_args)
+      : mNumFloatArgs(num_float_args),
+        mNumTextureArgs(num_tex_args),
+        mViewPort(view_port),
+        mRenderType(render_type),
+        mVertexData(vertex_data) {
+      YASSERT(num_float_args < ARRAY_SIZE(mFloatArgs),
+              "Maximum number of floats per render object exceeded: %u >= %u",
+              num_float_args, ARRAY_SIZE(mFloatArgs));
+      YASSERT(num_tex_args < ARRAY_SIZE(mTextureArgs),
+              "Maximum number of textures per render object exceeded: %u >= %u",
+              num_tex_args, ARRAY_SIZE(mTextureArgs));
+      memset(mFloatArgs, 0, sizeof(mFloatArgs));
+      memcpy(mFloatArgs, float_args, num_float_args * sizeof(mFloatArgs[0]));
+      memset(mTextureArgs, 0, sizeof(mTextureArgs));
+      memcpy(mTextureArgs, tex_args, num_tex_args * sizeof(mTextureArgs[0]));
+    }
+    uint8_t mNumFloatArgs;
+    uint8_t mNumTextureArgs;
+    ViewPortInternal* mViewPort;
+    RenderTypeInternal* mRenderType;
+    VertexDataInternal* mVertexData;
+    ShdrFloatArgInternal* mFloatArgs[MAX_FLOAT_ARGS_PER_OBJ];
+    ShdrTexArgInternal* mTextureArgs[MAX_TEXTURE_ARGS_PER_OBJ];
+  };
+  YCommon::YContainers::TypedHashTable<RenderObjectInternal> gRenderObjects;
+
+  RenderKeyField* gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
   ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
 
@@ -388,13 +434,16 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Texture Args");
   INITIALIZE_TABLE(gGlobalFloatArgs, GLOBALFLOATARGS_SIZE, "Global Float Args");
   INITIALIZE_TABLE(gGlobalTexArgs, GLOBALTEXARGS_SIZE, "Global Texture Args");
+  INITIALIZE_TABLE(gRenderObjects, RENDEROBJECTS_SIZE, "Render Objects");
 
   gActiveRenderPasses = nullptr;
+  SetupRenderKey(kDefaultRenderKeyFields, ARRAY_SIZE(kDefaultRenderKeyFields));
 }
 
 void Renderer::Terminate() {
   gActiveRenderPasses = nullptr;
 
+  gRenderObjects.Reset();
   gGlobalTexArgs.Reset();
   gGlobalFloatArgs.Reset();
   gShdrTexArgs.Reset();
@@ -413,6 +462,15 @@ void Renderer::Terminate() {
   gBackBufferNames.Reset();
   gRenderTargets.Reset();
   gViewPorts.Reset();
+}
+
+void Renderer::SetupRenderKey(const RenderKeyField* fields, size_t num_fields) {
+  memset(gActiveRenderKeyFields, 0, sizeof(gActiveRenderKeyFields));
+  YASSERT(num_fields < ARRAY_SIZE(gActiveRenderKeyFields),
+          "Maximum number of fields per render key exceeded: %u >= %u",
+          static_cast<uint32_t>(num_fields),
+          static_cast<uint32_t>(ARRAY_SIZE(gActiveRenderKeyFields)));
+  memcpy(gActiveRenderKeyFields, fields, num_fields * sizeof(fields[0]));
 }
 
 void Renderer::RegisterViewPort(const char* name, size_t name_size,
@@ -812,6 +870,73 @@ void Renderer::RegisterGlobalArg(const char* param, size_t param_size,
   YASSERT(false, "Invalid Global Shader Argument name: %s", arg);
 }
 
+void Renderer::RegisterRenderObject(
+    const char* name, size_t name_size,
+    const char* view_port, size_t view_port_size,
+    const char* render_type, size_t render_type_size,
+    const char* vertex_data, size_t vertex_data_size,
+    size_t num_shader_args,
+    const char** shader_args, size_t* shader_arg_sizes) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  RenderObjectInternal* render_object = gRenderObjects.GetValue(name_hash);
+  if (nullptr == render_object) {
+    ViewPortInternal* view_port_internal =
+        gViewPorts.GetValue(view_port, view_port_size);
+    YASSERT(view_port_internal,
+            "Invalid Render Object (%s) ViewPort: %s", name, view_port);
+    view_port_internal->IncRef();
+
+    RenderTypeInternal* render_type_internal =
+        gRenderTypes.GetValue(render_type, render_type_size);
+    YASSERT(render_type_internal,
+            "Invalid Render Object (%s) Render Type: %s", name, render_type);
+    render_type_internal->IncRef();
+
+    VertexDataInternal* vertex_data_internal =
+        gVertexDatas.GetValue(vertex_data, vertex_data_size);
+    YASSERT(vertex_data_internal,
+            "Invalid Render Object (%s) Vertex Data: %s", name, vertex_data);
+    vertex_data_internal->IncRef();
+
+    uint8_t num_float_args = 0;
+    uint8_t num_tex_args = 0;
+    ShdrFloatArgInternal* float_args[MAX_FLOAT_ARGS_PER_OBJ] = { nullptr };
+    ShdrTexArgInternal* tex_args[MAX_TEXTURE_ARGS_PER_OBJ] = { nullptr };
+    for (size_t i = 0; i < num_shader_args; ++i) {
+      const uint64_t arg_hash =
+          YCore::StringTable::AddString(shader_args[i], shader_arg_sizes[i]);
+      ShdrFloatArgInternal* float_arg = gShdrFloatArgs.GetValue(arg_hash);
+      if (float_arg) {
+        YASSERT(num_float_args + 1 < MAX_FLOAT_ARGS_PER_OBJ,
+                "Maximum float arguments per render object (%s) exceeded: %u",
+                name, MAX_FLOAT_ARGS_PER_OBJ);
+        float_arg->IncRef();
+        float_args[num_float_args++] = float_arg;
+        continue;
+      }
+      ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(arg_hash);
+      if (tex_arg) {
+        YASSERT(num_tex_args + 1 < MAX_TEXTURE_ARGS_PER_OBJ,
+                "Maximum texture arguments per render object (%s) exceeded: %u",
+                name, MAX_TEXTURE_ARGS_PER_OBJ);
+        tex_arg->IncRef();
+        tex_args[num_tex_args++] = tex_arg;
+        continue;
+      }
+      YASSERT(false, "Invalid Render Object (%s) Shader Argument: %s",
+              name, shader_args[i]);
+    }
+
+    RenderObjectInternal new_render_object(view_port_internal,
+                                           render_type_internal,
+                                           vertex_data_internal,
+                                           num_float_args, float_args,
+                                           num_tex_args, tex_args);
+    render_object = gRenderObjects.Insert(name_hash, new_render_object);
+  }
+  render_object->IncRef();
+}
+
 bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
@@ -1077,6 +1202,36 @@ bool Renderer::ReleaseGlobalArg(const char* param, size_t param_size) {
   }
 
   YASSERT(false, "Releasing invalid Global Argument parameter: %s", param);
+  return false;
+}
+
+bool Renderer::ReleaseRenderObject(const char* name, size_t name_size) {
+  const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  RenderObjectInternal* render_object = gRenderObjects.GetValue(name_hash);
+  YASSERT(render_object, "Releasing an invalid render object name: %s", name);
+  if (render_object->DecRef()) {
+    for (uint8_t i = 0; i < render_object->mNumTextureArgs; ++i) {
+      bool empty = render_object->mTextureArgs[i]->DecRef();
+      YASSERT(!empty,
+              "Texture Arg for Render Object %s released before object.", name);
+    }
+    for (uint8_t i = 0; i < render_object->mNumFloatArgs; ++i) {
+      bool empty = render_object->mFloatArgs[i]->DecRef();
+      YASSERT(!empty,
+              "Float Arg for Render Object %s released before object.", name);
+    }
+    bool vertex_data_empty = render_object->mVertexData->DecRef();
+    YASSERT(!vertex_data_empty,
+            "Vertex Data for Render Object %s released before object.", name);
+    bool render_type_empty = render_object->mRenderType->DecRef();
+    YASSERT(!render_type_empty,
+            "Render Type for Render Object %s released before object.", name);
+    bool view_port_empty = render_object->mViewPort->DecRef();
+    YASSERT(!view_port_empty,
+            "View Port for Render Object %s released before object.", name);
+
+    return gRenderObjects.Remove(name_hash);
+  }
   return false;
 }
 

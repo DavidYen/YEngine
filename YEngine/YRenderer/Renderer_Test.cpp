@@ -282,6 +282,42 @@ TEST_F(RendererTest, RegisterGlobalTextureArgTest) {
   EXPECT_TRUE(Renderer::ReleaseShaderTextureParam(param, sizeof(param)));
 }
 
+TEST_F(RendererTest, RegisterRenderObjectTest) {
+  const char name[] = "render_object_name";
+  const char viewport[] = "test_viewport";
+  const char render_type[] = "test_render_type_name";
+  const char shader[] = "test_shader_name";
+  const char vertex_data[] = "test_vertex_data_name";
+
+  Renderer::RegisterViewPort(viewport, sizeof(viewport),
+                             Renderer::kDimensionType_Absolute, 1.0f,
+                             Renderer::kDimensionType_Absolute, 2.0f,
+                             Renderer::kDimensionType_Absolute, 3.0f,
+                             Renderer::kDimensionType_Absolute, 4.0f,
+                             0.1f, 1.0f);
+  Renderer::RegisterRenderType(render_type, sizeof(render_type),
+                               shader, sizeof(shader));
+  Renderer::RegisterVertexData(vertex_data, sizeof(vertex_data));
+
+  Renderer::RegisterRenderObject(name, sizeof(name),
+                                viewport, sizeof(viewport),
+                                render_type, sizeof(render_type),
+                                vertex_data, sizeof(vertex_data),
+                                0, nullptr, nullptr);
+  Renderer::RegisterRenderObject(name, sizeof(name),
+                                viewport, sizeof(viewport),
+                                render_type, sizeof(render_type),
+                                vertex_data, sizeof(vertex_data),
+                                0, nullptr, nullptr);
+
+  EXPECT_FALSE(Renderer::ReleaseRenderObject(name, sizeof(name)));
+  EXPECT_TRUE(Renderer::ReleaseRenderObject(name, sizeof(name)));
+
+  EXPECT_TRUE(Renderer::ReleaseVertexData(vertex_data, sizeof(vertex_data)));
+  EXPECT_TRUE(Renderer::ReleaseRenderType(render_type, sizeof(render_type)));
+  EXPECT_TRUE(Renderer::ReleaseViewPort(viewport, sizeof(viewport)));
+}
+
 TEST_F(RendererTest, BasicActivationTest) {
   const char viewport_name[] = "test_render_passes";
   const YRenderDevice::ViewPortID viewport_id = 123;

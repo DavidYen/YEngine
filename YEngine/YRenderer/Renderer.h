@@ -16,8 +16,7 @@ namespace YEngine { namespace YRenderDevice {
 
 namespace YEngine { namespace YRenderer {
 
-struct RenderPass;
-struct RenderType;
+struct RenderKeyField;
 
 typedef uint8_t ShaderID;
 typedef uint8_t RenderTypeID;
@@ -25,6 +24,8 @@ typedef uint8_t RenderTypeID;
 namespace Renderer {
   void Initialize(void* buffer, size_t buffer_size);
   void Terminate();
+
+  void SetupRenderKey(const RenderKeyField* fields, size_t num_fields);
 
   enum DimensionType {
     kDimensionType_Absolute, // Use absolute numbers.
@@ -103,6 +104,10 @@ namespace Renderer {
   bool ReleaseGlobalArg(const char* param, size_t param_size);
   bool ReleaseRenderObject(const char* name, size_t name_size);
 
+  // Activate/Deactivate Render Options
+  void ActivateRenderPasses(const char* name, size_t name_size);
+  void DeactivateRenderPasses();
+
   // Set Render Data Here, these store the pointers and uploads data.
   void SetVertexData(
       uint64_t vertex_data_hash,
@@ -125,10 +130,6 @@ namespace Renderer {
       YRenderDevice::UsageType usage_type,
       size_t shader_arg_size,
       ReadRefData shader_arg_data);
-
-  // Activate/Deactivate Render Options
-  void ActivateRenderPasses(const char* name, size_t name_size);
-  void DeactivateRenderPasses();
 
   // Enqueue Render Command
   void EnqueueRenderObject(uint64_t render_object_hash);
