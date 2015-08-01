@@ -26,10 +26,20 @@ static uintptr_t ReleaseSemaphoreRoutine(void* arg) {
   return 0;
 }
 
+struct ReleaseWaitArg {
+  YPlatform::Semaphore release_semaphore;
+  YPlatform::Semaphore wait_semaphore;
+
+  ReleaseWaitArg()
+    : release_semaphore(0, 1),
+      wait_semaphore(0, 1) {
+  }
+};
+
 static uintptr_t ReleaseWaitSemaphoreRoutine(void* arg) {
-  YPlatform::Semaphore* semaphore = static_cast<YPlatform::Semaphore*>(arg);
-  semaphore->Release();
-  semaphore->Wait();
+  ReleaseWaitArg* arg_data = static_cast<ReleaseWaitArg*>(arg);
+  arg_data->release_semaphore.Release();
+  arg_data->wait_semaphore.Wait();
   return 0;
 }
 
@@ -69,15 +79,16 @@ TEST(BasicThreadPoolTest, StopPoolTest) {
 }
 
 TEST(BasicThreadPoolTest, StopPoolFailTest) {
-  YPlatform::Semaphore semaphore(0, 1);
+  ReleaseWaitArg arg_data;
   ContainedThreadPool<2, 10> thread_pool;
 
   ASSERT_TRUE(thread_pool.Start());
-  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore));
-  ASSERT_TRUE(semaphore.Wait(50));
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &arg_data));
+
+  arg_data.release_semaphore.Wait(50);
   ASSERT_FALSE(thread_pool.Stop(50));
 
-  semaphore.Release();
+  arg_data.wait_semaphore.Release();
   ASSERT_TRUE(thread_pool.Stop(50));
 }
 
@@ -147,27 +158,28 @@ TEST(BasicThreadPoolTest, StartStopTest) {
 
 TEST(BasicThreadPoolTest, StartStopFailTest) {
   volatile uint32_t num = 0;
-  YPlatform::Semaphore semaphore1(0, 1);
-  YPlatform::Semaphore semaphore2(0, 1);
+  ReleaseWaitArg arg_data1;
+  ReleaseWaitArg arg_data2;
   IncrementArg arg_data = { &num };
   ContainedThreadPool<2, 20> thread_pool;
 
   thread_pool.Start();
-  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore1));
-  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore2));
-
-  // Wait for threads to begin
-  ASSERT_TRUE(semaphore1.Wait(500));
-  ASSERT_TRUE(semaphore2.Wait(500));
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &arg_data1));
+  ASSERT_TRUE(arg_data1.release_semaphore.Wait(50));
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &arg_data2));
+  ASSERT_TRUE(arg_data2.release_semaphore.Wait(50));
 
   // Release semaphore 1
-  semaphore1.Release();
+  arg_data1.wait_semaphore.Release();
 
   // Only first thread is stoppable.
-  ASSERT_FALSE(thread_pool.Stop(50));
+  ASSERT_FALSE(thread_pool.Stop(100));
 
   // Also stop the 2nd thread now
-  semaphore2.Release();
+  arg_data2.wait_semaphore.Release();
+
+  YPlatform::Semaphore semaphore1(0, 1);
+  YPlatform::Semaphore semaphore2(0, 1);
 
   // Restart threads and make sure we have 2 active threads here.
   thread_pool.Start();
@@ -183,22 +195,22 @@ TEST(BasicThreadPoolTest, StartStopFailTest) {
     thread_pool.EnqueueRun(IncrementRoutine, &arg_data);
   }
   ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseSemaphoreRoutine, &semaphore2));
-  ASSERT_TRUE(semaphore2.Wait(50));
+  ASSERT_TRUE(semaphore2.Wait(500));
 
   semaphore1.Release();
-  ASSERT_TRUE(thread_pool.Stop(50));
+  ASSERT_TRUE(thread_pool.Stop(500));
   EXPECT_EQ(10, num);
 }
 
 TEST(BasicThreadPoolTest, PauseJoinTest) {
-  YPlatform::Semaphore semaphore(0, 1);
+  ReleaseWaitArg arg_data;
   ContainedThreadPool<2, 10> thread_pool;
 
   ASSERT_TRUE(thread_pool.Start());
   EXPECT_FALSE(thread_pool.Join(0));
 
-  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore));
-  ASSERT_TRUE(semaphore.Wait(50));
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &arg_data));
+  ASSERT_TRUE(arg_data.release_semaphore.Wait(50));
   ASSERT_TRUE(thread_pool.Pause());
 
   YPlatform::Timer test_timer;
@@ -210,19 +222,19 @@ TEST(BasicThreadPoolTest, PauseJoinTest) {
   EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
 
   // Releasing the semaphore should let the join succeed.
-  semaphore.Release();
+  arg_data.wait_semaphore.Release();
   EXPECT_TRUE(thread_pool.Join(50));
 }
 
 TEST(BasicThreadPoolTest, StopJoinTest) {
-  YPlatform::Semaphore semaphore(0, 1);
+  ReleaseWaitArg arg_data;
   ContainedThreadPool<2, 10> thread_pool;
 
   ASSERT_TRUE(thread_pool.Start());
   EXPECT_FALSE(thread_pool.Join(0));
 
-  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &semaphore));
-  ASSERT_TRUE(semaphore.Wait(50));
+  ASSERT_TRUE(thread_pool.EnqueueRun(ReleaseWaitSemaphoreRoutine, &arg_data));
+  ASSERT_TRUE(arg_data.release_semaphore.Wait(50));
   thread_pool.Stop(0);
 
   YPlatform::Timer test_timer;
@@ -234,7 +246,7 @@ TEST(BasicThreadPoolTest, StopJoinTest) {
   EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
 
   // Releasing the semaphore should let the join succeed.
-  semaphore.Release();
+  arg_data.wait_semaphore.Release();
   EXPECT_TRUE(thread_pool.Join(50));
 }
 
