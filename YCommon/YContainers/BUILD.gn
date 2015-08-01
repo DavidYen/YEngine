@@ -10,6 +10,7 @@ static_library("YContainers") {
     "MemPool.cpp",
     "RefPointer.cpp",
     "ThreadPool.cpp",
+    "UnorderedArray.cpp",
   ]
 
   deps = [
@@ -25,6 +26,7 @@ unit_test("YContainers_Test") {
     "MemPool_Test.cpp",
     "RefPointer_Test.cpp",
     "ThreadPool_Test.cpp",
+    "UnorderedArray_Test.cpp",
   ]
 
   deps += [
