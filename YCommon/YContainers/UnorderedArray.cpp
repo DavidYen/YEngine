@@ -10,7 +10,7 @@ UnorderedArray::UnorderedArray()
     mItemSize(0),
     mItemCount(0),
     mTotalSize(0),
-    mSwappedItemCallback(nullptr),
+    mPreSwapItemCallback(nullptr),
     mCallbackArg(nullptr) {
 }
 
@@ -20,7 +20,7 @@ UnorderedArray::UnorderedArray(void* buffer, size_t buffer_size,
     mItemSize(0),
     mItemCount(0),
     mTotalSize(0),
-    mSwappedItemCallback(nullptr),
+    mPreSwapItemCallback(nullptr),
     mCallbackArg(nullptr) {
   Init(buffer, buffer_size, item_size, num_items);
 }
@@ -41,7 +41,7 @@ void UnorderedArray::Init(void* buffer, size_t buffer_size,
   mItemSize = item_size;
   mItemCount = 0;
   mTotalSize = num_items;
-  mSwappedItemCallback = nullptr;
+  mPreSwapItemCallback = nullptr;
   mCallbackArg = nullptr;
 }
 
@@ -50,7 +50,7 @@ void UnorderedArray::Reset() {
   mItemSize = 0;
   mItemCount = 0;
   mTotalSize = 0;
-  mSwappedItemCallback = nullptr;
+  mPreSwapItemCallback = nullptr;
   mCallbackArg = nullptr;
 }
 
@@ -58,9 +58,9 @@ void UnorderedArray::Clear() {
   mItemCount = 0;
 }
 
-void UnorderedArray::SetItemSwappedCallBack(ItemSwapped callback_routine,
+void UnorderedArray::SetItemSwappedCallBack(PreItemSwap callback_routine,
                                             void* arg) {
-  mSwappedItemCallback = callback_routine;
+  mPreSwapItemCallback = callback_routine;
   mCallbackArg = arg;
 }
 
@@ -76,8 +76,8 @@ void UnorderedArray::Remove(uint32_t index) {
   YASSERT(index < mItemCount,
           "Invalid index to remove from array[%u]: %u", mItemCount, index);
   if (index != mItemCount - 1) {
-    if (mSwappedItemCallback) {
-      mSwappedItemCallback(mItemCount - 1, index, mCallbackArg);
+    if (mPreSwapItemCallback) {
+      mPreSwapItemCallback(mItemCount - 1, index, mCallbackArg);
     }
     memcpy(GetData(index), GetData(mItemCount-1), mItemSize);
   }

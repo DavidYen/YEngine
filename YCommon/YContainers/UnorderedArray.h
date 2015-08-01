@@ -7,7 +7,7 @@
 ********/
 namespace YCommon { namespace YContainers {
 
-typedef void (*ItemSwapped)(uint32_t old_index, uint32_t new_index, void* arg);
+typedef void (*PreItemSwap)(uint32_t old_index, uint32_t new_index, void* arg);
 
 class UnorderedArray {
  public:
@@ -21,7 +21,7 @@ class UnorderedArray {
   void Reset();
   void Clear();
 
-  void SetItemSwappedCallBack(ItemSwapped callback_routine,
+  void SetItemSwappedCallBack(PreItemSwap callback_routine,
                               void* arg = nullptr);
 
   // Allocates or Removes an index
@@ -42,7 +42,7 @@ class UnorderedArray {
   uint32_t mItemCount;
   uint32_t mTotalSize;
 
-  ItemSwapped mSwappedItemCallback;
+  PreItemSwap mPreSwapItemCallback;
   void* mCallbackArg;
 };
 
