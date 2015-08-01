@@ -11,6 +11,10 @@ typedef void (*PreItemSwap)(uint32_t old_index, uint32_t new_index, void* arg);
 
 class UnorderedArray {
  public:
+  static size_t GetAllocationSize(size_t item_size, uint32_t num_items) {
+    return item_size * num_items;
+  }
+
   UnorderedArray();
   UnorderedArray(void* buffer, size_t buffer_size,
                  size_t item_size, uint32_t num_items);
@@ -49,15 +53,17 @@ class UnorderedArray {
 template<typename T>
 class TypedUnorderedArray : public UnorderedArray {
  public:
+  static size_t GetAllocationSize(uint32_t num_items) {
+    return sizeof(T) * num_items;
+  }
+
   TypedUnorderedArray() : UnorderedArray() {}
-  TypedUnorderedArray(T* buffer, size_t buffer_size, uint32_t num_items)
-      : UnorderedArray(static_cast<void*>(buffer), buffer_size,
-                    sizeof(T), num_items) {}
+  TypedUnorderedArray(void* buffer, size_t buffer_size, uint32_t num_items)
+      : UnorderedArray(buffer, buffer_size, sizeof(T), num_items) {}
   ~TypedUnorderedArray() {}
 
-  void Init(T* buffer, size_t buffer_size, uint32_t num_items) {
-    return UnorderedArray::Init(static_cast<void*>(buffer), buffer_size,
-                             sizeof(T), num_items);
+  void Init(void* buffer, size_t buffer_size, uint32_t num_items) {
+    return UnorderedArray::Init(buffer, buffer_size, sizeof(T), num_items);
   }
 
   uint32_t PushBack(const T* data) {
@@ -82,6 +88,10 @@ class TypedUnorderedArray : public UnorderedArray {
 template<typename T, size_t items>
 class ContainedUnorderedArray : public TypedUnorderedArray<T> {
  public:
+  static size_t GetAllocationSize() {
+    return sizeof(T) * items;
+  }
+
   ContainedUnorderedArray() : TypedUnorderedArray(mData, sizeof(mData), items) {
   }
   ~ContainedUnorderedArray() {}

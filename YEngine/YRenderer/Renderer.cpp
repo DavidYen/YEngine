@@ -5,10 +5,11 @@
 
 #include <YCommon/YContainers/HashTable.h>
 #include <YCommon/YContainers/MemBuffer.h>
+#include <YCommon/YContainers/UnorderedArray.h>
 #include <YCommon/YUtils/Hash.h>
 #include <YEngine/YCore/StringTable.h>
 #include <YEngine/YRenderDevice/RenderBlendState.h>
-#include <Yengine/YRenderDevice/SamplerState.h>
+#include <YEngine/YRenderDevice/SamplerState.h>
 
 #include "RenderKeyField.h"
 
@@ -31,7 +32,7 @@
 #define GLOBALFLOATARGS_SIZE 128
 #define TEXARGS_SIZE 1024
 #define GLOBALTEXARGS_SIZE 128
-#define RENDEROBJECTS_SIZE 128
+#define RENDEROBJECTS_SIZE 256
 
 // Maximum Registered Render Items
 #define MAX_RENDERTARGETS_PER_PASS 4
@@ -44,6 +45,7 @@
 #define MAX_TEXTURE_ARGS_PER_OBJ 8
 
 // Maximum Actives
+#define MAX_ACTIVE_RENDEROBJS 128
 #define MAX_ACTIVE_VIEWPORTS 8
 #define MAX_ACTIVE_RENDERPASSES 8
 #define MAX_ACTIVE_VERTEX_DECLS 64
@@ -60,7 +62,11 @@
 namespace YEngine { namespace YRenderer {
 
 namespace {
+  struct RenderObjectInternal;
   YCommon::YContainers::MemBuffer gMemBuffer;
+
+  YCommon::YContainers::TypedUnorderedArray<RenderObjectInternal*>
+      gRenderObjArray;
 
   struct RefCountBase {
     RefCountBase() : mRefCount(0) {}
@@ -298,6 +304,7 @@ namespace {
               static_cast<uint32_t>(shader_size));
       memcpy(mShaderBase, shader, shader_size);
     }
+
     char mShaderBase[MAX_SHADER_BASE_NAME];
     size_t mShaderBaseSize;
   };
@@ -370,7 +377,8 @@ namespace {
         mNumTextureArgs(num_tex_args),
         mViewPort(view_port),
         mRenderType(render_type),
-        mVertexData(vertex_data) {
+        mVertexData(vertex_data),
+        mArrayIndex(static_cast<uint32_t>(-1)) {
       YASSERT(num_float_args < ARRAY_SIZE(mFloatArgs),
               "Maximum number of floats per render object exceeded: %u >= %u",
               num_float_args, ARRAY_SIZE(mFloatArgs));
@@ -382,8 +390,30 @@ namespace {
       memset(mTextureArgs, 0, sizeof(mTextureArgs));
       memcpy(mTextureArgs, tex_args, num_tex_args * sizeof(mTextureArgs[0]));
     }
+
+    void IncRef() {
+      if (mRefCount == 0) {
+        YASSERT(mArrayIndex == static_cast<uint32_t>(-1), "Unexpected index");
+        mArrayIndex = gRenderObjArray.PushBack(this);
+      }
+      RefCountBase::IncRef();
+    }
+
+    bool DecRef() {
+      if (RefCountBase::DecRef()) {
+        YASSERT(mArrayIndex != static_cast<uint32_t>(-1), "Empty index");
+        mArrayIndex = static_cast<uint32_t>(-1);
+        return true;
+      }
+      return false;
+    }
+
+    static void ItemSwapCallback(uint32_t old_index, uint32_t new_index,
+                                 void* arg);
+
     uint8_t mNumFloatArgs;
     uint8_t mNumTextureArgs;
+    uint32_t mArrayIndex;
     ViewPortInternal* mViewPort;
     RenderTypeInternal* mRenderType;
     VertexDataInternal* mVertexData;
@@ -394,6 +424,15 @@ namespace {
 
   RenderKeyField* gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
   ActivePassesInternal* gActiveRenderPasses = nullptr;
+}
+
+void RenderObjectInternal::ItemSwapCallback(uint32_t old_index,
+                                            uint32_t new_index,
+                                            void* arg) {
+  YASSERT(arg == &gRenderObjects, "Sanity check item swap callback failed.");
+  YASSERT(gRenderObjArray[old_index]->mArrayIndex == old_index,
+          "Unexpected index.");
+  gRenderObjArray[old_index]->mArrayIndex = new_index;
 }
 
 uint32_t GetDimensionValue(uint32_t frame_value,
@@ -413,8 +452,22 @@ uint32_t GetDimensionValue(uint32_t frame_value,
     HASHTABLE.Init(table_buffer, table_buffer_size, TABLESIZE); \
   } while(0)
 
+#define INITIALIZE_ARRAY(ARRAY, ARRAYSIZE, NAME, SWAPCALLBACK) \
+  do { \
+    const size_t array_buffer_size = \
+        ARRAY.GetAllocationSize(ARRAYSIZE); \
+    void* array_buffer = gMemBuffer.Allocate(array_buffer_size); \
+    YASSERT(array_buffer, \
+            "Not enought space to allocate " NAME " array."); \
+    ARRAY.Init(array_buffer, array_buffer_size, ARRAYSIZE); \
+    ARRAY.SetItemSwappedCallBack(SWAPCALLBACK, &ARRAY); \
+  } while(0)
+
 void Renderer::Initialize(void* buffer, size_t buffer_size) {
   gMemBuffer.Init(buffer, buffer_size);
+
+  INITIALIZE_ARRAY(gRenderObjArray, MAX_ACTIVE_RENDEROBJS, "Render Objects",
+                   RenderObjectInternal::ItemSwapCallback);
 
   INITIALIZE_TABLE(gViewPorts, VIEWPORTS_SIZE, "ViewPorts");
   INITIALIZE_TABLE(gRenderTargets, RENDERTARGETS_SIZE, "Render Targets");
@@ -462,6 +515,8 @@ void Renderer::Terminate() {
   gBackBufferNames.Reset();
   gRenderTargets.Reset();
   gViewPorts.Reset();
+
+  gRenderObjArray.Reset();
 }
 
 void Renderer::SetupRenderKey(const RenderKeyField* fields, size_t num_fields) {
