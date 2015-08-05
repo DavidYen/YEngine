@@ -110,20 +110,6 @@ uint32_t AtomicMemPool::Allocate() {
   return static_cast<uint32_t>(-1);
 }
 
-uint32_t AtomicMemPool::Insert(const void* data_item) {
-  const size_t item_size = mItemSize;
-  uint32_t free_index = Allocate();
-
-  // Copy data if index is reserved successfully.
-  if (free_index != static_cast<uint32_t>(-1)) {
-    memcpy(static_cast<uint8_t*>(mBuffer) + (item_size * free_index),
-           data_item,
-           item_size);
-  }
-
-  return free_index;
-}
-
 void AtomicMemPool::Remove(uint32_t index) {
   uint64_t next_free_index_value = mNextFreeIndex;
   MemoryBarrier();
@@ -148,6 +134,31 @@ void AtomicMemPool::Remove(uint32_t index) {
     next_free_index_value = mNextFreeIndex;
     MemoryBarrier();
   }
+}
+
+uint32_t AtomicMemPool::Insert(const void* data_item) {
+  const size_t item_size = mItemSize;
+  uint32_t free_index = Allocate();
+
+  // Copy data if index is reserved successfully.
+  if (free_index != static_cast<uint32_t>(-1)) {
+    memcpy(static_cast<uint8_t*>(mBuffer) + (item_size * free_index),
+           data_item,
+           item_size);
+  }
+
+  return free_index;
+}
+
+uint32_t AtomicMemPool::GetIndex(const void* buffer_item) {
+  const uint8_t* item_ptr = static_cast<const uint8_t*>(buffer_item);
+  const uint8_t* buffer_ptr = static_cast<uint8_t*>(mBuffer);
+  const size_t index = (item_ptr - buffer_ptr) / mItemSize;
+  YASSERT((item_ptr >= buffer_ptr) &&
+          ((item_ptr - buffer_ptr) % mItemSize == 0) &&
+          (index < mUsedIndexes),
+          "Cannot obtain index from invalid memory pool memory: %p", item_ptr);
+  return static_cast<uint32_t>(index);
 }
 
 uint32_t AtomicMemPool::GetNumIndexesUsed() {

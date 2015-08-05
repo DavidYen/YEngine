@@ -24,6 +24,7 @@ class AtomicMemPool {
 
   // Returns inserted index or -1.
   uint32_t Insert(const void* data_item);
+  uint32_t GetIndex(const void* buffer_item);
 
   // Gets max number of indexes used.
   uint32_t GetNumIndexesUsed();

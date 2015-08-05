@@ -100,6 +100,7 @@ uint32_t MemPool::Insert(const void* data_item) {
 }
 
 void MemPool::Remove(uint32_t index) {
+  YASSERT(index < mUsedIndexes, "Removing Invalid Index: %u", index);
   const size_t item_size = mItemSize;
   uint8_t* buffer_ptr = static_cast<uint8_t*>(mBuffer);
 
@@ -108,6 +109,17 @@ void MemPool::Remove(uint32_t index) {
 
   *free_item = mNextFreeIndex;
   mNextFreeIndex = index;
+}
+
+uint32_t MemPool::GetIndex(const void* item) {
+  const uint8_t* item_ptr = static_cast<const uint8_t*>(item);
+  const uint8_t* buffer_ptr = static_cast<uint8_t*>(mBuffer);
+  const size_t index = (item_ptr - buffer_ptr) / mItemSize;
+  YASSERT((item_ptr >= buffer_ptr) &&
+          ((item_ptr - buffer_ptr) % mItemSize == 0) &&
+          (index < mUsedIndexes),
+          "Cannot obtain index from invalid memory pool memory: %p", item);
+  return static_cast<uint32_t>(index);
 }
 
 uint32_t MemPool::GetNumIndexesUsed() {

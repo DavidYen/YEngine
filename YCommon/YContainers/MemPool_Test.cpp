@@ -57,6 +57,18 @@ class BaseMemPoolTest : public ::testing::Test {
     EXPECT_EQ(0, mem_pool.Allocate());
   }
 
+  void DoGetIndexTest() {
+    int array_data[2] = { 0 };
+    BaseMP mem_pool(array_data, sizeof(array_data),
+                    sizeof(array_data[0]), ARRAY_SIZE(array_data));
+
+    EXPECT_EQ(0, mem_pool.Allocate());
+    EXPECT_EQ(1, mem_pool.Allocate());
+
+    EXPECT_EQ(0, mem_pool.GetIndex(&array_data[0]));
+    EXPECT_EQ(1, mem_pool.GetIndex(&array_data[1]));
+  }
+
   void DoMaxUsedIndexTest() {
     int array_data[2] = { 0 };
     BaseMP mem_pool(array_data, sizeof(array_data),
@@ -198,13 +210,14 @@ class MemPoolTest : public BaseMemPoolTest<
   MemPool, TypedMemPool<int>, ContainedMemPool<int, 10> > {};
 
 #define MEMPOOL_TEST(NAME) \
-  TEST_F(AtomicMemPoolTest, NAME) { Do ## NAME(); } \
-  TEST_F(MemPoolTest, NAME) { Do ## NAME(); }
+  TEST_F(MemPoolTest, NAME) { Do ## NAME(); } \
+  TEST_F(AtomicMemPoolTest, NAME) { Do ## NAME(); }
 
 MEMPOOL_TEST(ConstructorTest)
 MEMPOOL_TEST(AllocationTest)
 MEMPOOL_TEST(InsertionTest)
 MEMPOOL_TEST(RemovalTest)
+MEMPOOL_TEST(GetIndexTest)
 MEMPOOL_TEST(MaxUsedIndexTest)
 MEMPOOL_TEST(TypedArrayFunctions)
 MEMPOOL_TEST(ContainedArrayFunctions)

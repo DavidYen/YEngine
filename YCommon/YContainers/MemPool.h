@@ -9,9 +9,13 @@ namespace YCommon { namespace YContainers {
 
 class MemPool {
  public:
+  static size_t GetAllocationSize(size_t item_size, uint32_t num_items) {
+    return item_size * num_items;
+  }
+
   MemPool();
   MemPool(void* buffer, size_t buffer_size,
-              size_t item_size, uint32_t num_items);
+          size_t item_size, uint32_t num_items);
   ~MemPool();
 
   void Init(void* buffer, size_t buffer_size,
@@ -26,6 +30,7 @@ class MemPool {
 
   // Returns inserted index or -1.
   uint32_t Insert(const void* data_item);
+  uint32_t GetIndex(const void* item);
 
   // Gets max number of indexes used.
   uint32_t GetNumIndexesUsed();
@@ -45,15 +50,17 @@ class MemPool {
 template<typename T>
 class TypedMemPool : public MemPool {
  public:
+  static size_t GetAllocationSize(uint32_t num_items) {
+    return sizeof(T) * num_items;
+  }
+
   TypedMemPool() : MemPool() {}
-  TypedMemPool(T* buffer, size_t buffer_size, uint32_t num_items)
-      : MemPool(static_cast<void*>(buffer), buffer_size,
-                    sizeof(T), num_items) {}
+  TypedMemPool(void* buffer, size_t buffer_size, uint32_t num_items)
+      : MemPool(buffer, buffer_size, sizeof(T), num_items) {}
   ~TypedMemPool() {}
 
-  void Init(T* buffer, size_t buffer_size, uint32_t num_items) {
-    return MemPool::Init(static_cast<void*>(buffer), buffer_size,
-                             sizeof(T), num_items);
+  void Init(void* buffer, size_t buffer_size, uint32_t num_items) {
+    return MemPool::Init(buffer, buffer_size, sizeof(T), num_items);
   }
 
   uint32_t Insert(const T* data_item) {
@@ -76,6 +83,10 @@ class TypedMemPool : public MemPool {
 template<typename T, size_t items>
 class ContainedMemPool : public TypedMemPool<T> {
  public:
+  static size_t GetAllocationSize() {
+    return sizeof(T) * items;
+  }
+
   ContainedMemPool() : TypedMemPool(mData, sizeof(mData), items) {}
   ~ContainedMemPool() {}
 
