@@ -5,6 +5,7 @@
 
 #include <YCommon/YContainers/HashTable.h>
 #include <YCommon/YContainers/MemBuffer.h>
+#include <YCommon/YContainers/MemPool.h>
 #include <YCommon/YContainers/UnorderedArray.h>
 #include <YCommon/YUtils/Hash.h>
 #include <YEngine/YCore/StringTable.h>
@@ -33,16 +34,22 @@
 #define TEXARGS_SIZE 1024
 #define GLOBALTEXARGS_SIZE 128
 #define RENDEROBJECTS_SIZE 256
+#define RENDERKEYS_SIZE 1024
+
+// Mem Pool Sizes
+#define VERTEX_BUFFERS_SIZE 512
 
 // Maximum Registered Render Items
 #define MAX_RENDERTARGETS_PER_PASS 4
 #define MAX_SHADER_BASE_NAME 32
 #define MAX_SHADER_VARIANT_NAME 32
+#define MAX_SHADER_PARAM_NAME 32
 #define MAX_VERTEX_ELEMENTS 8
 #define MAX_FLOAT_PARAMS_PER_SHADER 16
 #define MAX_TEX_PARAMS_PER_SHADER 8
 #define MAX_FLOAT_ARGS_PER_OBJ 8
 #define MAX_TEXTURE_ARGS_PER_OBJ 8
+#define MAX_VERTEX_BUFFERS_PER_DATA 8
 
 // Maximum Actives
 #define MAX_ACTIVE_RENDEROBJS 128
@@ -50,7 +57,6 @@
 #define MAX_ACTIVE_RENDERPASSES 8
 #define MAX_ACTIVE_VERTEX_DECLS 64
 #define MAX_ACTIVE_SHADERS 512
-#define MAX_ACTIVE_VERTEX_BUFFERS 512
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
@@ -58,15 +64,26 @@
 #define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
 #define INVALID_INDEX_BUFFER static_cast<YRenderDevice::IndexBufferID>(-1)
 #define INVALID_VERTEX_BUFFER static_cast<YRenderDevice::VertexBufferID>(-1)
+#define INVALID_INDEX static_cast<uint32_t>(-1)
 
 namespace YEngine { namespace YRenderer {
 
 namespace {
-  struct RenderObjectInternal;
   YCommon::YContainers::MemBuffer gMemBuffer;
+
+  struct RenderObjectInternal;
+  struct ViewPortInternal;
+  struct VertexDeclInternal;
+  struct ShaderDataInternal;
 
   YCommon::YContainers::TypedUnorderedArray<RenderObjectInternal*>
       gRenderObjArray;
+  YCommon::YContainers::TypedUnorderedArray<ViewPortInternal*>
+      gViewPortArray;
+  YCommon::YContainers::TypedUnorderedArray<VertexDeclInternal*>
+      gVertexDeclArray;
+  YCommon::YContainers::TypedUnorderedArray<ShaderDataInternal*>
+      gShaderDataArray;
 
   struct RefCountBase {
     RefCountBase() : mRefCount(0) {}
@@ -94,11 +111,13 @@ namespace {
         mHeight(height),
         mMinZ(min_z),
         mMaxZ(max_z),
+        mActivatedArrayIndex(INVALID_INDEX),
         mViewPortID(INVALID_VIEWPORT) {
     }
 
     Renderer::DimensionType mTopType, mLeftType, mWidthType, mHeightType;
     float mTop, mLeft, mWidth, mHeight, mMinZ, mMaxZ;
+    uint32_t mActivatedArrayIndex;
     YRenderDevice::ViewPortID mViewPortID;
   };
   YCommon::YContainers::TypedHashTable<ViewPortInternal> gViewPorts;
@@ -172,6 +191,7 @@ namespace {
     VertexDeclInternal(const YRenderDevice::VertexDeclElement* elements,
                        uint8_t num_elements)
       : RefCountBase(),
+        mActivatedArrayIndex(INVALID_INDEX),
         mNumVertexElements(num_elements),
         mVertexDeclID(INVALID_VERTEX_DECL) {
       YASSERT(num_elements < MAX_VERTEX_ELEMENTS,
@@ -183,20 +203,29 @@ namespace {
     }
 
     YRenderDevice::VertexDeclElement mVertexElements[MAX_VERTEX_ELEMENTS];
+    uint32_t mActivatedArrayIndex;
     uint8_t mNumVertexElements;
     YRenderDevice::VertexDeclID mVertexDeclID;
   };
   YCommon::YContainers::TypedHashTable<VertexDeclInternal> gVertexDecls;
 
   struct ShdrFloatParamInternal : public RefCountBase {
-    ShdrFloatParamInternal(uint8_t num_floats,
-                           uint8_t reg, uint8_t reg_offset)
+    ShdrFloatParamInternal(const char* name, size_t name_size,
+                           uint8_t num_floats, uint8_t reg, uint8_t reg_offset)
       : RefCountBase(),
+        mNameSize(name_size),
         mNumFloats(num_floats),
         mReg(reg),
         mRegOffset(reg_offset) {
+      YASSERT(name_size <= MAX_SHADER_PARAM_NAME,
+              "Maximum shader parameter name (%u) exceeded: %u",
+              static_cast<uint32_t>(MAX_SHADER_PARAM_NAME),
+              static_cast<uint32_t>(name_size));
+      memcpy(mName, name, name_size);
     }
 
+    char mName[MAX_SHADER_PARAM_NAME];
+    size_t mNameSize;
     uint8_t mNumFloats;
     uint8_t mReg;
     uint8_t mRegOffset;
@@ -204,13 +233,21 @@ namespace {
   YCommon::YContainers::TypedHashTable<ShdrFloatParamInternal> gShdrFloatParams;
 
   struct ShdrTexParamInternal : public RefCountBase {
-    ShdrTexParamInternal(uint8_t slot,
+    ShdrTexParamInternal(const char* name, size_t name_size, uint8_t slot,
                          const YRenderDevice::SamplerState& sampler_state)
       : RefCountBase(),
+        mNameSize(name_size),
         mSamplerState(sampler_state),
         mSlot(slot) {
+      YASSERT(name_size <= MAX_SHADER_PARAM_NAME,
+              "Maximum shader parameter name (%u) exceeded: %u",
+              static_cast<uint32_t>(MAX_SHADER_PARAM_NAME),
+              static_cast<uint32_t>(name_size));
+      memcpy(mName, name, name_size);
     }
 
+    char mName[MAX_SHADER_PARAM_NAME];
+    size_t mNameSize;
     YRenderDevice::SamplerState mSamplerState;
     uint8_t mSlot;
   };
@@ -255,6 +292,7 @@ namespace {
         mNumPixelShdrFloatParams(num_pixel_shdr_float_params),
         mNumVertexShdrTexParams(num_vertex_shdr_texture_params),
         mNumPixelShdrTexParams(num_pixel_shdr_texture_params),
+        mActivatedArrayIndex(INVALID_INDEX),
         mVertexDecl(vertex_decl),
         mVertexShader(vertex_shader),
         mPixelShader(pixel_shader) {
@@ -267,15 +305,16 @@ namespace {
       memcpy(mPixelShdrTexParams, pixel_shader_texture_params,
              num_pixel_shdr_texture_params * sizeof(mPixelShdrTexParams[0]));
     }
+    uint8_t mNumVertexShdrFloatParams, mNumPixelShdrFloatParams;
+    uint8_t mNumVertexShdrTexParams, mNumPixelShdrTexParams;
+    uint32_t mActivatedArrayIndex;
+    VertexDeclInternal* mVertexDecl;
+    VertexShaderInternal* mVertexShader;
+    PixelShaderInternal* mPixelShader;
     ShdrFloatParamInternal* mVertexShdrFloatParams[MAX_FLOAT_PARAMS_PER_SHADER];
     ShdrFloatParamInternal* mPixelShdrFloatParams[MAX_FLOAT_PARAMS_PER_SHADER];
     ShdrTexParamInternal* mVertexShdrTexParams[MAX_TEX_PARAMS_PER_SHADER];
     ShdrTexParamInternal* mPixelShdrTexParams[MAX_TEX_PARAMS_PER_SHADER];
-    uint8_t mNumVertexShdrFloatParams, mNumPixelShdrFloatParams;
-    uint8_t mNumVertexShdrTexParams, mNumPixelShdrTexParams;
-    VertexDeclInternal* mVertexDecl;
-    VertexShaderInternal* mVertexShader;
-    PixelShaderInternal* mPixelShader;
   };
   YCommon::YContainers::TypedHashTable<ShaderDataInternal> gShaderDatas;
 
@@ -310,16 +349,68 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<RenderTypeInternal> gRenderTypes;
 
-  struct VertexDataInternal : public RefCountBase { 
-    VertexDataInternal()
-      : RefCountBase(),
-        mCurrentIndex(0) {
+  struct VertexBufferInternal {
+    VertexBufferInternal(VertexDeclInternal* vertex_decl)
+      : mCurrentIndex(0),
+        mVertexDecl(vertex_decl) {
       memset(mIndexBufferIDs, -1, sizeof(mIndexBufferIDs));
       memset(mVertexBufferIDs, -1, sizeof(mVertexBufferIDs));
     }
+
+    void Release() {
+      for (int i = 0; i < 2; ++i) {
+        if (mIndexBufferIDs[i] != INVALID_INDEX_BUFFER)
+          YRenderDevice::RenderDevice::ReleaseIndexBuffer(mIndexBufferIDs[i]);
+        if (mVertexBufferIDs[i] != INVALID_VERTEX_BUFFER)
+          YRenderDevice::RenderDevice::ReleaseVertexBuffer(mVertexBufferIDs[i]);
+      }
+    }
+
     uint8_t mCurrentIndex;
     YRenderDevice::IndexBufferID mIndexBufferIDs[2];
     YRenderDevice::VertexBufferID mVertexBufferIDs[2];
+    VertexDeclInternal* mVertexDecl;
+  };
+  YCommon::YContainers::TypedMemPool<VertexBufferInternal> gVertexBuffers;
+
+  struct VertexDataInternal : public RefCountBase { 
+    VertexDataInternal()
+      : RefCountBase() {
+    }
+
+    VertexBufferInternal* GetVertexBuffer(VertexDeclInternal* vertex_decl) {
+      const uint32_t num_buffers = mVertexBuffers.GetCount();
+      for (uint32_t i = 0; i < num_buffers; ++i) {
+        if (mVertexBuffers[i]->mVertexDecl == vertex_decl)
+          return mVertexBuffers[i];
+      }
+      return nullptr;
+    }
+
+    bool InsertVertexBuffer(VertexBufferInternal* vertex_buffer) {
+      return mVertexBuffers.PushBack(vertex_buffer) != INVALID_INDEX;
+    }
+
+    void ClearUnusedVertexBuffer() {
+      const uint32_t num_buffers = mVertexBuffers.GetCount();
+      for (uint32_t i = 0; i < num_buffers; ++i) {
+        // Remove if vertex declaration is not activated.
+        VertexDeclInternal* vertex_decl = mVertexBuffers[i]->mVertexDecl;
+        if (vertex_decl->mActivatedArrayIndex == INVALID_INDEX) {
+          ClearVertexBuffer(i);
+          return;
+        }
+      }
+    }
+
+    void ClearVertexBuffer(uint32_t index) {
+      mVertexBuffers[index]->Release();
+      mVertexBuffers.Remove(index);
+    }
+
+    YCommon::YContainers::ContainedUnorderedArray<VertexBufferInternal*,
+                                                  MAX_VERTEX_BUFFERS_PER_DATA>
+        mVertexBuffers;
   };
   YCommon::YContainers::TypedHashTable<VertexDataInternal> gVertexDatas;
 
@@ -365,6 +456,61 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<GlobalTexArgInternal> gGlobalTexArgs;
 
+  struct RenderKeyInternal {
+    RenderKeyInternal(ViewPortInternal* viewport,
+                      RenderPassInternal* render_pass,
+                      ShaderDataInternal* shader_data,
+                      VertexBufferInternal* vertex_buffer,
+                      uint8_t num_vertex_shader_float_args,
+                      ShdrFloatArgInternal** vertex_shader_float_args,
+                      uint8_t num_vertex_shader_tex_args,
+                      ShdrTexArgInternal** vertex_shader_tex_args,
+                      uint8_t num_pixel_shader_float_args,
+                      ShdrFloatArgInternal** pixel_shader_float_args,
+                      uint8_t num_pixel_shader_tex_args,
+                      ShdrTexArgInternal** vertex_pixel_tex_args)
+      : mNumVertexShaderFloatArgs(num_vertex_shader_float_args),
+        mNumVertexShaderTexArgs(num_vertex_shader_tex_args),
+        mNumPixelShaderFloatArgs(num_pixel_shader_float_args),
+        mNumPixelShaderTexArgs(num_pixel_shader_tex_args),
+        mViewPort(viewport),
+        mRenderPass(render_pass),
+        mShaderData(shader_data),
+        mVertexBuffer(vertex_buffer) {
+      memcpy(mVertexShaderFloatArgs, vertex_shader_float_args,
+             num_vertex_shader_float_args * sizeof(mVertexShaderFloatArgs[0]));
+      memcpy(mVertexShaderTexArgs, vertex_shader_tex_args,
+             num_vertex_shader_tex_args * sizeof(mVertexShaderTexArgs[0]));
+      memcpy(mPixelShaderFloatArgs, pixel_shader_float_args,
+             num_pixel_shader_float_args * sizeof(mPixelShaderFloatArgs[0]));
+      memcpy(mPixelShaderTexArgs, vertex_pixel_tex_args,
+             num_pixel_shader_tex_args * sizeof(mPixelShaderTexArgs[0]));
+    }
+
+    /*void ExecuteRenderKey(RenderKeyInternal* prev_render_key) {
+
+    }*/
+
+    uint64_t GetRenderKey(size_t num_fields, RenderKeyField* fields) {
+      (void) fields;
+      for (size_t i = 0; i < num_fields; ++i) {
+      }
+      return 0;
+    }
+
+    uint8_t mNumVertexShaderFloatArgs, mNumVertexShaderTexArgs;
+    uint8_t mNumPixelShaderFloatArgs, mNumPixelShaderTexArgs;
+    ViewPortInternal* mViewPort;
+    RenderPassInternal* mRenderPass;
+    ShaderDataInternal* mShaderData;
+    VertexBufferInternal* mVertexBuffer;
+    ShdrFloatArgInternal* mVertexShaderFloatArgs[MAX_FLOAT_ARGS_PER_OBJ];
+    ShdrTexArgInternal* mVertexShaderTexArgs[MAX_TEXTURE_ARGS_PER_OBJ];
+    ShdrFloatArgInternal* mPixelShaderFloatArgs[MAX_FLOAT_ARGS_PER_OBJ];
+    ShdrTexArgInternal* mPixelShaderTexArgs[MAX_TEXTURE_ARGS_PER_OBJ];
+  };
+  YCommon::YContainers::TypedHashTable<RenderKeyInternal> gActiveRenderKeys;
+
   struct RenderObjectInternal : public RefCountBase {
     RenderObjectInternal(ViewPortInternal* view_port,
                          RenderTypeInternal* render_type,
@@ -375,6 +521,7 @@ namespace {
                          ShdrTexArgInternal** tex_args)
       : mNumFloatArgs(num_float_args),
         mNumTextureArgs(num_tex_args),
+        mNumRenderKeys(0),
         mViewPort(view_port),
         mRenderType(render_type),
         mVertexData(vertex_data),
@@ -389,6 +536,7 @@ namespace {
       memcpy(mFloatArgs, float_args, num_float_args * sizeof(mFloatArgs[0]));
       memset(mTextureArgs, 0, sizeof(mTextureArgs));
       memcpy(mTextureArgs, tex_args, num_tex_args * sizeof(mTextureArgs[0]));
+      memset(mRenderKeys, 0, sizeof(mRenderKeys));
     }
 
     void IncRef() {
@@ -408,21 +556,42 @@ namespace {
       return false;
     }
 
+    ShdrFloatArgInternal* GetFloatArg(ShdrFloatParamInternal* param) {
+      const uint8_t num_float_args = mNumFloatArgs;
+      for (uint8_t i = 0; i < num_float_args; ++i) {
+        if (mFloatArgs[i]->mFloatParam == param)
+          return mFloatArgs[i];
+      }
+      return nullptr;
+    }
+
+    ShdrTexArgInternal* GetTexArg(ShdrTexParamInternal* param) {
+      const uint8_t num_texture_args = mNumTextureArgs;
+      for (uint8_t i = 0; i < num_texture_args; ++i) {
+        if (mTextureArgs[i]->mTexParam == param)
+          return mTextureArgs[i];
+      }
+      return nullptr;
+    }
+
     static void ItemSwapCallback(uint32_t old_index, uint32_t new_index,
                                  void* arg);
 
     uint8_t mNumFloatArgs;
     uint8_t mNumTextureArgs;
+    uint8_t mNumRenderKeys;
     uint32_t mArrayIndex;
     ViewPortInternal* mViewPort;
     RenderTypeInternal* mRenderType;
     VertexDataInternal* mVertexData;
     ShdrFloatArgInternal* mFloatArgs[MAX_FLOAT_ARGS_PER_OBJ];
     ShdrTexArgInternal* mTextureArgs[MAX_TEXTURE_ARGS_PER_OBJ];
+    uint64_t mRenderKeys[MAX_ACTIVE_RENDERPASSES];
   };
   YCommon::YContainers::TypedHashTable<RenderObjectInternal> gRenderObjects;
 
-  RenderKeyField* gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
+  size_t gActiveRenderKeyFieldsCount = 0;
+  RenderKeyField gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
   ActivePassesInternal* gActiveRenderPasses = nullptr;
 }
 
@@ -442,17 +611,63 @@ uint32_t GetDimensionValue(uint32_t frame_value,
          std::min(frame_value, static_cast<uint32_t>(value));
 }
 
+void DeactivateRenderObjects() {
+  const uint32_t activated_viewports = gViewPortArray.GetCount();
+  for (uint32_t i = 0; i < activated_viewports; ++i) {
+    YASSERT(gViewPortArray[i]->mActivatedArrayIndex == i,
+            "Viewport activation state check failed.");
+    gViewPortArray[i]->mActivatedArrayIndex = INVALID_INDEX;
+  }
+  gViewPortArray.Clear();
+
+  const uint32_t activated_vert_decls = gVertexDeclArray.GetCount();
+  for (uint32_t i = 0; i < activated_vert_decls; ++i) {
+    YASSERT(gVertexDeclArray[i]->mActivatedArrayIndex == i,
+            "Vertex declaration activation state check failed.");
+    gVertexDeclArray[i]->mActivatedArrayIndex = INVALID_INDEX;
+  }
+  gVertexDeclArray.Clear();
+
+  const uint32_t activated_shaders = gShaderDataArray.GetCount();
+  for (uint32_t i = 0; i < activated_shaders; ++i) {
+    YASSERT(gShaderDataArray[i]->mActivatedArrayIndex == i,
+            "Shader activation state check failed.");
+    gShaderDataArray[i]->mActivatedArrayIndex = INVALID_INDEX;
+  }
+  gShaderDataArray.Clear();
+
+  const uint32_t activated_render_objects = gRenderObjArray.GetCount();
+  for (uint32_t i = 0; i < activated_render_objects; ++i) {
+    gRenderObjArray[i]->mNumRenderKeys = 0;
+  }
+  gActiveRenderKeys.Clear();
+}
+
 #define INITIALIZE_TABLE(HASHTABLE, TABLESIZE, NAME) \
   do { \
     const size_t table_buffer_size = \
         HASHTABLE.GetAllocationSize(TABLESIZE); \
     void* table_buffer = gMemBuffer.Allocate(table_buffer_size); \
     YASSERT(table_buffer, \
-            "Not enough space to allocate " NAME " table."); \
+            "Not enough space to allocate " NAME " table.\n" \
+            "  Free Space:   %u\n" \
+            "  Needed Space: %u", \
+            static_cast<uint32_t>(gMemBuffer.FreeSpace()), \
+            static_cast<uint32_t>(table_buffer_size)); \
     HASHTABLE.Init(table_buffer, table_buffer_size, TABLESIZE); \
   } while(0)
 
-#define INITIALIZE_ARRAY(ARRAY, ARRAYSIZE, NAME, SWAPCALLBACK) \
+#define INITIALIZE_MEMPOOL(MEMPOOL, POOLSIZE, NAME) \
+  do { \
+    const size_t pool_buffer_size = \
+        MEMPOOL.GetAllocationSize(POOLSIZE); \
+    void* pool_buffer = gMemBuffer.Allocate(pool_buffer_size); \
+    YASSERT(pool_buffer, \
+            "Not enought space to allocate " NAME " memory pool."); \
+    MEMPOOL.Init(pool_buffer, pool_buffer_size, POOLSIZE); \
+  } while(0)
+
+#define INITIALIZE_ARRAY(ARRAY, ARRAYSIZE, NAME) \
   do { \
     const size_t array_buffer_size = \
         ARRAY.GetAllocationSize(ARRAYSIZE); \
@@ -460,14 +675,20 @@ uint32_t GetDimensionValue(uint32_t frame_value,
     YASSERT(array_buffer, \
             "Not enought space to allocate " NAME " array."); \
     ARRAY.Init(array_buffer, array_buffer_size, ARRAYSIZE); \
-    ARRAY.SetItemSwappedCallBack(SWAPCALLBACK, &ARRAY); \
   } while(0)
 
 void Renderer::Initialize(void* buffer, size_t buffer_size) {
   gMemBuffer.Init(buffer, buffer_size);
 
-  INITIALIZE_ARRAY(gRenderObjArray, MAX_ACTIVE_RENDEROBJS, "Render Objects",
-                   RenderObjectInternal::ItemSwapCallback);
+  INITIALIZE_ARRAY(gRenderObjArray, MAX_ACTIVE_RENDEROBJS, "Render Object");
+  INITIALIZE_ARRAY(gViewPortArray, MAX_ACTIVE_VIEWPORTS, "View Port");
+  INITIALIZE_ARRAY(gVertexDeclArray, MAX_ACTIVE_VERTEX_DECLS, "Vertex Decl");
+  INITIALIZE_ARRAY(gShaderDataArray, MAX_ACTIVE_SHADERS, "Shader Data");
+
+  gRenderObjArray.SetItemSwappedCallBack(RenderObjectInternal::ItemSwapCallback,
+                                         &gRenderObjArray);
+
+  INITIALIZE_MEMPOOL(gVertexBuffers, VERTEX_BUFFERS_SIZE, "Vertex Buffers");
 
   INITIALIZE_TABLE(gViewPorts, VIEWPORTS_SIZE, "ViewPorts");
   INITIALIZE_TABLE(gRenderTargets, RENDERTARGETS_SIZE, "Render Targets");
@@ -487,6 +708,7 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Texture Args");
   INITIALIZE_TABLE(gGlobalFloatArgs, GLOBALFLOATARGS_SIZE, "Global Float Args");
   INITIALIZE_TABLE(gGlobalTexArgs, GLOBALTEXARGS_SIZE, "Global Texture Args");
+  INITIALIZE_TABLE(gActiveRenderKeys, RENDERKEYS_SIZE, "Active Render Keys");
   INITIALIZE_TABLE(gRenderObjects, RENDEROBJECTS_SIZE, "Render Objects");
 
   gActiveRenderPasses = nullptr;
@@ -497,6 +719,7 @@ void Renderer::Terminate() {
   gActiveRenderPasses = nullptr;
 
   gRenderObjects.Reset();
+  gActiveRenderKeys.Reset();
   gGlobalTexArgs.Reset();
   gGlobalFloatArgs.Reset();
   gShdrTexArgs.Reset();
@@ -516,6 +739,11 @@ void Renderer::Terminate() {
   gRenderTargets.Reset();
   gViewPorts.Reset();
 
+  gVertexBuffers.Reset();
+
+  gShaderDataArray.Reset();
+  gVertexDeclArray.Reset();
+  gViewPortArray.Reset();
   gRenderObjArray.Reset();
 }
 
@@ -640,7 +868,8 @@ void Renderer::RegisterShaderFloatParam(const char* name, size_t name_size,
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ShdrFloatParamInternal* float_param = gShdrFloatParams.GetValue(name_hash);
   if (nullptr == float_param) {
-    ShdrFloatParamInternal new_float_param(num_floats, reg, reg_offset);
+    ShdrFloatParamInternal new_float_param(name, name_size,
+                                           num_floats, reg, reg_offset);
     float_param = gShdrFloatParams.Insert(name_hash, new_float_param);
   }
   float_param->IncRef();
@@ -652,7 +881,7 @@ void Renderer::RegisterShaderTextureParam(
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ShdrTexParamInternal* tex_param = gShdrTexParams.GetValue(name_hash);
   if (nullptr == tex_param) {
-    ShdrTexParamInternal new_tex_param(slot, sampler);
+    ShdrTexParamInternal new_tex_param(name, name_size, slot, sampler);
     tex_param = gShdrTexParams.Insert(name_hash, new_tex_param);
   }
   tex_param->IncRef();
@@ -1195,6 +1424,12 @@ bool Renderer::ReleaseVertexData(const char* name, size_t name_size) {
   VertexDataInternal* vertex_data = gVertexDatas.GetValue(name_hash);
   YASSERT(vertex_data, "Releasing an invalid vertex data name: %s", name);
   if (vertex_data->DecRef()) {
+    const uint32_t num_buffers = vertex_data->mVertexBuffers.GetCount();
+    for (uint32_t i = 0; i < num_buffers; ++i) {
+      vertex_data->ClearVertexBuffer(0);
+    }
+    YDEBUG_CHECK(vertex_data->mVertexBuffers.GetCount() == 0,
+                 "Sanity check for vertex buffers failed.");
     return gVertexDatas.Remove(name_hash);
   }
   return false;
@@ -1331,28 +1566,205 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
   gActiveRenderPasses = active_passes;
 
   // Setup Render Objects
-  ViewPortInternal* viewport = gViewPorts.GetValue(name, name_size);
-  if (viewport->mViewPortID == INVALID_VIEWPORT) {
-    viewport->mViewPortID =
-        YRenderDevice::RenderDevice::CreateViewPort(
-            GetDimensionValue(frame_height,
-                              viewport->mTopType,
-                              viewport->mTop),
-            GetDimensionValue(frame_width,
-                              viewport->mLeftType,
-                              viewport->mLeft),
-            GetDimensionValue(frame_width,
-                              viewport->mWidthType,
-                              viewport->mWidth),
-            GetDimensionValue(frame_height,
-                              viewport->mHeightType,
-                              viewport->mHeight),
-            viewport->mMinZ, viewport->mMaxZ);
+  const uint32_t num_render_objects = gRenderObjArray.GetCount();
+  for (uint32_t i = 0; i < num_render_objects; ++i) {
+    RenderObjectInternal* render_obj = gRenderObjArray[i];
+
+    // Activate Viewport
+    ViewPortInternal* viewport = render_obj->mViewPort;
+    if (viewport->mActivatedArrayIndex == INVALID_INDEX) {
+      if (viewport->mViewPortID == INVALID_VIEWPORT) {
+        viewport->mViewPortID =
+            YRenderDevice::RenderDevice::CreateViewPort(
+                GetDimensionValue(frame_height,
+                                  viewport->mTopType,
+                                  viewport->mTop),
+                GetDimensionValue(frame_width,
+                                  viewport->mLeftType,
+                                  viewport->mLeft),
+                GetDimensionValue(frame_width,
+                                  viewport->mWidthType,
+                                  viewport->mWidth),
+                GetDimensionValue(frame_height,
+                                  viewport->mHeightType,
+                                  viewport->mHeight),
+                viewport->mMinZ, viewport->mMaxZ);
+      }
+      viewport->mActivatedArrayIndex = gViewPortArray.PushBack(viewport);
+      YASSERT(viewport->mActivatedArrayIndex != INVALID_INDEX,
+              "Maximum number of activated viewports (%u) exceeded.",
+              MAX_ACTIVE_VIEWPORTS);
+    }
+
+    // Iterate through active render passes
+    RenderTypeInternal* render_type = render_obj->mRenderType;
+    for (uint8_t n = 0; n < num_passes; ++n) {
+      RenderPassInternal* render_pass = active_passes->mRenderPasses[i];
+      char shader_name[MAX_SHADER_BASE_NAME + MAX_SHADER_VARIANT_NAME];
+      memcpy(shader_name, render_type->mShaderBase,
+             render_type->mShaderBaseSize);
+      shader_name[render_type->mShaderBaseSize-1] = ':';
+      memcpy(shader_name + render_type->mShaderBaseSize,
+             render_pass->mShaderVariant,
+             render_pass->mShaderVariantSize);
+
+      ShaderDataInternal* shader = gShaderDatas.GetValue(
+        shader_name,
+        render_type->mShaderBaseSize + render_pass->mShaderVariantSize);
+      if (shader) {
+        // Activate Shader
+        if (shader->mActivatedArrayIndex == INVALID_INDEX) {
+          shader->mActivatedArrayIndex = gShaderDataArray.PushBack(shader);
+          YASSERT(shader->mActivatedArrayIndex != INVALID_INDEX,
+              "Maximum number of activated shaders (%u) exceeded.",
+              MAX_ACTIVE_SHADERS);
+        }
+
+        // Activate Vertex Declaration
+        VertexDeclInternal* vertex_decl = shader->mVertexDecl;
+        if (vertex_decl->mActivatedArrayIndex == INVALID_INDEX) {
+          if (vertex_decl->mVertexDeclID == INVALID_VERTEX_DECL) {
+            vertex_decl->mVertexDeclID =
+                YRenderDevice::RenderDevice::CreateVertexDeclaration(
+                    vertex_decl->mVertexElements,
+                    vertex_decl->mNumVertexElements);
+          }
+          vertex_decl->mActivatedArrayIndex =
+              gVertexDeclArray.PushBack(vertex_decl);
+          YASSERT(vertex_decl->mActivatedArrayIndex != INVALID_INDEX,
+              "Maximum number of activated vertex declarations (%u) exceeded.",
+              MAX_ACTIVE_VERTEX_DECLS);
+        }
+
+        // Activate Vertex Buffers for the Vertex Declaration
+        VertexDataInternal* vertex_data = render_obj->mVertexData;
+        VertexBufferInternal* vertex_buffer =
+            vertex_data->GetVertexBuffer(vertex_decl);
+        if (nullptr == vertex_buffer) {
+          VertexBufferInternal new_vertex_buffer(vertex_decl);
+          uint32_t buffer_index = gVertexBuffers.Insert(new_vertex_buffer);
+          YASSERT(buffer_index != INVALID_INDEX,
+                  "Maximum number of vertex buffers (%u) reached.",
+                  VERTEX_BUFFERS_SIZE);
+          vertex_buffer = &gVertexBuffers[buffer_index];
+          if (!vertex_data->InsertVertexBuffer(vertex_buffer)) {
+            vertex_data->ClearUnusedVertexBuffer();
+            const bool inserted =
+                vertex_data->InsertVertexBuffer(vertex_buffer);
+            YASSERT(inserted,
+                    "Maximum number of vertex buffers (%u) per data exceeded.",
+                    MAX_VERTEX_BUFFERS_PER_DATA);
+          }
+        }
+
+        // Shader Parameters
+        ShdrFloatArgInternal* vertex_shdr_float_args[MAX_FLOAT_ARGS_PER_OBJ];
+        ShdrTexArgInternal* vertex_shdr_tex_args[MAX_TEXTURE_ARGS_PER_OBJ];
+        ShdrFloatArgInternal* pixel_shdr_float_args[MAX_FLOAT_ARGS_PER_OBJ];
+        ShdrTexArgInternal* pixel_shdr_tex_args[MAX_TEXTURE_ARGS_PER_OBJ];
+
+        // Vertex Shader Float Params
+        const uint8_t num_vert_shdr_floats = shader->mNumVertexShdrFloatParams;
+        for (uint8_t m = 0; m < num_vert_shdr_floats; ++m) {
+          ShdrFloatParamInternal* float_param =
+              shader->mVertexShdrFloatParams[m];
+          ShdrFloatArgInternal* float_arg =
+              render_obj->GetFloatArg(float_param);
+          if (!float_arg) {
+            GlobalFloatArgInternal* global_arg =
+                gGlobalFloatArgs.GetValue(float_param->mName,
+                                          float_param->mNameSize);
+            YASSERT(global_arg,
+                    "Vertex shader float parameter not set: %s",
+                    float_param->mName);
+            float_arg = global_arg->mFloatArg;
+          }
+          vertex_shdr_float_args[m] = float_arg;
+        }
+
+        // Vertex Shader Texture Params
+        const uint8_t num_vert_shdr_texs = shader->mNumVertexShdrTexParams;
+        for (uint8_t m = 0; m < num_vert_shdr_texs; ++m) {
+          ShdrTexParamInternal* tex_param = shader->mVertexShdrTexParams[m];
+          ShdrTexArgInternal* tex_arg = render_obj->GetTexArg(tex_param);
+          if (!tex_arg) {
+            GlobalTexArgInternal* global_arg =
+                gGlobalTexArgs.GetValue(tex_param->mName,
+                                        tex_param->mNameSize);
+            YASSERT(global_arg,
+                    "Vertex shader texture parameter not set: %s",
+                    tex_param->mName);
+            tex_arg = global_arg->mTexArg;
+          }
+          vertex_shdr_tex_args[m] = tex_arg;
+        }
+
+        // Pixel Shader Float Params
+        const uint8_t num_pix_shdr_floats = shader->mNumPixelShdrFloatParams;
+        for (uint8_t m = 0; m < num_pix_shdr_floats; ++m) {
+          ShdrFloatParamInternal* float_param =
+              shader->mPixelShdrFloatParams[m];
+          ShdrFloatArgInternal* float_arg =
+              render_obj->GetFloatArg(float_param);
+          if (!float_arg) {
+            GlobalFloatArgInternal* global_arg =
+                gGlobalFloatArgs.GetValue(float_param->mName,
+                                          float_param->mNameSize);
+            YASSERT(global_arg,
+                    "Pixel shader float parameter not set: %s",
+                    float_param->mName);
+            float_arg = global_arg->mFloatArg;
+          }
+          pixel_shdr_float_args[m] = float_arg;
+        }
+
+        // Pixel Shader Texture Params
+        const uint8_t num_pix_shdr_texs = shader->mNumPixelShdrTexParams;
+        for (uint8_t m = 0; m < num_pix_shdr_texs; ++m) {
+          ShdrTexParamInternal* tex_param = shader->mPixelShdrTexParams[m];
+          ShdrTexArgInternal* tex_arg = render_obj->GetTexArg(tex_param);
+          if (!tex_arg) {
+            GlobalTexArgInternal* global_arg =
+                gGlobalTexArgs.GetValue(tex_param->mName,
+                                        tex_param->mNameSize);
+            YASSERT(global_arg,
+                    "Pixel shader texture parameter not set: %s",
+                    tex_param->mName);
+            tex_arg = global_arg->mTexArg;
+          }
+          pixel_shdr_tex_args[m] = tex_arg;
+        }
+
+        // Generate Render Key
+        RenderKeyInternal render_key(viewport, render_pass,
+                                     shader, vertex_buffer,
+                                     num_vert_shdr_floats,
+                                     vertex_shdr_float_args,
+                                     num_vert_shdr_texs, vertex_shdr_tex_args,
+                                     num_pix_shdr_floats, pixel_shdr_float_args,
+                                     num_pix_shdr_texs, pixel_shdr_tex_args);
+        const uint64_t render_key_num =
+            render_key.GetRenderKey(gActiveRenderKeyFieldsCount,
+                                    gActiveRenderKeyFields);
+        RenderKeyInternal* active_key =
+            gActiveRenderKeys.GetValue(render_key_num);
+        if (nullptr == active_key) {
+          active_key = gActiveRenderKeys.Insert(render_key_num, render_key);
+        }
+        YASSERT(render_obj->mNumRenderKeys >=
+                ARRAY_SIZE(render_obj->mRenderKeys),
+                "Invalid number of render keys (%u), something went wrong...",
+                render_obj->mNumRenderKeys);
+        render_obj->mRenderKeys[render_obj->mNumRenderKeys++] = render_key_num;
+      }
+    }
   }
 }
 
 void Renderer::DeactivateRenderPasses() {
   if (gActiveRenderPasses) {
+    DeactivateRenderObjects();
+
     const bool empty = gActiveRenderPasses->DecRef();
     YASSERT(!empty, "Active render passes was released before deactivated.");
     gActiveRenderPasses = nullptr;

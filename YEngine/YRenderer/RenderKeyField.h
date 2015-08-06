@@ -8,7 +8,6 @@ enum RenderKeyFieldType {
   kRenderKeyFieldType_RenderPass,
   kRenderKeyFieldType_VertexDecl,
   kRenderKeyFieldType_Shader,
-  kRenderKeyFieldType_VertexData,
   kRenderKeyFieldType_Depth,
   kRenderKeyFieldType_ArbitraryNumber,
 
@@ -25,7 +24,6 @@ static const RenderKeyField kDefaultRenderKeyFields[] = {
   { 4, kRenderKeyFieldType_RenderPass },
   { 6, kRenderKeyFieldType_VertexDecl },
   { 6, kRenderKeyFieldType_Shader },
-  { 8, kRenderKeyFieldType_VertexData },
   { 6, kRenderKeyFieldType_Depth },
 };
 
