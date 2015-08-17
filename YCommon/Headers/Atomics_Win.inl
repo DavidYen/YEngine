@@ -8,6 +8,14 @@ inline void MemoryBarrier() {
   ::MemoryBarrier();
 }
 
+inline void AcquireFence() {
+  ::MemoryBarrier();
+}
+
+inline void ReleaseFence() {
+  ::MemoryBarrier();
+}
+
 /* Sets and returns previous value. */
 inline int32_t AtomicSet32(volatile int32_t* dest, int32_t value) {
   return InterlockedExchange(reinterpret_cast<volatile long*>(dest), value);
