@@ -6,6 +6,8 @@
 #include <YEngine/YRenderDevice/RenderDevice.h>
 #include <YEngine/YRenderDevice/VertexDeclElement.h>
 
+#include "RendererCommon.h"
+
 using YCommon::YContainers::ReadRefData;
 using YCommon::YContainers::TypedReadRefData;
 
@@ -26,11 +28,6 @@ namespace Renderer {
   void Terminate();
 
   void SetupRenderKey(const RenderKeyField* fields, size_t num_fields);
-
-  enum DimensionType {
-    kDimensionType_Absolute, // Use absolute numbers.
-    kDimensionType_Percentage, // Use percentage of frame buffer dimensions.
-  };
 
   // Register renderer options, default values do not overwrite settings.
   void RegisterViewPort(const char* name, size_t name_size,
@@ -134,7 +131,9 @@ namespace Renderer {
   // Enqueue Render Command
   void EnqueueRenderObject(uint64_t render_object_hash);
 
-  // Execution Commands
+  // Execution Commands (These are meant to run on separate threads)
+  void PrepareDraw();
+
   void ExecuteUploads();
   void ExecuteDraws();
 }

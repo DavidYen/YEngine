@@ -44,6 +44,8 @@ class RendererTest : public ::testing::Test {
     YRenderDevice::RenderDevice::Terminate();
     YCore::StringTable::Terminate();
 
+    mMemBuffer.Reset();
+
     delete [] mBuffer;
     mBuffer = nullptr;
   }
@@ -59,16 +61,16 @@ TEST_F(RendererTest, FixtureInitialization) {
 TEST_F(RendererTest, RegisterViewportTest) {
   const char name[] = "test_viewport";
   Renderer::RegisterViewPort(name, sizeof(name),
-                             Renderer::kDimensionType_Absolute, 1.0f,
-                             Renderer::kDimensionType_Absolute, 2.0f,
-                             Renderer::kDimensionType_Absolute, 3.0f,
-                             Renderer::kDimensionType_Absolute, 4.0f,
+                             kDimensionType_Absolute, 1.0f,
+                             kDimensionType_Absolute, 2.0f,
+                             kDimensionType_Absolute, 3.0f,
+                             kDimensionType_Absolute, 4.0f,
                              0.1f, 1.0f);
   Renderer::RegisterViewPort(name, sizeof(name),
-                             Renderer::kDimensionType_Absolute, 1.0f,
-                             Renderer::kDimensionType_Absolute, 2.0f,
-                             Renderer::kDimensionType_Absolute, 3.0f,
-                             Renderer::kDimensionType_Absolute, 4.0f,
+                             kDimensionType_Absolute, 1.0f,
+                             kDimensionType_Absolute, 2.0f,
+                             kDimensionType_Absolute, 3.0f,
+                             kDimensionType_Absolute, 4.0f,
                              0.1f, 1.0f);
 
   EXPECT_FALSE(Renderer::ReleaseViewPort(name, sizeof(name)));
@@ -80,11 +82,11 @@ TEST_F(RendererTest, RegisterRenderTargetTest) {
   const YRenderDevice::PixelFormat format =
       static_cast<YRenderDevice::PixelFormat>(123);
   Renderer::RegisterRenderTarget(name, sizeof(name), format,
-                                 Renderer::kDimensionType_Absolute, 1.0f,
-                                 Renderer::kDimensionType_Absolute, 2.0f);
+                                 kDimensionType_Absolute, 1.0f,
+                                 kDimensionType_Absolute, 2.0f);
   Renderer::RegisterRenderTarget(name, sizeof(name), format,
-                                 Renderer::kDimensionType_Absolute, 1.0f,
-                                 Renderer::kDimensionType_Absolute, 2.0f);
+                                 kDimensionType_Absolute, 1.0f,
+                                 kDimensionType_Absolute, 2.0f);
 
   EXPECT_FALSE(Renderer::ReleaseRenderTarget(name, sizeof(name)));
   EXPECT_TRUE(Renderer::ReleaseRenderTarget(name, sizeof(name)));
@@ -290,10 +292,10 @@ TEST_F(RendererTest, RegisterRenderObjectTest) {
   const char vertex_data[] = "test_vertex_data_name";
 
   Renderer::RegisterViewPort(viewport, sizeof(viewport),
-                             Renderer::kDimensionType_Absolute, 1.0f,
-                             Renderer::kDimensionType_Absolute, 2.0f,
-                             Renderer::kDimensionType_Absolute, 3.0f,
-                             Renderer::kDimensionType_Absolute, 4.0f,
+                             kDimensionType_Absolute, 1.0f,
+                             kDimensionType_Absolute, 2.0f,
+                             kDimensionType_Absolute, 3.0f,
+                             kDimensionType_Absolute, 4.0f,
                              0.1f, 1.0f);
   Renderer::RegisterRenderType(render_type, sizeof(render_type),
                                shader, sizeof(shader));
@@ -321,17 +323,12 @@ TEST_F(RendererTest, RegisterRenderObjectTest) {
 TEST_F(RendererTest, BasicActivationTest) {
   // Setup Viewport
   const char viewport_name[] = "test_view_port";
-  const YRenderDevice::ViewPortID viewport_id = 123;
   Renderer::RegisterViewPort(viewport_name, sizeof(viewport_name),
-                             Renderer::kDimensionType_Absolute, 1.0f,
-                             Renderer::kDimensionType_Percentage, 0.25f,
-                             Renderer::kDimensionType_Absolute, 3.0f,
-                             Renderer::kDimensionType_Percentage, 0.5f,
+                             kDimensionType_Absolute, 1.0f,
+                             kDimensionType_Percentage, 0.25f,
+                             kDimensionType_Absolute, 3.0f,
+                             kDimensionType_Percentage, 0.5f,
                              0.1f, 1.0f);
-  YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(viewport_id,
-                                                        1, gTestWidth / 4,
-                                                        3, gTestHeight / 2,
-                                                        0.1f, 1.0f);
 
   // Setup Render Target
   const char render_target_name[] = "test_render_target";
@@ -340,8 +337,8 @@ TEST_F(RendererTest, BasicActivationTest) {
   const YRenderDevice::RenderTargetID render_target_id = 12;
   Renderer::RegisterRenderTarget(render_target_name,
                                  sizeof(render_target_name), format,
-                                 Renderer::kDimensionType_Absolute, 1.0f,
-                                 Renderer::kDimensionType_Percentage, 0.5f);
+                                 kDimensionType_Absolute, 1.0f,
+                                 kDimensionType_Percentage, 0.5f);
   YRenderDevice::RenderDeviceMock::ExpectCreateRenderTarget(render_target_id,
                                                             1, gTestWidth / 2,
                                                             format);
@@ -405,7 +402,6 @@ TEST_F(RendererTest, BasicActivationTest) {
   EXPECT_TRUE(Renderer::ReleaseRenderTarget(render_target_name,
                                             sizeof(render_target_name)));
 
-  YRenderDevice::RenderDeviceMock::ExpectReleaseViewPort(viewport_id);
   EXPECT_TRUE(Renderer::ReleaseViewPort(viewport_name, sizeof(viewport_name)));
 }
 

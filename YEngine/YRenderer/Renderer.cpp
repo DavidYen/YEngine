@@ -3,16 +3,20 @@
 
 #include <algorithm>
 
+#include <YCommon/Headers/Atomics.h>
 #include <YCommon/YContainers/HashTable.h>
 #include <YCommon/YContainers/MemBuffer.h>
 #include <YCommon/YContainers/MemPool.h>
+#include <YCommon/YContainers/RefPointer.h>
 #include <YCommon/YContainers/UnorderedArray.h>
 #include <YCommon/YUtils/Hash.h>
 #include <YEngine/YCore/StringTable.h>
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/SamplerState.h>
 
+#include "RendererCommon.h"
 #include "RenderKeyField.h"
+#include "ViewPort.h"
 
 // Hash Table Sizes (~2x maximum)
 #define VIEWPORTS_SIZE 16
@@ -34,7 +38,6 @@
 #define TEXARGS_SIZE 1024
 #define GLOBALTEXARGS_SIZE 128
 #define RENDEROBJECTS_SIZE 256
-#define RENDERKEYS_SIZE 1024
 
 // Mem Pool Sizes
 #define VERTEX_BUFFERS_SIZE 512
@@ -57,6 +60,7 @@
 #define MAX_ACTIVE_RENDERPASSES 8
 #define MAX_ACTIVE_VERTEX_DECLS 64
 #define MAX_ACTIVE_SHADERS 512
+#define MAX_ACTIVE_RENDERKEYS 1024
 
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
@@ -72,7 +76,7 @@ namespace {
   YCommon::YContainers::MemBuffer gMemBuffer;
 
   struct RenderObjectInternal;
-  struct ViewPortInternal;
+  class ViewPortInternal;
   struct VertexDeclInternal;
   struct ShaderDataInternal;
 
@@ -94,38 +98,27 @@ namespace {
     int32_t mRefCount;
   };
 
-  struct ViewPortInternal : public RefCountBase {
-    ViewPortInternal(Renderer::DimensionType top_type, float top,
-                     Renderer::DimensionType left_type, float left,
-                     Renderer::DimensionType width_type, float width,
-                     Renderer::DimensionType height_type, float height,
+  class ViewPortInternal : public ViewPort, public RefCountBase {
+   public:
+    ViewPortInternal(DimensionType top_type, float top,
+                     DimensionType left_type, float left,
+                     DimensionType width_type, float width,
+                     DimensionType height_type, float height,
                      float min_z, float max_z)
-      : RefCountBase(),
-        mTopType(top_type),
-        mTop(top),
-        mLeftType(left_type),
-        mLeft(left),
-        mWidthType(width_type),
-        mWidth(width),
-        mHeightType(height_type),
-        mHeight(height),
-        mMinZ(min_z),
-        mMaxZ(max_z),
-        mActivatedArrayIndex(INVALID_INDEX),
-        mViewPortID(INVALID_VIEWPORT) {
-    }
+      : ViewPort(top_type, top, left_type, left,
+                 width_type, width, height_type, height,
+                 min_z, max_z),
+        RefCountBase(),
+        mActivatedArrayIndex(INVALID_INDEX) {}
 
-    Renderer::DimensionType mTopType, mLeftType, mWidthType, mHeightType;
-    float mTop, mLeft, mWidth, mHeight, mMinZ, mMaxZ;
     uint32_t mActivatedArrayIndex;
-    YRenderDevice::ViewPortID mViewPortID;
   };
   YCommon::YContainers::TypedHashTable<ViewPortInternal> gViewPorts;
 
   struct RenderTargetInternal : public RefCountBase {
     RenderTargetInternal(YRenderDevice::PixelFormat format,
-                         Renderer::DimensionType width_type, float width,
-                         Renderer::DimensionType height_type, float height)
+                         DimensionType width_type, float width,
+                         DimensionType height_type, float height)
       : mWidthType(width_type),
         mWidth(width),
         mHeightType(height_type),
@@ -134,7 +127,7 @@ namespace {
         mRenderTargetID(INVALID_RENDER_TARGET) {
     }
 
-    Renderer::DimensionType mWidthType, mHeightType;
+    DimensionType mWidthType, mHeightType;
     float mWidth, mHeight;
     YRenderDevice::PixelFormat mFormat;
     YRenderDevice::RenderTargetID mRenderTargetID;
@@ -457,6 +450,16 @@ namespace {
   YCommon::YContainers::TypedHashTable<GlobalTexArgInternal> gGlobalTexArgs;
 
   struct RenderKeyInternal {
+    RenderKeyInternal()
+      : mNumVertexShaderFloatArgs(0),
+        mNumVertexShaderTexArgs(0),
+        mNumPixelShaderFloatArgs(0),
+        mNumPixelShaderTexArgs(0),
+        mViewPort(nullptr),
+        mRenderPass(nullptr),
+        mShaderData(nullptr),
+        mVertexBuffer(nullptr) {}
+
     RenderKeyInternal(ViewPortInternal* viewport,
                       RenderPassInternal* render_pass,
                       ShaderDataInternal* shader_data,
@@ -487,15 +490,54 @@ namespace {
              num_pixel_shader_tex_args * sizeof(mPixelShaderTexArgs[0]));
     }
 
-    /*void ExecuteRenderKey(RenderKeyInternal* prev_render_key) {
-
-    }*/
-
-    uint64_t GetRenderKey(size_t num_fields, RenderKeyField* fields) {
-      (void) fields;
-      for (size_t i = 0; i < num_fields; ++i) {
+    void ExecuteRenderKey(const RenderKeyInternal* prev_render_key) const {
+      if (prev_render_key->mViewPort != mViewPort) {
+        mViewPort->Activate();
       }
-      return 0;
+    }
+
+    uint64_t GetRenderKey(uint32_t key_num, uint32_t pass_num,
+                          RenderKeyField* fields, size_t num_fields,
+                          uint8_t field_bits_used) {
+      uint64_t key = 0;
+      uint8_t bits_left = 64;
+
+      const uint32_t viewport = mViewPort->mActivatedArrayIndex;
+      const uint32_t decl = mShaderData->mVertexDecl->mActivatedArrayIndex;
+      const uint32_t shader = mShaderData->mActivatedArrayIndex;
+      uint64_t field_values[] = {
+        viewport, // kRenderKeyFieldType_ViewPort,
+        pass_num, // kRenderKeyFieldType_RenderPass,
+        decl, // kRenderKeyFieldType_VertexDecl,
+        shader, // kRenderKeyFieldType_Shader,
+        0, // kRenderKeyFieldType_Depth,
+        0, // kRenderKeyFieldType_ArbitraryNumber,
+      };
+      static_assert(NUM_RENDER_KEY_FIELD_TYPES == ARRAY_SIZE(field_values),
+                    "Number of field values must match.");
+
+      for (size_t i = 0; i < num_fields; ++i) {
+        YDEBUG_CHECK(fields[i].field_type >= 0 &&
+                     fields[i].field_type < NUM_RENDER_KEY_FIELD_TYPES,
+                     "Invalid Field Type: %d", fields[i].field_type);
+        YDEBUG_CHECK(fields[i].field_bits < bits_left,
+                     "Maximum number of field bits used.");
+        const uint8_t field_bits = fields[i].field_bits;
+        const uint8_t field_type = static_cast<uint8_t>(fields[i].field_type);
+        YASSERT(field_values[field_type] <
+                (static_cast<uint64_t>(1) << field_bits),
+                "Render key field (%d) needs more bits (%u): %u",
+                field_type, field_bits, field_values[field_type]);
+        key = (key << field_bits) | field_values[field_type];
+        bits_left -= field_bits;
+      }
+      YASSERT(bits_left + field_bits_used == 64,
+              "Unexpected number of bits used.");
+
+      YASSERT(key_num < (static_cast<uint64_t>(1) << bits_left),
+              "Bits left over (%u) not enough to store render key: %u",
+              bits_left, key_num);
+      return (key << bits_left) | key_num;
     }
 
     uint8_t mNumVertexShaderFloatArgs, mNumVertexShaderTexArgs;
@@ -509,7 +551,7 @@ namespace {
     ShdrFloatArgInternal* mPixelShaderFloatArgs[MAX_FLOAT_ARGS_PER_OBJ];
     ShdrTexArgInternal* mPixelShaderTexArgs[MAX_TEXTURE_ARGS_PER_OBJ];
   };
-  YCommon::YContainers::TypedHashTable<RenderKeyInternal> gActiveRenderKeys;
+  YCommon::YContainers::TypedUnorderedArray<RenderKeyInternal> gRenderKeys;
 
   struct RenderObjectInternal : public RefCountBase {
     RenderObjectInternal(ViewPortInternal* view_port,
@@ -591,8 +633,13 @@ namespace {
   YCommon::YContainers::TypedHashTable<RenderObjectInternal> gRenderObjects;
 
   size_t gActiveRenderKeyFieldsCount = 0;
-  RenderKeyField gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
+  uint8_t gActiveRenderKeyBitsUsed = 0;
   ActivePassesInternal* gActiveRenderPasses = nullptr;
+  RenderKeyField gActiveRenderKeyFields[NUM_RENDER_KEY_FIELD_TYPES];
+
+  volatile uint32_t gEnqueuedRenderKeysCount = 0;
+  const uint32_t gMaxEnqueuedRenderKeys = MAX_ACTIVE_RENDERKEYS;
+  uint64_t* gEnqueuedRenderKeys = nullptr;
 }
 
 void RenderObjectInternal::ItemSwapCallback(uint32_t old_index,
@@ -602,13 +649,6 @@ void RenderObjectInternal::ItemSwapCallback(uint32_t old_index,
   YASSERT(gRenderObjArray[old_index]->mArrayIndex == old_index,
           "Unexpected index.");
   gRenderObjArray[old_index]->mArrayIndex = new_index;
-}
-
-uint32_t GetDimensionValue(uint32_t frame_value,
-                           Renderer::DimensionType type, float value) {
-  return type == Renderer::kDimensionType_Percentage ?
-         static_cast<uint32_t>(frame_value * value + 0.5f) :
-         std::min(frame_value, static_cast<uint32_t>(value));
 }
 
 void DeactivateRenderObjects() {
@@ -640,14 +680,14 @@ void DeactivateRenderObjects() {
   for (uint32_t i = 0; i < activated_render_objects; ++i) {
     gRenderObjArray[i]->mNumRenderKeys = 0;
   }
-  gActiveRenderKeys.Clear();
+  gRenderKeys.Clear();
 }
 
 #define INITIALIZE_TABLE(HASHTABLE, TABLESIZE, NAME) \
   do { \
     const size_t table_buffer_size = \
         HASHTABLE.GetAllocationSize(TABLESIZE); \
-    void* table_buffer = gMemBuffer.Allocate(table_buffer_size); \
+    void* table_buffer = gMemBuffer.Allocate(table_buffer_size, 128); \
     YASSERT(table_buffer, \
             "Not enough space to allocate " NAME " table.\n" \
             "  Free Space:   %u\n" \
@@ -661,7 +701,7 @@ void DeactivateRenderObjects() {
   do { \
     const size_t pool_buffer_size = \
         MEMPOOL.GetAllocationSize(POOLSIZE); \
-    void* pool_buffer = gMemBuffer.Allocate(pool_buffer_size); \
+    void* pool_buffer = gMemBuffer.Allocate(pool_buffer_size, 128); \
     YASSERT(pool_buffer, \
             "Not enought space to allocate " NAME " memory pool."); \
     MEMPOOL.Init(pool_buffer, pool_buffer_size, POOLSIZE); \
@@ -671,7 +711,7 @@ void DeactivateRenderObjects() {
   do { \
     const size_t array_buffer_size = \
         ARRAY.GetAllocationSize(ARRAYSIZE); \
-    void* array_buffer = gMemBuffer.Allocate(array_buffer_size); \
+    void* array_buffer = gMemBuffer.Allocate(array_buffer_size, 128); \
     YASSERT(array_buffer, \
             "Not enought space to allocate " NAME " array."); \
     ARRAY.Init(array_buffer, array_buffer_size, ARRAYSIZE); \
@@ -684,6 +724,7 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_ARRAY(gViewPortArray, MAX_ACTIVE_VIEWPORTS, "View Port");
   INITIALIZE_ARRAY(gVertexDeclArray, MAX_ACTIVE_VERTEX_DECLS, "Vertex Decl");
   INITIALIZE_ARRAY(gShaderDataArray, MAX_ACTIVE_SHADERS, "Shader Data");
+  INITIALIZE_ARRAY(gRenderKeys, MAX_ACTIVE_RENDERKEYS, "Render Keys");
 
   gRenderObjArray.SetItemSwappedCallBack(RenderObjectInternal::ItemSwapCallback,
                                          &gRenderObjArray);
@@ -708,18 +749,31 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gShdrTexArgs, TEXARGS_SIZE, "Shader Texture Args");
   INITIALIZE_TABLE(gGlobalFloatArgs, GLOBALFLOATARGS_SIZE, "Global Float Args");
   INITIALIZE_TABLE(gGlobalTexArgs, GLOBALTEXARGS_SIZE, "Global Texture Args");
-  INITIALIZE_TABLE(gActiveRenderKeys, RENDERKEYS_SIZE, "Active Render Keys");
   INITIALIZE_TABLE(gRenderObjects, RENDEROBJECTS_SIZE, "Render Objects");
 
   gActiveRenderPasses = nullptr;
   SetupRenderKey(kDefaultRenderKeyFields, ARRAY_SIZE(kDefaultRenderKeyFields));
+
+  gEnqueuedRenderKeysCount = 0;
+  const size_t enqueued_render_keys_size =
+      sizeof(gEnqueuedRenderKeys[0]) * gMaxEnqueuedRenderKeys;
+  void* render_key_buffer = gMemBuffer.Allocate(enqueued_render_keys_size, 128);
+  YASSERT(render_key_buffer,
+          "Not enough space for enqueued render key buffer.\n"
+          "  Free Space:  %u\n"
+          "  Needed Size: %u\n",
+          static_cast<uint32_t>(gMemBuffer.FreeSpace()),
+          static_cast<uint32_t>(enqueued_render_keys_size));
+  gEnqueuedRenderKeys = static_cast<uint64_t*>(render_key_buffer);
 }
 
 void Renderer::Terminate() {
+  gEnqueuedRenderKeysCount = 0;
+  gEnqueuedRenderKeys = nullptr;
+
   gActiveRenderPasses = nullptr;
 
   gRenderObjects.Reset();
-  gActiveRenderKeys.Reset();
   gGlobalTexArgs.Reset();
   gGlobalFloatArgs.Reset();
   gShdrTexArgs.Reset();
@@ -741,6 +795,7 @@ void Renderer::Terminate() {
 
   gVertexBuffers.Reset();
 
+  gRenderKeys.Reset();
   gShaderDataArray.Reset();
   gVertexDeclArray.Reset();
   gViewPortArray.Reset();
@@ -754,6 +809,16 @@ void Renderer::SetupRenderKey(const RenderKeyField* fields, size_t num_fields) {
           static_cast<uint32_t>(num_fields),
           static_cast<uint32_t>(ARRAY_SIZE(gActiveRenderKeyFields)));
   memcpy(gActiveRenderKeyFields, fields, num_fields * sizeof(fields[0]));
+  gActiveRenderKeyFieldsCount = num_fields;
+
+  uint32_t bits_used = 0;
+  for (size_t i = 0; i < num_fields; ++i) {
+    bits_used += fields[i].field_bits;
+  }
+  YASSERT(bits_used < 64,
+          "Maximum number of bits used exceeded (64): %u", bits_used);
+
+  gActiveRenderKeyBitsUsed = static_cast<uint8_t>(bits_used);
 }
 
 void Renderer::RegisterViewPort(const char* name, size_t name_size,
@@ -1226,9 +1291,7 @@ bool Renderer::ReleaseViewPort(const char* name, size_t name_size) {
   ViewPortInternal* viewport = gViewPorts.GetValue(name_hash);
   YASSERT(viewport, "Releasing an invalid viewport: %s", name);
   if (viewport->DecRef()) {
-    if (viewport->mViewPortID != INVALID_VIEWPORT) {
-      YRenderDevice::RenderDevice::ReleaseViewPort(viewport->mViewPortID);
-    }
+    viewport->Release();
     return gViewPorts.Remove(name_hash);
   }
   return false;
@@ -1573,23 +1636,6 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
     // Activate Viewport
     ViewPortInternal* viewport = render_obj->mViewPort;
     if (viewport->mActivatedArrayIndex == INVALID_INDEX) {
-      if (viewport->mViewPortID == INVALID_VIEWPORT) {
-        viewport->mViewPortID =
-            YRenderDevice::RenderDevice::CreateViewPort(
-                GetDimensionValue(frame_height,
-                                  viewport->mTopType,
-                                  viewport->mTop),
-                GetDimensionValue(frame_width,
-                                  viewport->mLeftType,
-                                  viewport->mLeft),
-                GetDimensionValue(frame_width,
-                                  viewport->mWidthType,
-                                  viewport->mWidth),
-                GetDimensionValue(frame_height,
-                                  viewport->mHeightType,
-                                  viewport->mHeight),
-                viewport->mMinZ, viewport->mMaxZ);
-      }
       viewport->mActivatedArrayIndex = gViewPortArray.PushBack(viewport);
       YASSERT(viewport->mActivatedArrayIndex != INVALID_INDEX,
               "Maximum number of activated viewports (%u) exceeded.",
@@ -1598,8 +1644,9 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
 
     // Iterate through active render passes
     RenderTypeInternal* render_type = render_obj->mRenderType;
-    for (uint8_t n = 0; n < num_passes; ++n) {
-      RenderPassInternal* render_pass = active_passes->mRenderPasses[i];
+    for (uint8_t pass_index = 0; pass_index < num_passes; ++pass_index) {
+      RenderPassInternal* render_pass =
+          active_passes->mRenderPasses[pass_index];
       char shader_name[MAX_SHADER_BASE_NAME + MAX_SHADER_VARIANT_NAME];
       memcpy(shader_name, render_type->mShaderBase,
              render_type->mShaderBaseSize);
@@ -1743,14 +1790,13 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
                                      num_vert_shdr_texs, vertex_shdr_tex_args,
                                      num_pix_shdr_floats, pixel_shdr_float_args,
                                      num_pix_shdr_texs, pixel_shdr_tex_args);
+
+        const uint32_t key_index = gRenderKeys.PushBack(render_key);
         const uint64_t render_key_num =
-            render_key.GetRenderKey(gActiveRenderKeyFieldsCount,
-                                    gActiveRenderKeyFields);
-        RenderKeyInternal* active_key =
-            gActiveRenderKeys.GetValue(render_key_num);
-        if (nullptr == active_key) {
-          active_key = gActiveRenderKeys.Insert(render_key_num, render_key);
-        }
+            render_key.GetRenderKey(key_index, pass_index,
+                                    gActiveRenderKeyFields,
+                                    gActiveRenderKeyFieldsCount,
+                                    gActiveRenderKeyBitsUsed);
         YASSERT(render_obj->mNumRenderKeys >=
                 ARRAY_SIZE(render_obj->mRenderKeys),
                 "Invalid number of render keys (%u), something went wrong...",
@@ -1769,6 +1815,51 @@ void Renderer::DeactivateRenderPasses() {
     YASSERT(!empty, "Active render passes was released before deactivated.");
     gActiveRenderPasses = nullptr;
   }
+}
+
+void Renderer::EnqueueRenderObject(uint64_t render_object_hash) {
+  RenderObjectInternal* object = gRenderObjects.GetValue(render_object_hash);
+  YASSERT(object, "Invalid Render Object Hash Given.");
+
+  const uint32_t num_keys = object->mNumRenderKeys;
+  if (num_keys) {
+    uint32_t index = YCommon::AtomicAdd32(&gEnqueuedRenderKeysCount, num_keys);
+    YASSERT(index + num_keys <= gMaxEnqueuedRenderKeys,
+            "Maximum number of enqueued render objects reached: %u",
+            gMaxEnqueuedRenderKeys);
+
+    memcpy(&gEnqueuedRenderKeys[index], object->mRenderKeys,
+           sizeof(uint64_t) * num_keys);
+  }
+}
+
+void Renderer::PrepareDraw() {
+  const uint32_t num_keys = gEnqueuedRenderKeysCount;
+  YCommon::AcquireFence();
+  std::sort(gEnqueuedRenderKeys, gEnqueuedRenderKeys + num_keys);
+
+  RenderKeyInternal null_render_key;
+
+  YRenderDevice::RenderDevice::BeginRecord();
+  const uint8_t num_index_bits = 64 - gActiveRenderKeyBitsUsed;
+  YDEBUG_CHECK(num_index_bits > 0 && num_index_bits < 32,
+               "Sanity check failed for number of bits");
+  const uint32_t bits_power = static_cast<uint32_t>(1u) << num_index_bits;
+  const uint32_t key_index_mask = bits_power - 1;
+  const RenderKeyInternal* prev_render_key = &null_render_key;
+  for (uint32_t i = 0; i < num_keys; ++i) {
+    const uint64_t render_key = gEnqueuedRenderKeys[i];
+    const uint32_t render_index =
+        static_cast<uint32_t>(render_key) & key_index_mask;
+    const RenderKeyInternal* render_key_obj = &gRenderKeys[render_index];
+    render_key_obj->ExecuteRenderKey(prev_render_key);
+    prev_render_key = render_key_obj;
+  }
+
+  YRenderDevice::RenderDevice::EndRecord();
+}
+
+void Renderer::ExecuteDraws() {
 }
 
 }} // namespace YEngine { namespace YRenderer {
