@@ -83,6 +83,8 @@ class TypedUnorderedArray : public UnorderedArray {
   T& operator[](size_t index) {
     return static_cast<T*>(mBuffer)[index];
   }
+
+  size_t GetItemSize() { return sizeof(T); }
 };
 
 template<typename T, size_t items>

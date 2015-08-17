@@ -30,9 +30,6 @@ UnorderedArray::~UnorderedArray() {
 
 void UnorderedArray::Init(void* buffer, size_t buffer_size,
                           size_t item_size, uint32_t num_items) {
-  YASSERT(reinterpret_cast<uintptr_t>(buffer) % item_size == 0,
-          "Unordered Array must be aligned to %u bytes - supplied %p.",
-          item_size, buffer);
   YASSERT(item_size * num_items <= buffer_size,
           "Unordered Array requires %u bytes, supplied %u bytes.",
           buffer_size, item_size * num_items);

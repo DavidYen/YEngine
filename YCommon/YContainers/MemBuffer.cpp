@@ -46,6 +46,15 @@ void* MemBuffer::Allocate(size_t allocation_size) {
   return allocation;
 }
 
+void* MemBuffer::Allocate(size_t allocation_size, size_t alignment) {
+  YASSERT(IS_POWER_OF_2(alignment),
+          "Alignment must be a power of 2: %u",
+          static_cast<uint32_t>(alignment));
+  size_t buffer =
+      reinterpret_cast<size_t>(Allocate(allocation_size + alignment));
+  return reinterpret_cast<void*>(ROUND_UP(buffer, alignment));
+}
+
 void MemBuffer::Free(size_t allocation_size) {
   YASSERT(allocation_size <= mUsedBufferSize, "Sanity check failed for Free.");
   mUsedBufferSize -= allocation_size;

@@ -19,8 +19,8 @@ class MemBuffer {
   void Clear();
 
   void* Allocate(size_t allocation_size);
+  void* Allocate(size_t allocation_size, size_t alignment);
   void Free(size_t allocation_size);
-
 
   size_t AllocatedBufferSpace() const {
     return mUsedBufferSize;
