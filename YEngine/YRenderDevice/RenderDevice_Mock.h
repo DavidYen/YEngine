@@ -46,6 +46,10 @@ namespace RenderDeviceMock {
                                   void* buffer = NULL,
                                   size_t buffer_size = 0);
 
+  // Command List
+  void ExpectBeginRecord();
+  void ExpectEndRecord(CommandListID ret);
+
   // Modifiers
   void ExpectSetViewPort(ViewPortID viewport,
                          uint32_t top, uint32_t left,
@@ -94,6 +98,7 @@ namespace RenderDeviceMock {
   void ExpectReleaseVertexBuffer(VertexBufferID vertex_buffer);
   void ExpectReleaseIndexBuffer(IndexBufferID index_buffer);
   void ExpectReleaseConstantBuffer(ConstantBufferID constant_buffer);
+  void ExpectReleaseCommandList(CommandListID command_list);
 
   // Activations
   void ExpectActivateViewPort(ViewPortID viewport);
@@ -124,8 +129,7 @@ namespace RenderDeviceMock {
                                   uint32_t vertex_offset = 0);
 
   // Render
-  void ExpectBegin();
-  void ExpectEnd();
+  void ExpectExecuteCommandList(CommandListID commands);
   void ExpectPresent();
 }
 

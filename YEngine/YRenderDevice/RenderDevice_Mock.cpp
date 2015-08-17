@@ -53,6 +53,10 @@ namespace {
                                                   void* buffer,
                                                   size_t buffer_size) = 0;
 
+    // Command List
+    virtual void BeginRecord() = 0;
+    virtual CommandListID EndRecord() = 0;
+
     // Modifiers
     virtual void SetViewPort(ViewPortID viewport,
                              uint32_t top, uint32_t left,
@@ -100,6 +104,7 @@ namespace {
     virtual void ReleaseVertexBuffer(VertexBufferID vertex_buffer) = 0;
     virtual void ReleaseIndexBuffer(IndexBufferID index_buffer) = 0;
     virtual void ReleaseConstantBuffer(ConstantBufferID constant_buffer) = 0;
+    virtual void ReleaseCommandList(CommandListID command_list) = 0;
 
     // Activations
     virtual void ActivateViewPort(ViewPortID viewport) = 0;
@@ -133,8 +138,7 @@ namespace {
                                       uint32_t vertex_offset) = 0;
 
     // Render
-    virtual void Begin() = 0;
-    virtual void End() = 0;
+    virtual void ExecuteCommandList(CommandListID commands) = 0;
     virtual void Present() = 0;
   };
 
@@ -179,6 +183,10 @@ namespace {
     MOCK_METHOD4(CreateConstantBuffer,
                  ConstantBufferID(UsageType type, size_t size,
                                   void* buffer, size_t buffer_size));
+
+    // Command List
+    MOCK_METHOD0(BeginRecord, void());
+    MOCK_METHOD0(EndRecord, CommandListID());
 
     // Modifiers
     MOCK_METHOD7(SetViewPort, void(ViewPortID viewport,
@@ -229,6 +237,7 @@ namespace {
     MOCK_METHOD1(ReleaseVertexBuffer, void(VertexBufferID vertex_buffer));
     MOCK_METHOD1(ReleaseIndexBuffer, void(IndexBufferID index_buffer));
     MOCK_METHOD1(ReleaseConstantBuffer, void(ConstantBufferID constant_buffer));
+    MOCK_METHOD1(ReleaseCommandList, void(CommandListID command_list));
 
     // Activations
     MOCK_METHOD1(ActivateViewPort, void(ViewPortID viewport));
@@ -261,8 +270,7 @@ namespace {
                      uint32_t vertex_offset));
 
     // Render
-    MOCK_METHOD0(Begin, void());
-    MOCK_METHOD0(End, void());
+    MOCK_METHOD1(ExecuteCommandList, void(CommandListID commands));
     MOCK_METHOD0(Present, void());
   };
 
@@ -297,6 +305,8 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   EXPECT_CALL(*gMockRenderDevice, CreateVertexBuffer(_, _, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, CreateIndexBuffer(_, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, CreateConstantBuffer(_, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, BeginRecord()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, EndRecord()).Times(0);
   EXPECT_CALL(*gMockRenderDevice, SetViewPort(_, _, _, _, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, FillTexture(_, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, FillTextureMip(_, _, _, _)).Times(0);
@@ -321,6 +331,7 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   EXPECT_CALL(*gMockRenderDevice, ReleaseVertexBuffer(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ReleaseIndexBuffer(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ReleaseConstantBuffer(_)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ReleaseCommandList(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateViewPort(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateRenderBlendState(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateRenderTarget(_, _)).Times(0);
@@ -337,8 +348,7 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   EXPECT_CALL(*gMockRenderDevice, DrawInstanced(_, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, DrawIndexed(_, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, DrawIndexedInstanced(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, Begin()).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, End()).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ExecuteCommandList(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, Present()).Times(0);
 }
 
@@ -427,6 +437,14 @@ ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type, size_t size,
                                                     size_t buffer_size) {
   return gMockRenderDevice->CreateConstantBuffer(type, size,
                                                  buffer, buffer_size);
+}
+
+void RenderDevice::BeginRecord() {
+  gMockRenderDevice->BeginRecord();
+}
+
+CommandListID RenderDevice::EndRecord() {
+  return gMockRenderDevice->EndRecord();
 }
 
 void RenderDevice::SetViewPort(ViewPortID viewport,
@@ -558,6 +576,10 @@ void RenderDevice::ReleaseConstantBuffer(ConstantBufferID constant_buffer) {
   gMockRenderDevice->ReleaseConstantBuffer(constant_buffer);
 }
 
+void RenderDevice::ReleaseCommandList(CommandListID command_list) {
+  gMockRenderDevice->ReleaseCommandList(command_list);
+}
+
 void RenderDevice::ActivateViewPort(ViewPortID viewport) {
   gMockRenderDevice->ActivateViewPort(viewport);
 }
@@ -637,12 +659,8 @@ void RenderDevice::DrawIndexedInstanced(uint32_t start_index,
                                           vertex_offset);
 }
 
-void RenderDevice::Begin() {
-  gMockRenderDevice->Begin();
-}
-
-void RenderDevice::End() {
-  gMockRenderDevice->End();
+void RenderDevice::ExecuteCommandList(CommandListID commands) {
+  gMockRenderDevice->ExecuteCommandList(commands);
 }
 
 void RenderDevice::Present() {
@@ -760,6 +778,17 @@ void RenderDeviceMock::ExpectCreateConstantBuffer(ConstantBufferID ret,
                                                   size_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateConstantBuffer(type, size,
                                                       buffer, buffer_size))
+      .Times(1)
+      .WillOnce(Return(ret));
+}
+
+void RenderDeviceMock::ExpectBeginRecord() {
+  EXPECT_CALL(*gMockRenderDevice, BeginRecord())
+      .Times(1);
+}
+
+void RenderDeviceMock::ExpectEndRecord(CommandListID ret) {
+  EXPECT_CALL(*gMockRenderDevice, EndRecord())
       .Times(1)
       .WillOnce(Return(ret));
 }
@@ -924,6 +953,11 @@ void RenderDeviceMock::ExpectReleaseConstantBuffer(
       .Times(1);
 }
 
+void RenderDeviceMock::ExpectReleaseCommandList(CommandListID command_list) {
+  EXPECT_CALL(*gMockRenderDevice, ReleaseCommandList(command_list))
+      .Times(1);
+}
+
 void RenderDeviceMock::ExpectActivateViewPort(ViewPortID viewport) {
   EXPECT_CALL(*gMockRenderDevice, ActivateViewPort(viewport))
       .Times(1);
@@ -1026,12 +1060,8 @@ void RenderDeviceMock::ExpectDrawIndexedInstanced(uint32_t start_index,
       .Times(1);
 }
 
-void RenderDeviceMock::ExpectBegin() {
-  EXPECT_CALL(*gMockRenderDevice, Begin()).Times(1);
-}
-
-void RenderDeviceMock::ExpectEnd() {
-  EXPECT_CALL(*gMockRenderDevice, End()).Times(1);
+void RenderDeviceMock::ExpectExecuteCommandList(CommandListID commands) {
+  EXPECT_CALL(*gMockRenderDevice, ExecuteCommandList(commands)).Times(1);
 }
 
 void RenderDeviceMock::ExpectPresent() {

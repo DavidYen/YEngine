@@ -18,6 +18,7 @@ typedef uint8_t VertexDeclID;
 typedef uint8_t VertexShaderID;
 typedef uint8_t PixelShaderID;
 typedef uint8_t SamplerStateID;
+typedef uint8_t CommandListID;
 typedef uint16_t TextureID;
 typedef uint16_t VertexBufferID;
 typedef uint16_t IndexBufferID;
@@ -73,6 +74,10 @@ namespace RenderDevice {
                                         void* buffer = NULL,
                                         size_t buffer_size = 0);
 
+  // Command List
+  void BeginRecord();
+  CommandListID EndRecord();
+
   // Modifiers
   void SetViewPort(ViewPortID viewport,
                    uint32_t top, uint32_t left,
@@ -120,6 +125,7 @@ namespace RenderDevice {
   void ReleaseVertexBuffer(VertexBufferID vertex_buffer);
   void ReleaseIndexBuffer(IndexBufferID index_buffer);
   void ReleaseConstantBuffer(ConstantBufferID constant_buffer);
+  void ReleaseCommandList(CommandListID command_list);
 
   // Activations
   void ActivateViewPort(ViewPortID viewport);
@@ -146,8 +152,7 @@ namespace RenderDevice {
                             uint32_t vertex_offset = 0);
 
   // Render
-  void Begin();
-  void End();
+  void ExecuteCommandList(CommandListID commands);
   void Present();
 }
 
