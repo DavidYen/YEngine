@@ -334,14 +334,10 @@ TEST_F(RendererTest, BasicActivationTest) {
   const char render_target_name[] = "test_render_target";
   const YRenderDevice::PixelFormat format =
       static_cast<YRenderDevice::PixelFormat>(456);
-  const YRenderDevice::RenderTargetID render_target_id = 12;
   Renderer::RegisterRenderTarget(render_target_name,
                                  sizeof(render_target_name), format,
                                  kDimensionType_Absolute, 1.0f,
                                  kDimensionType_Percentage, 0.5f);
-  YRenderDevice::RenderDeviceMock::ExpectCreateRenderTarget(render_target_id,
-                                                            1, gTestWidth / 2,
-                                                            format);
 
   // Setup Render Pass
   const char render_pass_name[] = "test_render_pass";
@@ -349,13 +345,10 @@ TEST_F(RendererTest, BasicActivationTest) {
   YRenderDevice::RenderBlendState blend_state;
   const char* render_targets[] = { render_target_name };
   size_t render_target_sizes[] = { sizeof(render_target_name) };
-  const YRenderDevice::RenderBlendStateID blend_state_id = 10;
   Renderer::RegisterRenderPass(render_pass_name, sizeof(render_pass_name),
                                shader_variant, sizeof(shader_variant),
                                blend_state,
                                render_targets, render_target_sizes, 1);
-  YRenderDevice::RenderDeviceMock::ExpectCreateRenderBlendState(
-      blend_state_id, blend_state);
 
   // Setup Render Passes
   const char passes_name[] = "test_render_passes";
@@ -390,18 +383,11 @@ TEST_F(RendererTest, BasicActivationTest) {
 
   EXPECT_TRUE(Renderer::ReleaseRenderType(render_type, sizeof(render_type)));
   EXPECT_TRUE(Renderer::ReleaseVertexData(vertex_data, sizeof(vertex_data)));
-
   EXPECT_TRUE(Renderer::ReleaseRenderPasses(passes_name, sizeof(passes_name)));
-
-  YRenderDevice::RenderDeviceMock::ExpectReleaseRenderBlendState(
-      blend_state_id);
   EXPECT_TRUE(Renderer::ReleaseRenderPass(render_pass_name,
                                           sizeof(render_pass_name)));
-
-  YRenderDevice::RenderDeviceMock::ExpectReleaseRenderTarget(render_target_id);
   EXPECT_TRUE(Renderer::ReleaseRenderTarget(render_target_name,
                                             sizeof(render_target_name)));
-
   EXPECT_TRUE(Renderer::ReleaseViewPort(viewport_name, sizeof(viewport_name)));
 }
 

@@ -16,6 +16,7 @@
 
 #include "RendererCommon.h"
 #include "RenderKeyField.h"
+#include "RenderTarget.h"
 #include "ViewPort.h"
 
 // Hash Table Sizes (~2x maximum)
@@ -62,7 +63,6 @@
 #define MAX_ACTIVE_SHADERS 512
 #define MAX_ACTIVE_RENDERKEYS 1024
 
-#define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
 #define INVALID_BLEND_STATE static_cast<YRenderDevice::RenderBlendStateID>(-1)
 #define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
 #define INVALID_INDEX_BUFFER static_cast<YRenderDevice::IndexBufferID>(-1)
@@ -114,22 +114,13 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<ViewPortInternal> gViewPorts;
 
-  struct RenderTargetInternal : public RefCountBase {
+  class RenderTargetInternal : public RenderTarget, public RefCountBase {
+   public:
     RenderTargetInternal(YRenderDevice::PixelFormat format,
                          DimensionType width_type, float width,
                          DimensionType height_type, float height)
-      : mWidthType(width_type),
-        mWidth(width),
-        mHeightType(height_type),
-        mHeight(height),
-        mFormat(format),
-        mRenderTargetID(INVALID_RENDER_TARGET) {
-    }
-
-    DimensionType mWidthType, mHeightType;
-    float mWidth, mHeight;
-    YRenderDevice::PixelFormat mFormat;
-    YRenderDevice::RenderTargetID mRenderTargetID;
+      : RenderTarget(format, width_type, width, height_type, height),
+        RefCountBase() {}
   };
   YCommon::YContainers::TypedHashTable<RenderTargetInternal> gRenderTargets;
 
@@ -142,6 +133,14 @@ namespace {
     BlendStateInternal(const YRenderDevice::RenderBlendState& blend_state)
       : mBlendState(blend_state),
         mBlendStateID(INVALID_BLEND_STATE) {
+    }
+
+    void Activate() {
+      if (mBlendStateID == INVALID_BLEND_STATE) {
+        mBlendStateID =
+            YRenderDevice::RenderDevice::CreateRenderBlendState(mBlendState);
+      }
+      YRenderDevice::RenderDevice::ActivateRenderBlendState(mBlendStateID);
     }
 
     YRenderDevice::RenderBlendState mBlendState;
@@ -169,6 +168,13 @@ namespace {
              num_render_targets * sizeof(RenderTargetInternal*));
       memset(mShaderVariant, 0, sizeof(mShaderVariant));
       memcpy(mShaderVariant, shader_variant, shader_variant_size);
+    }
+
+    void Activate() {
+      for (uint8_t i = 0; i < mNumRenderTargets; ++i) {
+        mRenderTargets[i]->Activate(i);
+      }
+      mBlendState->Activate();
     }
 
     RenderTargetInternal* mRenderTargets[MAX_RENDERTARGETS_PER_PASS];
@@ -492,6 +498,9 @@ namespace {
     void ExecuteRenderKey(const RenderKeyInternal* prev_render_key) const {
       if (prev_render_key->mViewPort != mViewPort) {
         mViewPort->Activate();
+      }
+      if (prev_render_key->mRenderPass != mRenderPass) {
+        mRenderPass->Activate();
       }
     }
 
@@ -895,8 +904,8 @@ void Renderer::RegisterRenderPass(
 
     RenderTargetInternal* targets[MAX_RENDERTARGETS_PER_PASS] = { nullptr };
     for (size_t i = 0; i < num_targets; ++i) {
-      RenderTargetInternal* target =
-      target = gRenderTargets.GetValue(render_targets[i], target_sizes[i]);
+      RenderTargetInternal* target = gRenderTargets.GetValue(render_targets[i],
+                                                             target_sizes[i]);
       YASSERT(target != nullptr,
               "Render Target (%s) could not be found for render pass (%s).",
               render_targets[i], name);
@@ -1301,10 +1310,7 @@ bool Renderer::ReleaseRenderTarget(const char* name, size_t name_size) {
   RenderTargetInternal* render_target = gRenderTargets.GetValue(name_hash);
   YASSERT(render_target, "Releasing an invalid render target: %s", name);
   if (render_target->DecRef()) {
-    if (render_target->mRenderTargetID != INVALID_RENDER_TARGET) {
-      YRenderDevice::RenderDevice::ReleaseRenderTarget(
-          render_target->mRenderTargetID);
-    }
+    render_target->Release();
     return gRenderTargets.Remove(name_hash);
   }
   return false;
@@ -1595,35 +1601,6 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
 
   ActivePassesInternal* active_passes = gActivePasses.GetValue(name, name_size);
   YASSERT(active_passes, "Unknown Render Passes Name: %s", name);
-  const uint8_t num_passes = active_passes->mNumRenderPasses;
-  for (uint8_t i = 0; i < num_passes; ++i) {
-    RenderPassInternal* render_pass = active_passes->mRenderPasses[i];
-
-    BlendStateInternal* blend_state = render_pass->mBlendState;
-    if (blend_state->mBlendStateID == INVALID_BLEND_STATE) {
-      YDEBUG_CHECK(blend_state = gBlendStates.GetValue(blend_state->mBlendState),
-                   "Sanity blend state existance check failed.");
-      blend_state->mBlendStateID =
-          YRenderDevice::RenderDevice::CreateRenderBlendState(
-              blend_state->mBlendState);
-    }
-
-    const uint8_t num_render_targets = render_pass->mNumRenderTargets;
-    for (uint8_t n = 0; n < num_render_targets; ++n) {
-      RenderTargetInternal* render_target = render_pass->mRenderTargets[n];
-      if (render_target->mRenderTargetID == INVALID_RENDER_TARGET) {
-        render_target->mRenderTargetID =
-            YRenderDevice::RenderDevice::CreateRenderTarget(
-                GetDimensionValue(frame_width,
-                                  render_target->mWidthType,
-                                  render_target->mWidth),
-                GetDimensionValue(frame_width,
-                                  render_target->mHeightType,
-                                  render_target->mHeight),
-                render_target->mFormat);
-      }
-    }
-  }
   active_passes->IncRef();
   gActiveRenderPasses = active_passes;
 
@@ -1642,6 +1619,7 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
     }
 
     // Iterate through active render passes
+    const uint8_t num_passes = active_passes->mNumRenderPasses;
     RenderTypeInternal* render_type = render_obj->mRenderType;
     for (uint8_t pass_index = 0; pass_index < num_passes; ++pass_index) {
       RenderPassInternal* render_pass =
