@@ -1,6 +1,7 @@
 
 source_set("YRenderer_Common") {
   sources = [
+    "BlendState.cpp",
     "Renderer.cpp",
     "RendererCommon.cpp",
     "RenderTarget.cpp",
@@ -22,6 +23,7 @@ static_library("YRenderer") {
 
 unit_test("YRenderer_Test") {
   sources = [
+    "BlendState_Test.cpp",
     "Renderer_Test.cpp",
     "RenderTarget_Test.cpp",
     "ViewPort_Test.cpp",
