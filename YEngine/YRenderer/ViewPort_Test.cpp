@@ -3,52 +3,15 @@
 
 #include <gtest/gtest.h>
 
-#include <YCommon/YContainers/MemBuffer.h>
-#include <YCommon/YPlatform/PlatformHandle.h>
 #include <YEngine/YRenderDevice/RenderDevice_Mock.h>
-#include <YEngine/YRenderDevice/RenderDevice.h>
+
+#include "BasicRendererTest.h"
 
 namespace YEngine { namespace YRenderer {
 
-namespace {
-  const uint32_t gTestWidth = 128;
-  const uint32_t gTestHeight = 128;
-};
+class ViewPortTest : public BasicRendererTest {};
 
-class ViewPortTest : public ::testing::Test {
- protected:
-  ViewPortTest()
-    : mBuffer(nullptr) {
-    memset(&mHandle, 0, sizeof(mHandle));
-  }
-
-  ~ViewPortTest() override {
-    delete [] mBuffer;
-  }
-
-  void SetUp() override {
-    delete [] mBuffer;
-    mBuffer = new uint8_t[1024 * 10];
-    mMemBuffer.Init(mBuffer, 10240);
-    YRenderDevice::RenderDevice::Initialize(mHandle, gTestWidth, gTestHeight,
-                                            mMemBuffer.Allocate(10240), 10240);
-  }
-
-  void TearDown() override {
-    YRenderDevice::RenderDevice::Terminate();
-
-    mMemBuffer.Reset();
-
-    delete [] mBuffer;
-    mBuffer = nullptr;
-  }
-
-  void* mBuffer;
-  YCommon::YContainers::MemBuffer mMemBuffer;
-  YCommon::YPlatform::PlatformHandle mHandle;
-};
-
-TEST_F(ViewPortTest, EmptyRelease) {
+TEST_F(ViewPortTest, ViewPortEmptyRelease) {
   ViewPort viewport(kDimensionType_Absolute, 1.0f,
                     kDimensionType_Absolute, 2.0f,
                     kDimensionType_Absolute, 3.0f,
@@ -58,7 +21,7 @@ TEST_F(ViewPortTest, EmptyRelease) {
   viewport.Release();
 }
 
-TEST_F(ViewPortTest, ActivationTest) {
+TEST_F(ViewPortTest, ViewPortActivationTest) {
   ViewPort viewport(kDimensionType_Absolute, 1.0f,
                     kDimensionType_Absolute, 2.0f,
                     kDimensionType_Absolute, 3.0f,
@@ -84,10 +47,9 @@ TEST_F(ViewPortTest, ActivationTest) {
                        kDimensionType_Percentage, 1.0f,
                        0.2f, 0.9f);
   const YRenderDevice::ViewPortID viewport_id2 = 234;
-  YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(viewport_id2,
-                                                        4, gTestWidth * 3,
-                                                        2, gTestHeight * 1,
-                                                        0.2f, 0.9f);
+  YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(
+      viewport_id2, 4, BASIC_RENDERER_WIDTH * 3,
+      2, BASIC_RENDERER_HEIGHT * 1, 0.2f, 0.9f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id2);
   viewport.Activate();
 
@@ -97,10 +59,9 @@ TEST_F(ViewPortTest, ActivationTest) {
                        kDimensionType_Absolute, 6.0f,
                        kDimensionType_Percentage, 8.0f,
                        0.3f, 0.8f);
-  YRenderDevice::RenderDeviceMock::ExpectSetViewPort(viewport_id,
-                                                     2, gTestWidth * 4,
-                                                     6, gTestHeight * 8,
-                                                     0.3f, 0.8f);
+  YRenderDevice::RenderDeviceMock::ExpectSetViewPort(
+      viewport_id, 2, BASIC_RENDERER_WIDTH * 4,
+      6, BASIC_RENDERER_HEIGHT * 8, 0.3f, 0.8f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id);
   viewport.Activate();
 
@@ -110,10 +71,9 @@ TEST_F(ViewPortTest, ActivationTest) {
                        kDimensionType_Absolute, 9.0f,
                        kDimensionType_Percentage, 12.0f,
                        0.3f, 0.8f);
-  YRenderDevice::RenderDeviceMock::ExpectSetViewPort(viewport_id2,
-                                                     3, gTestWidth * 6,
-                                                     9, gTestHeight * 12,
-                                                     0.3f, 0.8f);
+  YRenderDevice::RenderDeviceMock::ExpectSetViewPort(
+      viewport_id2, 3, BASIC_RENDERER_WIDTH * 6,
+      9, BASIC_RENDERER_HEIGHT * 12, 0.3f, 0.8f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id2);
   viewport.Activate();
 

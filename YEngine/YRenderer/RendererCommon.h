@@ -13,11 +13,6 @@ enum DimensionType {
 uint32_t GetDimensionValue(uint32_t frame_value, DimensionType type,
                            float value);
 
-enum ActivationState {
-  kActivationState_Unactivated, // Current state not activated our out of date.
-  kActivationState_Activated, // Currently active and up to date.
-};
-
 }} // namespace YEngine { namespace YRenderer {
 
 #endif // YENGINE_YRENDERER_RENDERERCOMMON_H

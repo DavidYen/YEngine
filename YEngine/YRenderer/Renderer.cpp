@@ -62,7 +62,6 @@
 #define MAX_ACTIVE_SHADERS 512
 #define MAX_ACTIVE_RENDERKEYS 1024
 
-#define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
 #define INVALID_BLEND_STATE static_cast<YRenderDevice::RenderBlendStateID>(-1)
 #define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)

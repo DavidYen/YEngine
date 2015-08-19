@@ -20,14 +20,14 @@ ViewPort::ViewPort(DimensionType top_type, float top,
     mLeftType(left_type),
     mWidthType(width_type),
     mHeightType(height_type),
-    mActivationState(kActivationState_Unactivated),
+    mDirty(true),
     mActiveViewPortIndex(0) {
   mViewPortIDs[0] = INVALID_VIEWPORT;
   mViewPortIDs[1] = INVALID_VIEWPORT;
 }
 
 void ViewPort::Release() {
-  mActivationState = kActivationState_Unactivated;
+  mDirty = true;
   for (int i = 0; i < ARRAY_SIZE(mViewPortIDs); ++i) {
     if (mViewPortIDs[i] != INVALID_VIEWPORT) {
       YRenderDevice::RenderDevice::ReleaseViewPort(mViewPortIDs[i]);
@@ -51,11 +51,11 @@ void ViewPort::SetViewPort(DimensionType top_type, float top,
   mWidthType = width_type;
   mHeightType = height_type;
 
-  mActivationState = kActivationState_Unactivated;
+  mDirty = true;
 }
 
 void ViewPort::Activate() {
-  if (mActivationState != kActivationState_Activated) {
+  if (mDirty) {
     uint32_t frame_width, frame_height;
     YRenderDevice::RenderDevice::GetFrameBufferDimensions(frame_width,
                                                           frame_height);
@@ -73,7 +73,7 @@ void ViewPort::Activate() {
           mViewPortIDs[mActiveViewPortIndex], t, l, w, h, mMinZ, mMaxZ);
     }
 
-    mActivationState = kActivationState_Activated;
+    mDirty = false;
   }
 
   YRenderDevice::RenderDevice::ActivateViewPort(

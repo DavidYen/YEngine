@@ -3,6 +3,7 @@ source_set("YRenderer_Common") {
   sources = [
     "Renderer.cpp",
     "RendererCommon.cpp",
+    "RenderTarget.cpp",
     "ViewPort.cpp",
   ]
 
@@ -22,6 +23,7 @@ static_library("YRenderer") {
 unit_test("YRenderer_Test") {
   sources = [
     "Renderer_Test.cpp",
+    "RenderTarget_Test.cpp",
     "ViewPort_Test.cpp",
   ]
 

@@ -27,7 +27,7 @@ class ViewPort {
  private:
   float mTop, mLeft, mWidth, mHeight, mMinZ, mMaxZ;
   DimensionType mTopType, mLeftType, mWidthType, mHeightType;
-  ActivationState mActivationState;
+  bool mDirty;
   uint8_t mActiveViewPortIndex;
   YRenderDevice::ViewPortID mViewPortIDs[2];
 };
