@@ -16,6 +16,7 @@
 
 #include "RendererCommon.h"
 #include "RenderKeyField.h"
+#include "RenderStateCache.h"
 #include "RenderTarget.h"
 #include "ViewPort.h"
 
@@ -129,34 +130,14 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<BackBufferInternal> gBackBufferNames;
 
-  struct BlendStateInternal : public RefCountBase {
-    BlendStateInternal(const YRenderDevice::RenderBlendState& blend_state)
-      : mBlendState(blend_state),
-        mBlendStateID(INVALID_BLEND_STATE) {
-    }
-
-    void Activate() {
-      if (mBlendStateID == INVALID_BLEND_STATE) {
-        mBlendStateID =
-            YRenderDevice::RenderDevice::CreateRenderBlendState(mBlendState);
-      }
-      YRenderDevice::RenderDevice::ActivateRenderBlendState(mBlendStateID);
-    }
-
-    YRenderDevice::RenderBlendState mBlendState;
-    YRenderDevice::RenderBlendStateID mBlendStateID;
-  };
-  YCommon::YContainers::FullTypedHashTable<YRenderDevice::RenderBlendState,
-                                           BlendStateInternal> gBlendStates;
-
   struct RenderPassInternal : public RefCountBase {
-    RenderPassInternal(BlendStateInternal* blend_state,
+    RenderPassInternal(uint64_t blend_state_hash,
                        const char* shader_variant,
                        uint8_t shader_variant_size,
                        RenderTargetInternal** render_targets,
                        uint8_t num_render_targets)
       : RefCountBase(),
-        mBlendState(blend_state),
+        mBlendStateHash(blend_state_hash),
         mNumRenderTargets(num_render_targets),
         mShaderVariantSize(shader_variant_size) {
       YASSERT(num_render_targets < ARRAY_SIZE(mRenderTargets),
@@ -171,14 +152,16 @@ namespace {
     }
 
     void Activate() {
+      YRenderDevice::RenderDevice::ActivateRenderBlendState(
+          RenderStateCache::GetBlendStateID(mBlendStateHash));
+
       for (uint8_t i = 0; i < mNumRenderTargets; ++i) {
         mRenderTargets[i]->Activate(i);
       }
-      mBlendState->Activate();
     }
 
     RenderTargetInternal* mRenderTargets[MAX_RENDERTARGETS_PER_PASS];
-    BlendStateInternal* mBlendState;
+    uint64_t mBlendStateHash;
     char mShaderVariant[MAX_SHADER_VARIANT_NAME];
     uint8_t mNumRenderTargets;
     uint8_t mShaderVariantSize;
@@ -727,6 +710,11 @@ void DeactivateRenderObjects() {
 
 void Renderer::Initialize(void* buffer, size_t buffer_size) {
   gMemBuffer.Init(buffer, buffer_size);
+  const size_t state_cache_size = RenderStateCache::GetAllocationSize();
+  void* state_cache_buffer = gMemBuffer.Allocate(state_cache_size);
+  YASSERT(state_cache_buffer,
+          "Not enough space to allocate render state cache.");
+  RenderStateCache::Initialize(state_cache_buffer, state_cache_size);
 
   INITIALIZE_ARRAY(gRenderObjArray, MAX_ACTIVE_RENDEROBJS, "Render Object");
   INITIALIZE_ARRAY(gViewPortArray, MAX_ACTIVE_VIEWPORTS, "View Port");
@@ -742,7 +730,6 @@ void Renderer::Initialize(void* buffer, size_t buffer_size) {
   INITIALIZE_TABLE(gViewPorts, VIEWPORTS_SIZE, "ViewPorts");
   INITIALIZE_TABLE(gRenderTargets, RENDERTARGETS_SIZE, "Render Targets");
   INITIALIZE_TABLE(gBackBufferNames, BACKBUFFERNAMES_SIZE, "Back Buffer Names");
-  INITIALIZE_TABLE(gBlendStates, BLENDSTATES_SIZE, "Blend States");
   INITIALIZE_TABLE(gRenderPasses, RENDERPASSES_SIZE, "Render Pass");
   INITIALIZE_TABLE(gVertexDecls, VERTEXDECLS_SIZE, "Vertex Declaration");
   INITIALIZE_TABLE(gShdrFloatParams, FLOATPARAMS_SIZE, "Shader Float Params");
@@ -796,7 +783,6 @@ void Renderer::Terminate() {
   gShdrFloatParams.Reset();
   gVertexDecls.Reset();
   gRenderPasses.Reset();
-  gBlendStates.Reset();
   gBackBufferNames.Reset();
   gRenderTargets.Reset();
   gViewPorts.Reset();
@@ -808,6 +794,9 @@ void Renderer::Terminate() {
   gVertexDeclArray.Reset();
   gViewPortArray.Reset();
   gRenderObjArray.Reset();
+
+  RenderStateCache::Terminate();
+  gMemBuffer.Reset();
 }
 
 void Renderer::SetupRenderKey(const RenderKeyField* fields, size_t num_fields) {
@@ -881,14 +870,7 @@ void Renderer::RegisterRenderPass(
     const YRenderDevice::RenderBlendState& blend_state,
     const char** render_targets, size_t* target_sizes,
     size_t num_targets) {
-  const uint64_t blend_hash =
-      YCommon::YUtils::Hash::Hash64(&blend_state, sizeof(blend_state));
-  BlendStateInternal* blend_state_internal = gBlendStates.GetValue(blend_hash);
-  if (nullptr == blend_state_internal) {
-    BlendStateInternal new_blend_state(blend_state);
-    blend_state_internal = gBlendStates.Insert(blend_hash, new_blend_state);
-  }
-  blend_state_internal->IncRef();
+  const uint64_t blend_hash = RenderStateCache::InsertBlendState(blend_state);
 
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   RenderPassInternal* render_pass = gRenderPasses.GetValue(name_hash);
@@ -912,7 +894,7 @@ void Renderer::RegisterRenderPass(
       target->IncRef();
       targets[i] = target;
     }
-    RenderPassInternal new_render_pass(blend_state_internal, shader_variant,
+    RenderPassInternal new_render_pass(blend_hash, shader_variant,
                                        static_cast<uint8_t>(variant_size),
                                        targets,
                                        static_cast<uint8_t>(num_targets));
@@ -1338,17 +1320,6 @@ bool Renderer::ReleaseRenderPass(const char* name, size_t name_size) {
       YASSERT(!released,
               "Render target released before referenced render pass (%s).",
               name);
-    }
-
-    // Decrement Blend State Reference.
-    BlendStateInternal* blend_state = render_pass->mBlendState;
-    if (blend_state->DecRef()) {
-      if (blend_state->mBlendStateID != INVALID_BLEND_STATE) {
-        YRenderDevice::RenderDevice::ReleaseRenderBlendState(
-            blend_state->mBlendStateID);
-      }
-      const bool released = gBlendStates.Remove(blend_state->mBlendState);
-      YDEBUG_CHECK(released, "Sanity blend state removal check failed.");
     }
 
     return gRenderPasses.Remove(name_hash);
