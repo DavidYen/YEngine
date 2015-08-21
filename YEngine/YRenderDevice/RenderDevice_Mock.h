@@ -23,7 +23,7 @@ namespace RenderDeviceMock {
                                 uint32_t width, uint32_t height,
                                 PixelFormat format);
   void ExpectCreateVertexDeclaration(VertexDeclID ret,
-                                     VertexDeclElement* elements,
+                                     const VertexDeclElement* elements,
                                      size_t num_elements);
   void ExpectCreateVertexShader(VertexShaderID ret, const void* shader_data,
                                 size_t shader_size);
@@ -33,17 +33,18 @@ namespace RenderDeviceMock {
   void ExpectCreateTexture(TextureID ret,
                            UsageType type, uint32_t width, uint32_t height,
                            uint32_t mips, PixelFormat format,
-                           void* buffer = NULL, size_t buffer_size = 0);
+                           const void* buffer = NULL, size_t buffer_size = 0);
   void ExpectCreateVertexBuffer(VertexBufferID ret,
                                 UsageType type, uint32_t stride,
-                                uint32_t count, void* buffer = NULL,
+                                uint32_t count, const void* buffer = NULL,
                                 size_t buffer_size = 0);
   void ExpectCreateIndexBuffer(IndexBufferID ret,
                                UsageType type, uint32_t count,
-                               void* buffer = NULL, size_t buffer_size = 0);
+                               const void* buffer = NULL,
+                               size_t buffer_size = 0);
   void ExpectCreateConstantBuffer(ConstantBufferID ret,
                                   UsageType type, size_t size,
-                                  void* buffer = NULL,
+                                  const void* buffer = NULL,
                                   size_t buffer_size = 0);
 
   // Command List
@@ -56,25 +57,25 @@ namespace RenderDeviceMock {
                          uint32_t width, uint32_t height,
                          float min_z, float max_z);
   void ExpectFillTexture(TextureID texture,
-                         void* buffer, size_t size);
+                         const void* buffer, size_t size);
   void ExpectFillTextureMip(TextureID texture, uint32_t mip,
-                            void* buffer, size_t size);
+                            const void* buffer, size_t size);
   void ExpectResetVertexBuffer(VertexBufferID vertex_buffer);
   void ExpectAppendVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                               void* buffer, size_t buffer_size,
+                               const void* buffer, size_t buffer_size,
                                uint32_t* starting_offset);
   void ExpectFillVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                             void* buffer, size_t buffer_size,
+                             const void* buffer, size_t buffer_size,
                              uint32_t index_offset = 0);
   void ExpectResetIndexBuffer(IndexBufferID index_buffer);
   void ExpectAppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                               void* buffer, size_t buffer_size,
+                               const void* buffer, size_t buffer_size,
                                uint32_t* starting_offset);
   void ExpectFillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                             void* buffer, size_t buffer_size,
+                             const void* buffer, size_t buffer_size,
                              uint32_t index_offset = 0);
   void ExpectFillConstantBuffer(ConstantBufferID constant_buffer,
-                                void* buffer, size_t size);
+                                const void* buffer, size_t size);
 
   // Accessors
   void ExpectGetViewPort(ViewPortID viewport,

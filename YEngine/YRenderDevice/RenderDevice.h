@@ -56,7 +56,7 @@ namespace RenderDevice {
   RenderBlendStateID CreateRenderBlendState(const RenderBlendState& state);
   RenderTargetID CreateRenderTarget(uint32_t width, uint32_t height,
                                     PixelFormat format);
-  VertexDeclID CreateVertexDeclaration(VertexDeclElement* elements,
+  VertexDeclID CreateVertexDeclaration(const VertexDeclElement* elements,
                                        size_t num_elements);
   VertexShaderID CreateVertexShader(const void* shader_data,
                                     size_t shader_size);
@@ -64,14 +64,15 @@ namespace RenderDevice {
   SamplerStateID CreateSamplerState(const SamplerState& state);
   TextureID CreateTexture(UsageType type, uint32_t width, uint32_t height,
                           uint32_t mips, PixelFormat format,
-                          void* buffer = NULL, size_t buffer_size = 0);
+                          const void* buffer = NULL, size_t buffer_size = 0);
   VertexBufferID CreateVertexBuffer(UsageType type, uint32_t stride,
-                                    uint32_t count, void* buffer = NULL,
+                                    uint32_t count, const void* buffer = NULL,
                                     size_t buffer_size = 0);
   IndexBufferID CreateIndexBuffer(UsageType type, uint32_t count,
-                                  void* buffer = NULL, size_t buffer_size = 0);
+                                  const void* buffer = NULL,
+                                  size_t buffer_size = 0);
   ConstantBufferID CreateConstantBuffer(UsageType type, size_t size,
-                                        void* buffer = NULL,
+                                        const void* buffer = NULL,
                                         size_t buffer_size = 0);
 
   // Command List
@@ -84,25 +85,25 @@ namespace RenderDevice {
                    uint32_t width, uint32_t height,
                    float min_z, float max_z);
   void FillTexture(TextureID texture,
-                   void* buffer, size_t size);
+                   const void* buffer, size_t size);
   void FillTextureMip(TextureID texture, uint32_t mip,
-                      void* buffer, size_t size);
+                      const void* buffer, size_t size);
   void ResetVertexBuffer(VertexBufferID vertex_buffer);
   void AppendVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                          void* buffer, size_t buffer_size,
+                          const void* buffer, size_t buffer_size,
                           uint32_t* starting_offset);
   void FillVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                        void* buffer, size_t buffer_size,
+                        const void* buffer, size_t buffer_size,
                         uint32_t index_offset = 0);
   void ResetIndexBuffer(IndexBufferID index_buffer);
   void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                        void* buffer, size_t buffer_size,
+                        const void* buffer, size_t buffer_size,
                         uint32_t* starting_offset);
   void FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                       void* buffer, size_t buffer_size,
+                       const void* buffer, size_t buffer_size,
                        uint32_t index_offset = 0);
   void FillConstantBuffer(ConstantBufferID constant_buffer,
-                          void* buffer, size_t size);
+                          const void* buffer, size_t size);
 
   // Accessors
   void GetFrameBufferDimensions(uint32_t& width, uint32_t& height);

@@ -589,8 +589,8 @@ RenderTargetID RenderDevice::CreateRenderTarget(uint32_t width, uint32_t height,
   return surface_id;
 }
 
-VertexDeclID RenderDevice::CreateVertexDeclaration(VertexDeclElement* elements,
-                                                   size_t num_elements) {
+VertexDeclID RenderDevice::CreateVertexDeclaration(
+    const VertexDeclElement* elements, size_t num_elements) {
   YASSERT(num_elements < MAX_ELEMENTS_PER_VERTEX,
           "Maximum number of elements per vertex declaration is %u, %u given.",
           static_cast<uint32_t>(MAX_ELEMENTS_PER_VERTEX),
@@ -711,7 +711,7 @@ SamplerStateID RenderDevice::CreateSamplerState(const SamplerState& state) {
 TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
                                       uint32_t height, uint32_t mips,
                                       PixelFormat format,
-                                      void* buffer, size_t buffer_size) {
+                                      const void* buffer, size_t buffer_size) {
   YASSERT(format > 0 && format < ARRAY_SIZE(kTextureFormats),
           "Invalid Pixel Format: %d", static_cast<int>(format));
   const D3DFORMAT d3d_format = kTextureFormats[format];
@@ -774,7 +774,8 @@ TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
 }
 
 VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
-                                                uint32_t count, void* buffer,
+                                                uint32_t count,
+                                                const void* buffer,
                                                 size_t buffer_size) {
   const VertexBufferID vert_id = gVertexBuffers.AllocateID();
   YASSERT(vert_id != static_cast<VertexBufferID>(-1),
@@ -828,7 +829,7 @@ VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
 }
 
 IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
-                                              void* buffer,
+                                              const void* buffer,
                                               size_t buffer_size) {
   const IndexBufferID indx_id = gIndexBuffers.AllocateID();
   YASSERT(indx_id != static_cast<IndexBufferID>(-1),
@@ -881,7 +882,7 @@ IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
 }
 
 ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type, size_t size,
-                                                    void* buffer,
+                                                    const void* buffer,
                                                     size_t buffer_size) {
   const ConstantBufferID buff_id = gConstBuffers.AllocateID();
   YASSERT(buff_id != static_cast<ConstantBufferID>(-1),
@@ -935,7 +936,8 @@ void RenderDevice::SetViewPort(ViewPortID viewport,
   gViewPorts[viewport].SetData(top, left, width, height, min_z, max_z);
 }
 
-void RenderDevice::FillTexture(TextureID texture, void* buffer, size_t size) {
+void RenderDevice::FillTexture(TextureID texture, const void* buffer,
+                               size_t size) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Filling Invalid Texture ID: %d.", static_cast<int>(texture));
 
@@ -968,7 +970,7 @@ void RenderDevice::FillTexture(TextureID texture, void* buffer, size_t size) {
 }
 
 void RenderDevice::FillTextureMip(TextureID texture, uint32_t mip,
-                                  void* buffer, size_t size) {
+                                  const void* buffer, size_t size) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Filling Invalid Texture ID: %d.", static_cast<int>(texture));
 
@@ -1020,7 +1022,7 @@ void RenderDevice::ResetVertexBuffer(VertexBufferID vertex_buffer) {
 
 void RenderDevice::AppendVertexBuffer(VertexBufferID vertex_buffer,
                                       uint32_t count,
-                                      void* buffer, size_t buffer_size,
+                                      const void* buffer, size_t buffer_size,
                                       uint32_t* starting_offset) {
   YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
           gVertexBuffers.used[vertex_buffer],
@@ -1041,7 +1043,7 @@ void RenderDevice::AppendVertexBuffer(VertexBufferID vertex_buffer,
 
 void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
                                     uint32_t count,
-                                    void* buffer, size_t buffer_size,
+                                    const void* buffer, size_t buffer_size,
                                     uint32_t index_offset) {
   HRESULT hr = E_FAIL;
 
@@ -1112,7 +1114,7 @@ void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
 }
 
 void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                     void* buffer, size_t buffer_size,
+                                     const void* buffer, size_t buffer_size,
                                      uint32_t* starting_offset) {
   YASSERT(index_buffer < ARRAY_SIZE(gIndexBuffers.used) &&
           gIndexBuffers.used[index_buffer],
@@ -1131,7 +1133,7 @@ void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
 }
 
 void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                   void* buffer, size_t buffer_size,
+                                   const void* buffer, size_t buffer_size,
                                    uint32_t index_offset) {
   HRESULT hr = E_FAIL;
 
@@ -1191,7 +1193,7 @@ void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
 }
 
 void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
-                                      void* buffer, size_t size) {
+                                      const void* buffer, size_t size) {
    YASSERT(constant_buffer < ARRAY_SIZE(gConstBuffers.used) &&
           gConstBuffers.used[constant_buffer],
           "Filling Invalid Constant Buffer ID: %d.",
