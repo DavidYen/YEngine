@@ -25,6 +25,7 @@ static_library("YRenderer") {
 unit_test("YRenderer_Test") {
   sources = [
     "Renderer_Test.cpp",
+    "RenderStateCache_Test.cpp",
     "RenderTarget_Test.cpp",
     "ShaderData_Test.cpp",
     "ViewPort_Test.cpp",

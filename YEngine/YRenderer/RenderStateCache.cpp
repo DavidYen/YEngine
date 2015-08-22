@@ -126,9 +126,21 @@ uint64_t RenderStateCache::InsertSamplerState(
   if (nullptr == cached_sampler_state) {
     SamplerStateInternal new_state = { sampler_state, INVALID_SAMPLER_STATE };
     const uint32_t index = gSamplerStateCache.Insert(new_state);
-    gBlendStateHash.Insert(sampler_hash, index);
+    gSamplerStateHash.Insert(sampler_hash, index);
   }
   return sampler_hash;
+}
+
+const YRenderDevice::RenderBlendState* RenderStateCache::GetBlendState(
+    uint64_t blend_hash) {
+  uint32_t* index = gBlendStateHash.GetValue(blend_hash);
+  return index ? &gBlendStateCache[*index].mBlendState : nullptr;
+}
+
+const YRenderDevice::SamplerState* RenderStateCache::GetSamplerState(
+    uint64_t sampler_hash) {
+  uint32_t* index = gSamplerStateHash.GetValue(sampler_hash);
+  return index ? &gSamplerStateCache[*index].mSamplerState : nullptr;
 }
 
 YRenderDevice::RenderBlendStateID RenderStateCache::GetBlendStateID(

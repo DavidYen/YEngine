@@ -19,6 +19,9 @@ namespace RenderStateCache {
   uint64_t InsertBlendState(const YRenderDevice::RenderBlendState& blend_state);
   uint64_t InsertSamplerState(const YRenderDevice::SamplerState& sampler_state);
 
+  const YRenderDevice::RenderBlendState* GetBlendState(uint64_t blend_hash);
+  const YRenderDevice::SamplerState* GetSamplerState(uint64_t sampler_hash);
+
   YRenderDevice::RenderBlendStateID GetBlendStateID(uint64_t blend_state_hash);
   YRenderDevice::SamplerStateID GetSamplerStateID(uint64_t sampler_state_hash);
 }
