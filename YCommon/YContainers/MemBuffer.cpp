@@ -19,6 +19,7 @@ MemBuffer::MemBuffer(void* buffer, size_t buffer_size)
 }
 
 void MemBuffer::Init(void* buffer, size_t buffer_size) {
+  YASSERT(buffer, "Invalid Buffer passed to MemBuffer.");
   mBuffer = buffer;
   mUsedBufferSize = 0;
   mUsedScratchPadSize = 0;
