@@ -49,8 +49,7 @@ class ShaderFloatArg {
   void Activate();
 
  private:
-  uint8_t mNumFloats;
-  uint8_t mReg;
+  const ShaderFloatParam* mFloatParam;
   YRenderDevice::UsageType mUsageType;
   uint8_t mActiveIndex;
   YRenderDevice::ConstantBufferID mConstantBufferIDs[2];
@@ -78,13 +77,14 @@ class ShaderTextureArg {
   void Release();
 
   void Fill(const void* data, size_t data_size);
-  void FillMips(uint8_t mip_levels, const void** datas, size_t* data_sizes);
+  void FillMips(uint8_t mip_levels, const void** datas,
+                const size_t* data_sizes);
   void Activate();
 
  private:
+  const ShaderTextureParam* mTextureParam;
   uint64_t mSamplerStateHash;
   uint32_t mWidth, mHeight;
-  uint8_t mSlot;
   uint8_t mActiveIndex;
   uint8_t mNumMips;
   YRenderDevice::UsageType mUsageType;

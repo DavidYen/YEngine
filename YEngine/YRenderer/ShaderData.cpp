@@ -46,8 +46,7 @@ void VertexDecl::Activate() {
 
 ShaderFloatArg::ShaderFloatArg(YRenderDevice::UsageType usage,
                                const ShaderFloatParam* float_param)
-  : mNumFloats(float_param->mNumFloats),
-    mReg(float_param->mReg),
+  : mFloatParam(float_param),
     mUsageType(usage),
     mActiveIndex(0) {
   mConstantBufferIDs[0] = INVALID_CONSTANT_BUFFER;
@@ -64,10 +63,11 @@ void ShaderFloatArg::Release() {
 }
 
 void ShaderFloatArg::Fill(const void* data, size_t data_size) {
-  YASSERT(data_size == mNumFloats * sizeof(float),
+  const uint8_t num_floats = mFloatParam->mNumFloats;
+  YASSERT(data_size == num_floats * sizeof(float),
           "Invalid data size (%u), expected %u floats (%u).",
           static_cast<uint32_t>(data_size),
-          mNumFloats, mNumFloats * sizeof(float));
+          num_floats, num_floats * sizeof(float));
   mActiveIndex = !mActiveIndex;
   if (mConstantBufferIDs[mActiveIndex] == INVALID_CONSTANT_BUFFER) {
     mConstantBufferIDs[mActiveIndex] =
@@ -83,10 +83,11 @@ void ShaderFloatArg::Fill(const void* data, size_t data_size) {
 }
 
 void ShaderFloatArg::Activate() {
+  const uint8_t reg = mFloatParam->mReg;
   YASSERT(mConstantBufferIDs[mActiveIndex] != INVALID_CONSTANT_BUFFER,
           "Cannot activate non-filled shader float argument.");
   YRenderDevice::RenderDevice::ActivateConstantBuffer(
-      mReg, mConstantBufferIDs[mActiveIndex]);
+      reg, mConstantBufferIDs[mActiveIndex]);
 }
 
 ShaderTextureArg::ShaderTextureArg(YRenderDevice::UsageType usage,
@@ -94,10 +95,10 @@ ShaderTextureArg::ShaderTextureArg(YRenderDevice::UsageType usage,
                                    uint8_t num_mips,
                                    YRenderDevice::PixelFormat format,
                                    const ShaderTextureParam* texture_param)
-  : mSamplerStateHash(texture_param->mSamplerStateHash),
+  : mTextureParam(texture_param),
+    mSamplerStateHash(0),
     mWidth(width),
     mHeight(height),
-    mSlot(texture_param->mSlot),
     mActiveIndex(0),
     mNumMips(num_mips),
     mUsageType(usage),
@@ -121,21 +122,22 @@ void ShaderTextureArg::Fill(const void* data, size_t data_size) {
 }
 
 void ShaderTextureArg::FillMips(uint8_t mip_levels,
-                                const void** datas, size_t* data_sizes) {
+                                const void** datas, const size_t* data_sizes) {
   YASSERT(mip_levels == mNumMips,
           "Number of mip levels do not match %u != %u.",
           mip_levels, mNumMips);
   mActiveIndex = !mActiveIndex;
   if (mTextureIDs[mActiveIndex] == INVALID_TEXTURE) {
-    mTextureIDs[mActiveIndex] = YRenderDevice::RenderDevice::CreateTexture(mUsageType, mWidth,
-                                                             mHeight, mNumMips,
-                                                             mFormat);
+    mTextureIDs[mActiveIndex] =
+        YRenderDevice::RenderDevice::CreateTexture(mUsageType, mWidth,
+                                                   mHeight, mNumMips, mFormat);
   } else {
     YASSERT(mUsageType == YRenderDevice::kUsageType_Static ||
             mUsageType == YRenderDevice::kUsageType_Dynamic,
             "Can only modify textures that are static or dynamic.");
   }
 
+  const uint32_t format_size = YRenderDevice::kPixelFormatSize[mFormat];
   for (uint8_t i = 0; i < mip_levels; ++i) {
     const void* data = datas[i];
     const size_t data_size = data_sizes[i];
@@ -143,28 +145,32 @@ void ShaderTextureArg::FillMips(uint8_t mip_levels,
     const uint32_t mip_height = mHeight >> i;
     const uint32_t width = mip_width ? mip_width : 1;
     const uint32_t height = mip_height ? mip_height : 1;
+    const uint32_t mip_size = width * height * format_size;
 
-    YASSERT(data_size == width * height,
+    YASSERT(data_size == mip_size,
             "Invalid texture data size (%u), expected %u bytes.\n"
-            "  Original Size: %ux%u\n"
-            "  Mip Level (%u): %ux%u.",
+            "  Original Size: %ux%ux%u\n"
+            "  Mip Level (%u): %ux%ux%u.",
             static_cast<uint32_t>(data_size),
-            static_cast<uint32_t>(width * height),
-            mWidth, mHeight, i, width, height);
+            static_cast<uint32_t>(mip_size),
+            mWidth, mHeight, format_size, i, width, height, format_size);
 
-    YRenderDevice::RenderDevice::FillTextureMip(mTextureIDs[mActiveIndex], i,
-                                  data, data_size);
+    YRenderDevice::RenderDevice::FillTextureMip(
+        mTextureIDs[mActiveIndex], i, data, data_size);
   }
 }
 
 void ShaderTextureArg::Activate() {
   YASSERT(mTextureIDs[mActiveIndex] != INVALID_TEXTURE,
           "Cannot activate texture which has not been filled.");
-  if (mSamplerStateID == INVALID_SAMPLER_STATE) {
+  const uint8_t slot_num = mTextureParam->mSlot;
+  if (mSamplerStateHash != mTextureParam->mSamplerStateHash) {
+    mSamplerStateHash = mTextureParam->mSamplerStateHash;
     mSamplerStateID = RenderStateCache::GetSamplerStateID(mSamplerStateHash);
   }
-  YRenderDevice::RenderDevice::ActivateSamplerState(mSlot, mSamplerStateID);
-  YRenderDevice::RenderDevice::ActivateTexture(mSlot, mTextureIDs[mActiveIndex]);
+  YRenderDevice::RenderDevice::ActivateSamplerState(slot_num, mSamplerStateID);
+  YRenderDevice::RenderDevice::ActivateTexture(slot_num,
+                                               mTextureIDs[mActiveIndex]);
 }
 
 VertexShader::VertexShader(const void* shader_data, size_t shader_size)

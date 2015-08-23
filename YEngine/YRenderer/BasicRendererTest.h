@@ -7,6 +7,8 @@
 #include <YCommon/YPlatform/PlatformHandle.h>
 #include <YEngine/YRenderDevice/RenderDevice.h>
 
+#include "RenderStateCache.h"
+
 #define BASIC_RENDERER_WIDTH 128
 #define BASIC_RENDERER_HEIGHT 128
 
@@ -25,14 +27,22 @@ class BasicRendererTest : public ::testing::Test {
 
   void SetUp() override {
     delete [] mBuffer;
-    mBuffer = new uint8_t[1024 * 10];
-    mMemBuffer.Init(mBuffer, 10240);
+    const size_t renderer_size = 1024 * 10;
+    const size_t cache_size = RenderStateCache::GetAllocationSize();
+    const size_t total_size = renderer_size + cache_size;
+
+    mBuffer = new uint8_t[total_size];
+    mMemBuffer.Init(mBuffer, total_size);
     YRenderDevice::RenderDevice::Initialize(mHandle, BASIC_RENDERER_WIDTH,
                                             BASIC_RENDERER_HEIGHT, 
-                                            mMemBuffer.Allocate(10240), 10240);
+                                            mMemBuffer.Allocate(renderer_size),
+                                            renderer_size);
+
+    RenderStateCache::Initialize(mMemBuffer.Allocate(cache_size), cache_size);
   }
 
   void TearDown() override {
+    RenderStateCache::Terminate();
     YRenderDevice::RenderDevice::Terminate();
 
     mMemBuffer.Reset();

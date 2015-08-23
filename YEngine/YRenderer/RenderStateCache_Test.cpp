@@ -11,36 +11,7 @@
 
 namespace YEngine { namespace YRenderer {
 
-class RenderStateCacheTest : public BasicRendererTest {
- protected:
-  RenderStateCacheTest()
-    : BasicRendererTest(),
-      mCacheBuffer(nullptr) {
-  }
-
-  ~RenderStateCacheTest() override {
-    delete [] mCacheBuffer;
-  }
-
-  void SetUp() override {
-    BasicRendererTest::SetUp();
-
-    delete [] mCacheBuffer;
-    const size_t buffer_size = RenderStateCache::GetAllocationSize();
-    mCacheBuffer = new uint8_t[buffer_size];
-    RenderStateCache::Initialize(mCacheBuffer, buffer_size);
-  }
-
-  void TearDown() override {
-    RenderStateCache::Terminate();
-    delete mCacheBuffer;
-    mCacheBuffer = nullptr;
-
-    BasicRendererTest::TearDown();
-  }
-
-  void* mCacheBuffer;
-};
+class RenderStateCacheTest : public BasicRendererTest {};
 
 TEST_F(BasicRendererTest, InitializeTearDown) {
 }
@@ -88,8 +59,8 @@ TEST_F(RenderStateCacheTest, SamplerStateID) {
   ASSERT_NE(sampler_state_pointer, nullptr);
 
   const YRenderDevice::SamplerStateID kSamplerStateID = 234;
-  YRenderDevice::RenderDeviceMock::ExpectCreateSamplerState(kSamplerStateID,
-                                                  *sampler_state_pointer);
+  YRenderDevice::RenderDeviceMock::ExpectCreateSamplerState(
+      kSamplerStateID, *sampler_state_pointer);
   ASSERT_EQ(kSamplerStateID, RenderStateCache::GetSamplerStateID(sampler_hash));
 
   YRenderDevice::RenderDeviceMock::ExpectReleaseSamplerState(kSamplerStateID);

@@ -22,7 +22,7 @@ struct Pixel_F32 {
   float data;
 };
 
-static const size_t kPixelFormatSize[] = {
+static const uint32_t kPixelFormatSize[] = {
   sizeof(Pixel_A8R8G8B8), // kPixelFormat_A8R8G8B8,
   sizeof(Pixel_F32),      // kPixelFormat_F32,
 };

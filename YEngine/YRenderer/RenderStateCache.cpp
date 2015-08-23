@@ -45,7 +45,11 @@ namespace {
         MEMPOOL.GetAllocationSize(POOLSIZE); \
     void* pool_buffer = gMemBuffer.Allocate(pool_buffer_size, 128); \
     YASSERT(pool_buffer, \
-            "Not enough space to allocate " NAME " cache."); \
+            "Not enough space to allocate " NAME " cache.\n" \
+            "  Free Space:   %u\n" \
+            "  Needed Space: %u", \
+            static_cast<uint32_t>(gMemBuffer.FreeSpace()), \
+            static_cast<uint32_t>(pool_buffer_size + 128)); \
     MEMPOOL.Init(pool_buffer, pool_buffer_size, POOLSIZE); \
   } while(0)
 
@@ -59,7 +63,7 @@ namespace {
             "  Free Space:   %u\n" \
             "  Needed Space: %u", \
             static_cast<uint32_t>(gMemBuffer.FreeSpace()), \
-            static_cast<uint32_t>(table_buffer_size)); \
+            static_cast<uint32_t>(table_buffer_size + 128)); \
     HASHTABLE.Init(table_buffer, table_buffer_size, TABLESIZE); \
   } while(0)
 
@@ -146,7 +150,9 @@ const YRenderDevice::SamplerState* RenderStateCache::GetSamplerState(
 YRenderDevice::RenderBlendStateID RenderStateCache::GetBlendStateID(
     uint64_t blend_state_hash) {
   uint32_t* index = gBlendStateHash.GetValue(blend_state_hash);
-  YASSERT(index, "Invalid Blend State Hash.");
+  YASSERT(index, "Invalid Blend Hash: 0x%08X%08X.",
+          static_cast<uint32_t>(blend_state_hash >> 32),
+          static_cast<uint32_t>(blend_state_hash));
 
   BlendStateInternal& blend_state = gBlendStateCache[*index];
   if (blend_state.mBlendStateID == INVALID_BLEND_STATE) {
@@ -160,7 +166,9 @@ YRenderDevice::RenderBlendStateID RenderStateCache::GetBlendStateID(
 YRenderDevice::SamplerStateID RenderStateCache::GetSamplerStateID(
     uint64_t sampler_state_hash) {
   uint32_t* index = gSamplerStateHash.GetValue(sampler_state_hash);
-  YASSERT(index, "Invalid Blend State Hash.");
+  YASSERT(index, "Invalid Sampler Hash: 0x%08X%08X.",
+          static_cast<uint32_t>(sampler_state_hash >> 32),
+          static_cast<uint32_t>(sampler_state_hash));
 
   SamplerStateInternal& sampler_state = gSamplerStateCache[*index];
   if (sampler_state.mSamplerStateID == INVALID_SAMPLER_STATE) {
