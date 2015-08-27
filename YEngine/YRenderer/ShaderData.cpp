@@ -173,12 +173,11 @@ void ShaderTextureArg::Activate() {
                                                mTextureIDs[mActiveIndex]);
 }
 
-VertexShader::VertexShader(const void* shader_data, size_t shader_size)
+VertexShader::VertexShader()
   : mShaderHash(0),
     mActiveIndex(0) {
   mVertexShaderIDs[0] = INVALID_VERTEX_SHADER;
   mVertexShaderIDs[1] = INVALID_VERTEX_SHADER;
-  SetVertexShader(shader_data, shader_size);
 }
 
 void VertexShader::Release() {
@@ -213,12 +212,11 @@ void VertexShader::Activate() {
       mVertexShaderIDs[mActiveIndex]);
 }
 
-PixelShader::PixelShader(const void* shader_data, size_t shader_size)
+PixelShader::PixelShader()
   : mShaderHash(0),
     mActiveIndex(0) {
   mPixelShaderIDs[0] = INVALID_PIXEL_SHADER;
   mPixelShaderIDs[1] = INVALID_PIXEL_SHADER;
-  SetPixelShader(shader_data, shader_size);
 }
 
 void PixelShader::Release() {

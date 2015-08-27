@@ -13,6 +13,7 @@
 namespace YEngine { namespace YRenderer {
 
 class ShaderDataTest : public BasicRendererTest {};
+class ShaderDataFailTest : public BasicRendererTest {};
 
 TEST_F(ShaderDataTest, VertexDeclEmptyRelease) {
   const YRenderDevice::VertexDeclElement kElements[] = {
@@ -55,20 +56,24 @@ TEST_F(ShaderDataTest, ShaderFloatArgEmptyRelease) {
   float_arg.Release();
 }
 
-TEST_FAILURE(ShaderDataFailTest, ShaderFloatArgInvalidFill,
-             "Invalid data") {
+TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgInvalidFill,
+               "Invalid data") {
   const ShaderFloatParam float_param(4, 0);
   ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
 
   const float kFloats[] = { 1.0f, 2.0f, 3.0f };
+  YRenderDevice::RenderDeviceMock::ExpectCreateConstantBuffer(
+      0, YRenderDevice::kUsageType_Static,
+      sizeof(kFloats), kFloats, sizeof(kFloats));
   float_arg.Fill(kFloats, sizeof(kFloats));
 }
 
-TEST_FAILURE(ShaderDataFailTest, ShaderFloatArgActivateNoFill,
-             "Cannot activate") {
+TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgActivateNoFill,
+               "Cannot activate") {
   const ShaderFloatParam float_param(4, 0);
   ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
-
+  YRenderDevice::RenderDeviceMock::ExpectActivateConstantBuffer(
+      0, static_cast<YRenderDevice::ConstantBufferID>(-1));
   float_arg.Activate();
 }
 
@@ -145,37 +150,54 @@ TEST_F(ShaderDataTest, ShaderTexArgEmptyRelease) {
   texture_arg.Release();
 }
 
-TEST_FAILURE(ShaderDataFailTest, ShaderTexArgInvalidMipFill,
-             "Invalid data") {
+TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidMipFill,
+               "Number of mip levels do not match") {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
   ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               123, 234, 2,
+                               2, 2, 2,
                                YRenderDevice::kPixelFormat_A8R8G8B8,
                                &texture_param);
-  
-  texture_arg.Fill(nullptr, 0);
+
+  const uint32_t kPixelData[] = { 1, 2, 3, 4 };
+  const YRenderDevice::TextureID kTextureID = 123;
+  YRenderDevice::RenderDeviceMock::ExpectCreateTexture(
+      kTextureID, YRenderDevice::kUsageType_Static, 2, 2, 2,
+      YRenderDevice::kPixelFormat_A8R8G8B8);
+  YRenderDevice::RenderDeviceMock::ExpectFillTextureMip(
+      kTextureID, 0, kPixelData, sizeof(kPixelData));
+  texture_arg.Fill(kPixelData, sizeof(kPixelData));
 }
 
-TEST_FAILURE(ShaderDataFailTest, ShaderTexArgInvalidFillSize,
-             "Invalid data") {
+TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidFillSize,
+               "Invalid texture data") {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
   ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               123, 234, 1,
+                               2, 2, 1,
                                YRenderDevice::kPixelFormat_A8R8G8B8,
                                &texture_param);
 
   const uint32_t kPixelData[] = { 1, 2 };
+  const YRenderDevice::TextureID kTextureID = 123;
+  YRenderDevice::RenderDeviceMock::ExpectCreateTexture(
+      kTextureID, YRenderDevice::kUsageType_Static, 2, 2, 1,
+      YRenderDevice::kPixelFormat_A8R8G8B8);
+  YRenderDevice::RenderDeviceMock::ExpectFillTextureMip(
+      kTextureID, 0, kPixelData, sizeof(kPixelData));
   texture_arg.Fill(kPixelData, sizeof(kPixelData));
 }
 
-TEST_FAILURE(ShaderDataFailTest, ShaderTexArgActivateNoFill,
-             "Cannot activate") {
-  const ShaderTextureParam texture_param(3, 0xDEADBEEF);
+TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgActivateNoFill,
+               "Cannot activate") {
+  const ShaderTextureParam texture_param(3, 0);
   ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
                                123, 234, 1,
                                YRenderDevice::kPixelFormat_A8R8G8B8,
                                &texture_param);
 
+  YRenderDevice::RenderDeviceMock::ExpectActivateSamplerState(
+      3, static_cast<YRenderDevice::SamplerStateID>(-1));
+  YRenderDevice::RenderDeviceMock::ExpectActivateTexture(
+      3, static_cast<YRenderDevice::TextureID>(-1));
   texture_arg.Activate();
 }
 
@@ -291,6 +313,130 @@ TEST_F(ShaderDataTest, ShaderTexActivationTest) {
 
   YRenderDevice::RenderDeviceMock::ExpectReleaseSamplerState(kSamplerStateID);
   RenderStateCache::Terminate();
+}
+
+TEST_F(ShaderDataTest, VertexShaderEmptyRelease) {
+  VertexShader vertex_shader;
+  vertex_shader.Release();
+}
+
+TEST_F(ShaderDataTest, VertexShaderSet) {
+  const char vertex_shader_data[] = "Test Vertex Shader Data.";
+  const char vertex_shader_data2[] = "Test Vertex Shader Data 2.";
+  VertexShader vertex_shader;
+
+  // First set should create a shader.
+  const YRenderDevice::VertexShaderID kVertexShaderID = 1;
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      kVertexShaderID, vertex_shader_data, sizeof(vertex_shader_data));
+  vertex_shader.SetVertexShader(vertex_shader_data, sizeof(vertex_shader_data));
+
+  // Second set of same data should do nothing.
+  vertex_shader.SetVertexShader(vertex_shader_data, sizeof(vertex_shader_data));
+
+  // Third set should create a new vertex shader data.
+  const YRenderDevice::VertexShaderID kVertexShaderID2 = 2;
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      kVertexShaderID2, vertex_shader_data2, sizeof(vertex_shader_data2));
+  vertex_shader.SetVertexShader(vertex_shader_data2,
+                                sizeof(vertex_shader_data2));
+
+  // Fourth set should release the first shader data.
+  const YRenderDevice::VertexShaderID kVertexShaderID3 = 3;
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID);
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      kVertexShaderID3, vertex_shader_data, sizeof(vertex_shader_data));
+  vertex_shader.SetVertexShader(vertex_shader_data, sizeof(vertex_shader_data));
+
+  // fifth set should release the second shader data.
+  const YRenderDevice::VertexShaderID kVertexShaderID4 = 4;
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID2);
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      kVertexShaderID4, vertex_shader_data2, sizeof(vertex_shader_data2));
+  vertex_shader.SetVertexShader(vertex_shader_data2,
+                                sizeof(vertex_shader_data2));
+
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID3);
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID4);
+  vertex_shader.Release();
+}
+
+TEST_F(ShaderDataTest, VertexShaderActivation) {
+  const char vertex_shader_data[] = "Test Vertex Shader Data.";
+  VertexShader vertex_shader;
+
+  const YRenderDevice::VertexShaderID kVertexShaderID = 1;
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexShader(
+      kVertexShaderID, vertex_shader_data, sizeof(vertex_shader_data));
+  vertex_shader.SetVertexShader(vertex_shader_data, sizeof(vertex_shader_data));
+
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexShader(kVertexShaderID);
+  vertex_shader.Activate();
+
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID);
+  vertex_shader.Release();
+}
+
+TEST_F(ShaderDataTest, PixelShaderEmptyRelease) {
+  PixelShader pixel_shader;
+  pixel_shader.Release();
+}
+
+TEST_F(ShaderDataTest, PixelShaderSet) {
+  const char pixel_shader_data[] = "Test Pixel Shader Data.";
+  const char pixel_shader_data2[] = "Test Pixel Shader Data 2.";
+  PixelShader pixel_shader;
+
+  // First set should create a shader.
+  const YRenderDevice::PixelShaderID kPixelShaderID = 1;
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      kPixelShaderID, pixel_shader_data, sizeof(pixel_shader_data));
+  pixel_shader.SetPixelShader(pixel_shader_data, sizeof(pixel_shader_data));
+
+  // Second set of same data should do nothing.
+  pixel_shader.SetPixelShader(pixel_shader_data, sizeof(pixel_shader_data));
+
+  // Third set should create a new pixel shader data.
+  const YRenderDevice::PixelShaderID kPixelShaderID2 = 2;
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      kPixelShaderID2, pixel_shader_data2, sizeof(pixel_shader_data2));
+  pixel_shader.SetPixelShader(pixel_shader_data2,
+                                sizeof(pixel_shader_data2));
+
+  // Fourth set should release the first shader data.
+  const YRenderDevice::PixelShaderID kPixelShaderID3 = 3;
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID);
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      kPixelShaderID3, pixel_shader_data, sizeof(pixel_shader_data));
+  pixel_shader.SetPixelShader(pixel_shader_data, sizeof(pixel_shader_data));
+
+  // fifth set should release the second shader data.
+  const YRenderDevice::PixelShaderID kPixelShaderID4 = 4;
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID2);
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      kPixelShaderID4, pixel_shader_data2, sizeof(pixel_shader_data2));
+  pixel_shader.SetPixelShader(pixel_shader_data2,
+                                sizeof(pixel_shader_data2));
+
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID3);
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID4);
+  pixel_shader.Release();
+}
+
+TEST_F(ShaderDataTest, PixelShaderActivation) {
+  const char pixel_shader_data[] = "Test Pixel Shader Data.";
+  PixelShader pixel_shader;
+
+  const YRenderDevice::PixelShaderID kPixelShaderID = 1;
+  YRenderDevice::RenderDeviceMock::ExpectCreatePixelShader(
+      kPixelShaderID, pixel_shader_data, sizeof(pixel_shader_data));
+  pixel_shader.SetPixelShader(pixel_shader_data, sizeof(pixel_shader_data));
+
+  YRenderDevice::RenderDeviceMock::ExpectActivatePixelShader(kPixelShaderID);
+  pixel_shader.Activate();
+
+  YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID);
+  pixel_shader.Release();
 }
 
 }} // namespace YEngine { namespace YRenderer {

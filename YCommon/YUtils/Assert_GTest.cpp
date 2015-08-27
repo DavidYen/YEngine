@@ -29,7 +29,7 @@ void Assert::Warn(const char* file, uint32_t line, const char* message) {
   ::testing::internal::ColoredPrintf(
       ::testing::internal::COLOR_GREEN, "[          ] ");
   ::testing::internal::ColoredPrintf(
-      ::testing::internal::COLOR_YELLOW, "[%s:%u] %s", file, line, message);
+      ::testing::internal::COLOR_YELLOW, "[%s:%u] %s\n", file, line, message);
 }
 
 }} // namespace YCommon { namespace YUtils {

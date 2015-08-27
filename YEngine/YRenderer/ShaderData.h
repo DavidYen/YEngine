@@ -95,7 +95,7 @@ class ShaderTextureArg {
 
 class VertexShader {
  public:
-  VertexShader(const void* shader_data, size_t shader_size);
+  VertexShader();
   void Release();
 
   void SetVertexShader(const void* shader_data, size_t shader_size);
@@ -109,7 +109,7 @@ class VertexShader {
 
 class PixelShader {
  public:
-  PixelShader(const void* shader_data, size_t shader_size);
+  PixelShader();
   void Release();
 
   void SetPixelShader(const void* shader_data, size_t shader_size);
