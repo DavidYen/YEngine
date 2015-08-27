@@ -130,9 +130,9 @@ TEST_F(RendererTest, RegisterVertexDeclTest) {
 TEST_F(RendererTest, RegisterShaderFloatParamTest) {
   const char name[] = "test_float_param";
   Renderer::RegisterShaderFloatParam(name, sizeof(name),
-                                     4, 0, 1);
+                                     4, 0);
   Renderer::RegisterShaderFloatParam(name, sizeof(name),
-                                     4, 0, 1);
+                                     4, 0);
 
   EXPECT_FALSE(Renderer::ReleaseShaderFloatParam(name, sizeof(name)));
   EXPECT_TRUE(Renderer::ReleaseShaderFloatParam(name, sizeof(name)));
@@ -225,7 +225,7 @@ TEST_F(RendererTest, RegisterVertexDataTest) {
 TEST_F(RendererTest, RegisterShaderFloatArgTest) {
   const char name[] = "test_float_arg";
   const char param[] = "test_float_param";
-  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0, 1);
+  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0);
 
   Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
   Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
@@ -254,7 +254,7 @@ TEST_F(RendererTest, RegisterShaderTextureArgTest) {
 TEST_F(RendererTest, RegisterGlobalFloatArgTest) {
   const char name[] = "global_float_arg";
   const char param[] = "test_float_param";
-  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0, 1);
+  Renderer::RegisterShaderFloatParam(param, sizeof(param), 4, 0);
   Renderer::RegisterShaderArg(name, sizeof(name), param, sizeof(param));
 
   Renderer::RegisterGlobalArg(param, sizeof(param), name, sizeof(name));

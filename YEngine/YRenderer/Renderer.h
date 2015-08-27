@@ -50,8 +50,7 @@ namespace Renderer {
                           const YRenderDevice::VertexDeclElement* elements,
                           size_t num_elements);
   void RegisterShaderFloatParam(const char* name, size_t name_size,
-                                uint8_t num_floats,
-                                uint8_t reg, uint8_t reg_offset);
+                                uint8_t num_floats, uint8_t reg);
   void RegisterShaderTextureParam(const char* name, size_t name_size,
                                   uint8_t slot,
                                   const YRenderDevice::SamplerState& sampler);

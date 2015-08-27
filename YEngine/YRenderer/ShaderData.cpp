@@ -44,10 +44,9 @@ void VertexDecl::Activate() {
   YRenderDevice::RenderDevice::ActivateVertexDeclaration(mVertexDeclID);
 }
 
-ShaderFloatArg::ShaderFloatArg(YRenderDevice::UsageType usage,
-                               const ShaderFloatParam* float_param)
+ShaderFloatArg::ShaderFloatArg(const ShaderFloatParam* float_param)
   : mFloatParam(float_param),
-    mUsageType(usage),
+    mUsageType(YRenderDevice::kUsageType_Invalid),
     mActiveIndex(0) {
   mConstantBufferIDs[0] = INVALID_CONSTANT_BUFFER;
   mConstantBufferIDs[1] = INVALID_CONSTANT_BUFFER;
@@ -62,7 +61,14 @@ void ShaderFloatArg::Release() {
   }
 }
 
+void ShaderFloatArg::Initialize(YRenderDevice::UsageType usage) {
+  mUsageType = usage;
+}
+
 void ShaderFloatArg::Fill(const void* data, size_t data_size) {
+  YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
+          "Shader Float Argument has not been initialized.");
+
   const uint8_t num_floats = mFloatParam->mNumFloats;
   YASSERT(data_size == num_floats * sizeof(float),
           "Invalid data size (%u), expected %u floats (%u).",
@@ -90,19 +96,15 @@ void ShaderFloatArg::Activate() {
       reg, mConstantBufferIDs[mActiveIndex]);
 }
 
-ShaderTextureArg::ShaderTextureArg(YRenderDevice::UsageType usage,
-                                   uint32_t width, uint32_t height,
-                                   uint8_t num_mips,
-                                   YRenderDevice::PixelFormat format,
-                                   const ShaderTextureParam* texture_param)
+ShaderTextureArg::ShaderTextureArg(const ShaderTextureParam* texture_param)
   : mTextureParam(texture_param),
     mSamplerStateHash(0),
-    mWidth(width),
-    mHeight(height),
+    mWidth(0),
+    mHeight(0),
     mActiveIndex(0),
-    mNumMips(num_mips),
-    mUsageType(usage),
-    mFormat(format),
+    mNumMips(0),
+    mUsageType(YRenderDevice::kUsageType_Invalid),
+    mFormat(YRenderDevice::kPixelFormat_A8R8G8B8),
     mSamplerStateID(INVALID_SAMPLER_STATE) {
   mTextureIDs[0] = INVALID_TEXTURE;
   mTextureIDs[1] = INVALID_TEXTURE;
@@ -117,12 +119,25 @@ void ShaderTextureArg::Release() {
   }
 }
 
+void ShaderTextureArg::Initialize(YRenderDevice::UsageType usage,
+                                  uint32_t width, uint32_t height,
+                                  uint8_t num_mips,
+                                  YRenderDevice::PixelFormat format) {
+  mUsageType = usage;
+  mWidth = width;
+  mHeight = height;
+  mNumMips = num_mips,
+  mFormat = format;
+}
+
 void ShaderTextureArg::Fill(const void* data, size_t data_size) {
   FillMips(1, &data, &data_size);
 }
 
 void ShaderTextureArg::FillMips(uint8_t mip_levels,
                                 const void** datas, const size_t* data_sizes) {
+  YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
+          "Shader Texture Argument has not been initialized.");
   YASSERT(mip_levels == mNumMips,
           "Number of mip levels do not match %u != %u.",
           mip_levels, mNumMips);

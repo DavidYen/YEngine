@@ -52,14 +52,16 @@ TEST_F(ShaderDataTest, VertexDeclActivationTest) {
 
 TEST_F(ShaderDataTest, ShaderFloatArgEmptyRelease) {
   const ShaderFloatParam float_param(4, 0);
-  ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
   float_arg.Release();
 }
 
 TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgInvalidFill,
                "Invalid data") {
   const ShaderFloatParam float_param(4, 0);
-  ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
 
   const float kFloats[] = { 1.0f, 2.0f, 3.0f };
   YRenderDevice::RenderDeviceMock::ExpectCreateConstantBuffer(
@@ -71,7 +73,8 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgInvalidFill,
 TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgActivateNoFill,
                "Cannot activate") {
   const ShaderFloatParam float_param(4, 0);
-  ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
   YRenderDevice::RenderDeviceMock::ExpectActivateConstantBuffer(
       0, static_cast<YRenderDevice::ConstantBufferID>(-1));
   float_arg.Activate();
@@ -79,7 +82,8 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgActivateNoFill,
 
 TEST_F(ShaderDataTest, ShaderFloatFillTest) {
   const ShaderFloatParam float_param(4, 3);
-  ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
   const float kFloats[] = { 1.0f, 2.0f, 3.0f, 4.0f };
 
   // First fill creates constant buffer.
@@ -116,7 +120,8 @@ TEST_F(ShaderDataTest, ShaderFloatFillTest) {
 
 TEST_F(ShaderDataTest, ShaderFloatActivationTest) {
   const ShaderFloatParam float_param(4, 3);
-  ShaderFloatArg float_arg(YRenderDevice::kUsageType_Static, &float_param);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
   const float kFloats[] = { 1.0f, 2.0f, 3.0f, 4.0f };
 
   // Fill creates constant buffer.
@@ -143,20 +148,20 @@ TEST_F(ShaderDataTest, ShaderFloatActivationTest) {
 
 TEST_F(ShaderDataTest, ShaderTexArgEmptyRelease) {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               123, 234, 1,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         123, 234, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
   texture_arg.Release();
 }
 
 TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidMipFill,
                "Number of mip levels do not match") {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               2, 2, 2,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         2, 2, 2,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
 
   const uint32_t kPixelData[] = { 1, 2, 3, 4 };
   const YRenderDevice::TextureID kTextureID = 123;
@@ -171,10 +176,10 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidMipFill,
 TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidFillSize,
                "Invalid texture data") {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               2, 2, 1,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         2, 2, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
 
   const uint32_t kPixelData[] = { 1, 2 };
   const YRenderDevice::TextureID kTextureID = 123;
@@ -189,10 +194,10 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidFillSize,
 TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgActivateNoFill,
                "Cannot activate") {
   const ShaderTextureParam texture_param(3, 0);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               123, 234, 1,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         123, 234, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
 
   YRenderDevice::RenderDeviceMock::ExpectActivateSamplerState(
       3, static_cast<YRenderDevice::SamplerStateID>(-1));
@@ -203,10 +208,10 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgActivateNoFill,
 
 TEST_F(ShaderDataTest, ShaderTexFillTest) {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               2, 2, 1,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         2, 2, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
   const uint32_t kTextureData[] = { 1, 2, 3, 4 };
 
   // First fill creates texture.
@@ -245,10 +250,10 @@ TEST_F(ShaderDataTest, ShaderTexFillTest) {
 
 TEST_F(ShaderDataTest, ShaderTexFillMipTest) {
   const ShaderTextureParam texture_param(3, 0xDEADBEEF);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               2, 2, 2,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         2, 2, 2,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
   const uint32_t kTextureDataMip0[] = { 1, 2, 3, 4 };
   const uint32_t kTextureDataMip1[] = { 5 };
   const void* kTextureData[] = { kTextureDataMip0, kTextureDataMip1 };
@@ -283,10 +288,10 @@ TEST_F(ShaderDataTest, ShaderTexActivationTest) {
 
   // Texture Arg.
   const ShaderTextureParam texture_param(3, sampler_hash);
-  ShaderTextureArg texture_arg(YRenderDevice::kUsageType_Static,
-                               2, 2, 1,
-                               YRenderDevice::kPixelFormat_A8R8G8B8,
-                               &texture_param);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         2, 2, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
   const uint32_t kTextureData[] = { 1, 2, 3, 4 };
 
   // Fill.

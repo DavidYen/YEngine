@@ -41,10 +41,13 @@ class ShaderFloatParam {
 
 class ShaderFloatArg {
  public:
-  ShaderFloatArg(YRenderDevice::UsageType usage,
-                 const ShaderFloatParam* float_param);
+  ShaderFloatArg(const ShaderFloatParam* float_param);
   void Release();
 
+  const ShaderFloatParam* GetFloatParam() const { return mFloatParam; }
+  uint8_t GetReg() const { return mFloatParam->mReg; }
+
+  void Initialize(YRenderDevice::UsageType usage);
   void Fill(const void* data, size_t data_size);
   void Activate();
 
@@ -70,12 +73,15 @@ class ShaderTextureParam {
 
 class ShaderTextureArg {
  public:
-  ShaderTextureArg(YRenderDevice::UsageType usage,
-                   uint32_t width, uint32_t height,
-                   uint8_t num_mips, YRenderDevice::PixelFormat format,
-                   const ShaderTextureParam* texture_param);
+  ShaderTextureArg(const ShaderTextureParam* texture_param);
   void Release();
 
+  const ShaderTextureParam* GetTextureParam() const { return mTextureParam; }
+  uint8_t GetSlot() const { return mTextureParam->mSlot; }
+
+  void Initialize(YRenderDevice::UsageType usage,
+                  uint32_t width, uint32_t height,
+                  uint8_t num_mips, YRenderDevice::PixelFormat format);
   void Fill(const void* data, size_t data_size);
   void FillMips(uint8_t mip_levels, const void** datas,
                 const size_t* data_sizes);

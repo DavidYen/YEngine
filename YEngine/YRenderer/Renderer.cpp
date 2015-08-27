@@ -18,6 +18,7 @@
 #include "RenderKeyField.h"
 #include "RenderStateCache.h"
 #include "RenderTarget.h"
+#include "ShaderData.h"
 #include "ViewPort.h"
 
 // Hash Table Sizes (~2x maximum)
@@ -77,7 +78,7 @@ namespace {
 
   struct RenderObjectInternal;
   class ViewPortInternal;
-  struct VertexDeclInternal;
+  class VertexDeclInternal;
   struct ShaderDataInternal;
 
   YCommon::YContainers::TypedUnorderedArray<RenderObjectInternal*>
@@ -168,36 +169,25 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<RenderPassInternal> gRenderPasses;
 
-  struct VertexDeclInternal : public RefCountBase {
+  class VertexDeclInternal : public VertexDecl, public RefCountBase {
+   public:
     VertexDeclInternal(const YRenderDevice::VertexDeclElement* elements,
                        uint8_t num_elements)
-      : RefCountBase(),
-        mActivatedArrayIndex(INVALID_INDEX),
-        mNumVertexElements(num_elements),
-        mVertexDeclID(INVALID_VERTEX_DECL) {
-      YASSERT(num_elements < MAX_VERTEX_ELEMENTS,
-              "Maximum vertex elements (%d) exceeded: %d",
-              static_cast<int>(MAX_VERTEX_ELEMENTS),
-              static_cast<int>(num_elements));
-      memset(mVertexElements, 0, sizeof(mVertexElements));
-      memcpy(mVertexElements, elements, num_elements * sizeof(elements[0]));
-    }
+      : VertexDecl(elements, num_elements),
+        RefCountBase(),
+        mActivatedArrayIndex(INVALID_INDEX) {}
 
-    YRenderDevice::VertexDeclElement mVertexElements[MAX_VERTEX_ELEMENTS];
     uint32_t mActivatedArrayIndex;
-    uint8_t mNumVertexElements;
-    YRenderDevice::VertexDeclID mVertexDeclID;
   };
   YCommon::YContainers::TypedHashTable<VertexDeclInternal> gVertexDecls;
 
-  struct ShdrFloatParamInternal : public RefCountBase {
+  class ShdrFloatParamInternal : public ShaderFloatParam, public RefCountBase {
+   public:
     ShdrFloatParamInternal(const char* name, size_t name_size,
-                           uint8_t num_floats, uint8_t reg, uint8_t reg_offset)
-      : RefCountBase(),
-        mNameSize(name_size),
-        mNumFloats(num_floats),
-        mReg(reg),
-        mRegOffset(reg_offset) {
+                           uint8_t num_floats, uint8_t reg)
+      : ShaderFloatParam(num_floats, reg),
+        RefCountBase(),
+        mNameSize(name_size) {
       YASSERT(name_size <= MAX_SHADER_PARAM_NAME,
               "Maximum shader parameter name (%u) exceeded: %u",
               static_cast<uint32_t>(MAX_SHADER_PARAM_NAME),
@@ -207,19 +197,16 @@ namespace {
 
     char mName[MAX_SHADER_PARAM_NAME];
     size_t mNameSize;
-    uint8_t mNumFloats;
-    uint8_t mReg;
-    uint8_t mRegOffset;
   };
   YCommon::YContainers::TypedHashTable<ShdrFloatParamInternal> gShdrFloatParams;
 
-  struct ShdrTexParamInternal : public RefCountBase {
-    ShdrTexParamInternal(const char* name, size_t name_size, uint8_t slot,
-                         const YRenderDevice::SamplerState& sampler_state)
-      : RefCountBase(),
-        mNameSize(name_size),
-        mSamplerState(sampler_state),
-        mSlot(slot) {
+  class ShdrTexParamInternal : public ShaderTextureParam, public RefCountBase {
+   public:
+    ShdrTexParamInternal(const char* name, size_t name_size,
+                         uint8_t slot, uint64_t sampler_state_hash)
+      : ShaderTextureParam(slot, sampler_state_hash),
+        RefCountBase(),
+        mNameSize(name_size) {
       YASSERT(name_size <= MAX_SHADER_PARAM_NAME,
               "Maximum shader parameter name (%u) exceeded: %u",
               static_cast<uint32_t>(MAX_SHADER_PARAM_NAME),
@@ -229,8 +216,6 @@ namespace {
 
     char mName[MAX_SHADER_PARAM_NAME];
     size_t mNameSize;
-    YRenderDevice::SamplerState mSamplerState;
-    uint8_t mSlot;
   };
   YCommon::YContainers::TypedHashTable<ShdrTexParamInternal> gShdrTexParams;
 
@@ -395,29 +380,25 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<VertexDataInternal> gVertexDatas;
 
-  struct ShdrFloatArgInternal : public RefCountBase {
+  class ShdrFloatArgInternal : public ShaderFloatArg, public RefCountBase {
+   public:
     ShdrFloatArgInternal(ShdrFloatParamInternal* float_param)
-      : RefCountBase(),
-        mFloatParam(float_param),
-        mCurrentIndex(0) {
-      memset(mConstantBufferIDs, -1, sizeof(mConstantBufferIDs));
-    }
-    ShdrFloatParamInternal* mFloatParam;
-    uint8_t mCurrentIndex;
-    YRenderDevice::ConstantBufferID mConstantBufferIDs[2];
+      : ShaderFloatArg(float_param),
+        RefCountBase(),
+        mFloatParamInternal(float_param) {}
+
+    ShdrFloatParamInternal* mFloatParamInternal;
   };
   YCommon::YContainers::TypedHashTable<ShdrFloatArgInternal> gShdrFloatArgs;
 
-  struct ShdrTexArgInternal : public RefCountBase {
+  class ShdrTexArgInternal : public ShaderTextureArg, public RefCountBase {
+   public:
     ShdrTexArgInternal(ShdrTexParamInternal* tex_param)
-      : RefCountBase(),
-        mTexParam(tex_param),
-        mCurrentIndex(0) {
-      memset(mTextureIDs, -1, sizeof(mTextureIDs));
-    }
-    ShdrTexParamInternal* mTexParam;
-    uint8_t mCurrentIndex;
-    YRenderDevice::TextureID mTextureIDs[2];
+      : ShaderTextureArg(tex_param),
+        RefCountBase(),
+        mTexParamInternal(tex_param) {}
+
+    ShdrTexParamInternal* mTexParamInternal;
   };
   YCommon::YContainers::TypedHashTable<ShdrTexArgInternal> gShdrTexArgs;
 
@@ -592,7 +573,7 @@ namespace {
     ShdrFloatArgInternal* GetFloatArg(ShdrFloatParamInternal* param) {
       const uint8_t num_float_args = mNumFloatArgs;
       for (uint8_t i = 0; i < num_float_args; ++i) {
-        if (mFloatArgs[i]->mFloatParam == param)
+        if (mFloatArgs[i]->GetFloatParam() == param)
           return mFloatArgs[i];
       }
       return nullptr;
@@ -601,7 +582,7 @@ namespace {
     ShdrTexArgInternal* GetTexArg(ShdrTexParamInternal* param) {
       const uint8_t num_texture_args = mNumTextureArgs;
       for (uint8_t i = 0; i < num_texture_args; ++i) {
-        if (mTextureArgs[i]->mTexParam == param)
+        if (mTextureArgs[i]->GetTextureParam() == param)
           return mTextureArgs[i];
       }
       return nullptr;
@@ -919,12 +900,11 @@ void Renderer::RegisterVertexDecl(
 
 void Renderer::RegisterShaderFloatParam(const char* name, size_t name_size,
                                         uint8_t num_floats,
-                                        uint8_t reg, uint8_t reg_offset) {
+                                        uint8_t reg) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
   ShdrFloatParamInternal* float_param = gShdrFloatParams.GetValue(name_hash);
   if (nullptr == float_param) {
-    ShdrFloatParamInternal new_float_param(name, name_size,
-                                           num_floats, reg, reg_offset);
+    ShdrFloatParamInternal new_float_param(name, name_size, num_floats, reg);
     float_param = gShdrFloatParams.Insert(name_hash, new_float_param);
   }
   float_param->IncRef();
@@ -934,9 +914,10 @@ void Renderer::RegisterShaderTextureParam(
     const char* name, size_t name_size, uint8_t slot,
     const YRenderDevice::SamplerState& sampler) {
   const uint64_t name_hash = YCore::StringTable::AddString(name, name_size);
+  const uint64_t sampler_hash = RenderStateCache::InsertSamplerState(sampler);
   ShdrTexParamInternal* tex_param = gShdrTexParams.GetValue(name_hash);
   if (nullptr == tex_param) {
-    ShdrTexParamInternal new_tex_param(name, name_size, slot, sampler);
+    ShdrTexParamInternal new_tex_param(name, name_size, slot, sampler_hash);
     tex_param = gShdrTexParams.Insert(name_hash, new_tex_param);
   }
   tex_param->IncRef();
@@ -1159,6 +1140,7 @@ void Renderer::RegisterShaderArg(const char* name, size_t name_size,
     ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(name_hash);
     if (nullptr == tex_arg) {
       tex_param->IncRef();
+
       ShdrTexArgInternal new_float_arg(tex_param);
       tex_arg = gShdrTexArgs.Insert(name_hash, new_float_arg);
     }
@@ -1332,10 +1314,7 @@ bool Renderer::ReleaseVertexDecl(const char* name, size_t name_size) {
   VertexDeclInternal* vertex_decl = gVertexDecls.GetValue(name_hash);
   YASSERT(vertex_decl, "Releasing an invalid Vertex Declaration: %s", name);
   if (vertex_decl->DecRef()) {
-    if (vertex_decl->mVertexDeclID != INVALID_VERTEX_DECL) {
-      YRenderDevice::RenderDevice::ReleaseVertexDeclaration(
-          vertex_decl->mVertexDeclID);
-    }
+    vertex_decl->Release();
     return gVertexDecls.Remove(name_hash);
   }
   return false;
@@ -1481,8 +1460,9 @@ bool Renderer::ReleaseShaderArg(const char* name, size_t name_size) {
   ShdrFloatArgInternal* float_arg = gShdrFloatArgs.GetValue(name_hash);
   if (float_arg) {
     if (float_arg->DecRef()) {
-      bool empty = float_arg->mFloatParam->DecRef();
+      bool empty = float_arg->mFloatParamInternal->DecRef();
       YASSERT(!empty, "Shader parameter released before argument: %s", name);
+      float_arg->Release();
       return gShdrFloatArgs.Remove(name_hash);
     }
     return false;
@@ -1492,8 +1472,9 @@ bool Renderer::ReleaseShaderArg(const char* name, size_t name_size) {
   ShdrTexArgInternal* tex_arg = gShdrTexArgs.GetValue(name_hash);
   if (tex_arg) {
     if (tex_arg->DecRef()) {
-      bool empty = tex_arg->mTexParam->DecRef();
+      bool empty = tex_arg->mTexParamInternal->DecRef();
       YASSERT(!empty, "Shader parameter released before argument: %s", name);
+      tex_arg->Release();
       return gShdrTexArgs.Remove(name_hash);
     }
     return false;
@@ -1618,12 +1599,6 @@ void Renderer::ActivateRenderPasses(const char* name, size_t name_size) {
         // Activate Vertex Declaration
         VertexDeclInternal* vertex_decl = shader->mVertexDecl;
         if (vertex_decl->mActivatedArrayIndex == INVALID_INDEX) {
-          if (vertex_decl->mVertexDeclID == INVALID_VERTEX_DECL) {
-            vertex_decl->mVertexDeclID =
-                YRenderDevice::RenderDevice::CreateVertexDeclaration(
-                    vertex_decl->mVertexElements,
-                    vertex_decl->mNumVertexElements);
-          }
           vertex_decl->mActivatedArrayIndex =
               gVertexDeclArray.PushBack(vertex_decl);
           YASSERT(vertex_decl->mActivatedArrayIndex != INVALID_INDEX,
