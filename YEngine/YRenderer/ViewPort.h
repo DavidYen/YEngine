@@ -7,6 +7,8 @@
 
 namespace YEngine { namespace YRenderer {
 
+struct RenderDeviceState;
+
 class ViewPort {
  public:
   ViewPort(DimensionType top_type, float top,
@@ -22,7 +24,7 @@ class ViewPort {
                    DimensionType width_type, float width,
                    DimensionType height_type, float height,
                    float min_z, float max_z);
-  void Activate();
+  void Activate(RenderDeviceState& render_device_state);
 
  private:
   float mTop, mLeft, mWidth, mHeight, mMinZ, mMaxZ;

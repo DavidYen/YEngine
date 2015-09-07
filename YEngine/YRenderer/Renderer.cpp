@@ -14,6 +14,7 @@
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/SamplerState.h>
 
+#include "RenderDeviceState.h"
 #include "RendererCommon.h"
 #include "RenderKeyField.h"
 #include "RenderStateCache.h"
@@ -152,12 +153,13 @@ namespace {
       memcpy(mShaderVariant, shader_variant, shader_variant_size);
     }
 
-    void Activate() {
-      YRenderDevice::RenderDevice::ActivateRenderBlendState(
-          RenderStateCache::GetBlendStateID(mBlendStateHash));
+    void Activate(RenderDeviceState& device_state) {
+      const YRenderDevice::RenderBlendStateID blend_state_id =
+          RenderStateCache::GetBlendStateID(mBlendStateHash);
 
+      device_state.ActivateBlendState(blend_state_id);
       for (uint8_t i = 0; i < mNumRenderTargets; ++i) {
-        mRenderTargets[i]->Activate(i);
+        mRenderTargets[i]->Activate(device_state, i);
       }
     }
 
@@ -459,13 +461,9 @@ namespace {
              num_pixel_shader_tex_args * sizeof(mPixelShaderTexArgs[0]));
     }
 
-    void ExecuteRenderKey(const RenderKeyInternal* prev_render_key) const {
-      if (prev_render_key->mViewPort != mViewPort) {
-        mViewPort->Activate();
-      }
-      if (prev_render_key->mRenderPass != mRenderPass) {
-        mRenderPass->Activate();
-      }
+    void ExecuteRenderKey(RenderDeviceState& device_state) const {
+      mViewPort->Activate(device_state);
+      mRenderPass->Activate(device_state);
     }
 
     uint64_t GetRenderKey(uint32_t key_num, uint32_t pass_num,
@@ -1761,7 +1759,7 @@ void Renderer::PrepareDraw() {
   YCommon::AcquireFence();
   std::sort(gEnqueuedRenderKeys, gEnqueuedRenderKeys + num_keys);
 
-  RenderKeyInternal null_render_key;
+  RenderDeviceState device_state;
 
   YRenderDevice::RenderDevice::BeginRecord();
   const uint8_t num_index_bits = 64 - gActiveRenderKeyBitsUsed;
@@ -1769,14 +1767,12 @@ void Renderer::PrepareDraw() {
                "Sanity check failed for number of bits");
   const uint32_t bits_power = static_cast<uint32_t>(1u) << num_index_bits;
   const uint32_t key_index_mask = bits_power - 1;
-  const RenderKeyInternal* prev_render_key = &null_render_key;
   for (uint32_t i = 0; i < num_keys; ++i) {
     const uint64_t render_key = gEnqueuedRenderKeys[i];
     const uint32_t render_index =
         static_cast<uint32_t>(render_key) & key_index_mask;
     const RenderKeyInternal* render_key_obj = &gRenderKeys[render_index];
-    render_key_obj->ExecuteRenderKey(prev_render_key);
-    prev_render_key = render_key_obj;
+    render_key_obj->ExecuteRenderKey(device_state);
   }
 
   YRenderDevice::RenderDevice::EndRecord();

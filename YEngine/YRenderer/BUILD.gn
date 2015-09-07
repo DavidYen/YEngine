@@ -1,6 +1,7 @@
 
 source_set("YRenderer_Common") {
   sources = [
+    "RenderDeviceState.cpp",
     "Renderer.cpp",
     "RendererCommon.cpp",
     "RenderStateCache.cpp",

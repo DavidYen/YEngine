@@ -1,6 +1,8 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "RenderTarget.h"
 
+#include "RenderDeviceState.h"
+
 #define INVALID_RENDER_TARGET static_cast<YRenderDevice::RenderTargetID>(-1)
 
 namespace YEngine { namespace YRenderer {
@@ -40,7 +42,7 @@ void RenderTarget::SetRenderTarget(YRenderDevice::PixelFormat format,
   mDirty = true;
 }
 
-void RenderTarget::Activate(int target) {
+void RenderTarget::Activate(RenderDeviceState& device_state, uint8_t target) {
   if (mDirty) {
     uint32_t frame_width, frame_height;
     YRenderDevice::RenderDevice::GetFrameBufferDimensions(frame_width,
@@ -59,8 +61,8 @@ void RenderTarget::Activate(int target) {
     mDirty = false;
   }
 
-  YRenderDevice::RenderDevice::ActivateRenderTarget(
-      target, mRenderTargetIDs[mActiveRenderTargetIndex]);
+  device_state.ActivateRenderTarget(target,
+                                    mRenderTargetIDs[mActiveRenderTargetIndex]);
 }
 
 }} // namespace YEngine { namespace YRenderer {

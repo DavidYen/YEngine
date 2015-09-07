@@ -1,6 +1,8 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "ViewPort.h"
 
+#include "RenderDeviceState.h"
+
 #define INVALID_VIEWPORT static_cast<YRenderDevice::ViewPortID>(-1)
 
 namespace YEngine { namespace YRenderer {
@@ -54,7 +56,7 @@ void ViewPort::SetViewPort(DimensionType top_type, float top,
   mDirty = true;
 }
 
-void ViewPort::Activate() {
+void ViewPort::Activate(RenderDeviceState& render_device_state) {
   if (mDirty) {
     uint32_t frame_width, frame_height;
     YRenderDevice::RenderDevice::GetFrameBufferDimensions(frame_width,
@@ -76,8 +78,8 @@ void ViewPort::Activate() {
     mDirty = false;
   }
 
-  YRenderDevice::RenderDevice::ActivateViewPort(
-      mViewPortIDs[mActiveViewPortIndex]);
+  render_device_state.ActivateViewPort(mViewPortIDs[mActiveViewPortIndex]);
+  
 }
 
 }} // namespace YEngine { namespace YRenderer {

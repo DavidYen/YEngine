@@ -7,6 +7,8 @@
 
 namespace YEngine { namespace YRenderer {
 
+struct RenderDeviceState;
+
 class RenderTarget {
  public:
   RenderTarget(YRenderDevice::PixelFormat format,
@@ -17,7 +19,7 @@ class RenderTarget {
   void SetRenderTarget(YRenderDevice::PixelFormat format,
                        DimensionType width_type, float width,
                        DimensionType height_type, float height);
-  void Activate(int target);
+  void Activate(RenderDeviceState& device_state, uint8_t target);
 
  private:
   float mWidth, mHeight;

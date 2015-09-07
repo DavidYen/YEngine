@@ -6,6 +6,7 @@
 #include <YEngine/YRenderDevice/RenderDevice_Mock.h>
 
 #include "BasicRendererTest.h"
+#include "RenderDeviceState.h"
 
 namespace YEngine { namespace YRenderer {
 
@@ -28,17 +29,20 @@ TEST_F(ViewPortTest, ViewPortActivationTest) {
                     kDimensionType_Absolute, 4.0f,
                     0.1f, 1.0f);
 
+  RenderDeviceState device_state;
+
   // First Activation should create the viewport.
   const YRenderDevice::ViewPortID viewport_id = 123;
   YRenderDevice::RenderDeviceMock::ExpectCreateViewPort(viewport_id,
                                                         1, 2, 3, 4,
                                                         0.1f, 1.0f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id);
-  viewport.Activate();
+  viewport.Activate(device_state);
 
   // Second activation should reuse the same viewport id.
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id);
-  viewport.Activate();
+  device_state.Reset();
+  viewport.Activate(device_state);
 
   // Third activation (when changed data) should allocate a new viewport.
   viewport.SetViewPort(kDimensionType_Absolute, 4.0f,
@@ -51,7 +55,8 @@ TEST_F(ViewPortTest, ViewPortActivationTest) {
       viewport_id2, 4, BASIC_RENDERER_WIDTH * 3,
       2, BASIC_RENDERER_HEIGHT * 1, 0.2f, 0.9f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id2);
-  viewport.Activate();
+  device_state.Reset();
+  viewport.Activate(device_state);
 
   // Fourth activation should re-use the first viewport id.
   viewport.SetViewPort(kDimensionType_Absolute, 2.0f,
@@ -63,7 +68,8 @@ TEST_F(ViewPortTest, ViewPortActivationTest) {
       viewport_id, 2, BASIC_RENDERER_WIDTH * 4,
       6, BASIC_RENDERER_HEIGHT * 8, 0.3f, 0.8f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id);
-  viewport.Activate();
+  device_state.Reset();
+  viewport.Activate(device_state);
 
   // Fifth activation should reuse the second viewport id.
   viewport.SetViewPort(kDimensionType_Absolute, 3.0f,
@@ -75,7 +81,8 @@ TEST_F(ViewPortTest, ViewPortActivationTest) {
       viewport_id2, 3, BASIC_RENDERER_WIDTH * 6,
       9, BASIC_RENDERER_HEIGHT * 12, 0.3f, 0.8f);
   YRenderDevice::RenderDeviceMock::ExpectActivateViewPort(viewport_id2);
-  viewport.Activate();
+  device_state.Reset();
+  viewport.Activate(device_state);
 
   // Release should release both.
   YRenderDevice::RenderDeviceMock::ExpectReleaseViewPort(viewport_id);
