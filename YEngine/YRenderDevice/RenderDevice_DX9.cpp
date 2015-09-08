@@ -1462,15 +1462,8 @@ void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
           static_cast<int>(shader));
 }
 
-void RenderDevice::ActivateSamplerState(int sampler,
-                                        SamplerStateID sampler_state) {
-  YASSERT(sampler_state < ARRAY_SIZE(gSamplerStates.used) &&
-          gSamplerStates.used[sampler_state],
-          "Activating Invalid Blend State ID: %d",
-          static_cast<int>(sampler_state));
-
-  const SamplerState& state = gSamplerStates[sampler_state].state_data;
-  const SamplerFilterState& filter_state = kSamplerFilterStates[state.filter];
+void ActivateSamplerHelper(DWORD sampler, const SamplerState& state,
+                           const SamplerFilterState& filter_state) {
   HRESULT hr = E_FAIL;
 
   hr = gD3DDevice->SetSamplerState(sampler, D3DSAMP_MINFILTER,
@@ -1498,9 +1491,52 @@ void RenderDevice::ActivateSamplerState(int sampler,
   YASSERT(hr == D3D_OK, "Could not set sampler address mode w.");
 }
 
-void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
+void RenderDevice::ActivateVertexSamplerState(int sampler,
+                                        SamplerStateID sampler_state) {
+  YASSERT(sampler_state < ARRAY_SIZE(gSamplerStates.used) &&
+          gSamplerStates.used[sampler_state],
+          "Activating Invalid Sampler State ID: %d",
+          static_cast<int>(sampler_state));
+  YASSERT(sampler < 4, "Invalid Vertex Sampler: %d", sampler);
+
+  const SamplerState& state = gSamplerStates[sampler_state].state_data;
+  const SamplerFilterState& filter_state = kSamplerFilterStates[state.filter];
+  const DWORD sampler_dx9 =
+      static_cast<DWORD>(D3DVERTEXTEXTURESAMPLER0 + sampler);
+  ActivateSamplerHelper(sampler_dx9, state, filter_state);
+}
+
+void RenderDevice::ActivatePixelSamplerState(int sampler,
+                                        SamplerStateID sampler_state) {
+  YASSERT(sampler_state < ARRAY_SIZE(gSamplerStates.used) &&
+          gSamplerStates.used[sampler_state],
+          "Activating Invalid Sampler State ID: %d",
+          static_cast<int>(sampler_state));
+  YASSERT(sampler < D3DDMAPSAMPLER, "Invalid Pixel Sampler: %d", sampler);
+
+  const SamplerState& state = gSamplerStates[sampler_state].state_data;
+  const SamplerFilterState& filter_state = kSamplerFilterStates[state.filter];
+  ActivateSamplerHelper(static_cast<DWORD>(sampler), state, filter_state);
+}
+
+void RenderDevice::ActivateVertexTexture(int sampler, TextureID texture) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Activating Invalid Texture ID: %d", static_cast<int>(texture));
+  YASSERT(sampler < 4, "Invalid Vertex Sampler: %d", sampler);
+
+  const DWORD sampler_dx9 =
+      static_cast<DWORD>(D3DVERTEXTEXTURESAMPLER0 + sampler);
+  HRESULT hr = gD3DDevice->SetTexture(sampler_dx9,
+                                      gTextures[texture].texture);
+  YASSERT(hr == D3D_OK,
+          "Could not set texture ID (%d) to sampler %d.",
+          static_cast<int>(texture), sampler);
+}
+
+void RenderDevice::ActivatePixelTexture(int sampler, TextureID texture) {
+  YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
+          "Activating Invalid Texture ID: %d", static_cast<int>(texture));
+  YASSERT(sampler < D3DDMAPSAMPLER, "Invalid Pixel Sampler: %d", sampler);
 
   HRESULT hr = gD3DDevice->SetTexture(static_cast<DWORD>(sampler),
                                       gTextures[texture].texture);
@@ -1546,8 +1582,8 @@ void RenderDevice::ActivateIndexStream(IndexBufferID index_buffer) {
           static_cast<int>(index_buffer));
 }
 
-void RenderDevice::ActivateConstantBuffer(int start_reg,
-                                          ConstantBufferID constant_buffer) {
+void RenderDevice::ActivateVertexConstantBuffer(
+    int start_reg, ConstantBufferID constant_buffer) {
   YASSERT(constant_buffer < ARRAY_SIZE(gConstBuffers.used) &&
           gConstBuffers.used[constant_buffer],
           "Activating Invalid Constant Buffer ID: %d",
@@ -1557,6 +1593,25 @@ void RenderDevice::ActivateConstantBuffer(int start_reg,
   const int regs = static_cast<int>(const_buffer.size / (sizeof(float) * 4));
 
   HRESULT hr = gD3DDevice->SetVertexShaderConstantF(
+      start_reg,
+      static_cast<float*>(const_buffer.buffer_data),
+      regs);
+  YASSERT(hr == D3D_OK,
+          "Could not activate constant buffer %d",
+          static_cast<int>(constant_buffer));
+}
+
+void RenderDevice::ActivatePixelConstantBuffer(
+    int start_reg, ConstantBufferID constant_buffer) {
+  YASSERT(constant_buffer < ARRAY_SIZE(gConstBuffers.used) &&
+          gConstBuffers.used[constant_buffer],
+          "Activating Invalid Constant Buffer ID: %d",
+          static_cast<int>(constant_buffer));
+
+  const ConstBuffData& const_buffer = gConstBuffers[constant_buffer];
+  const int regs = static_cast<int>(const_buffer.size / (sizeof(float) * 4));
+
+  HRESULT hr = gD3DDevice->SetPixelShaderConstantF(
       start_reg,
       static_cast<float*>(const_buffer.buffer_data),
       regs);

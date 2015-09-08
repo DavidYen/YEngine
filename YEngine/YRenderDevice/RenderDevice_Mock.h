@@ -108,13 +108,19 @@ namespace RenderDeviceMock {
   void ExpectActivateVertexDeclaration(VertexDeclID vertex_decl);
   void ExpectActivateVertexShader(VertexShaderID shader);
   void ExpectActivatePixelShader(PixelShaderID shader);
-  void ExpectActivateSamplerState(int sampler, SamplerStateID sampler_state);
-  void ExpectActivateTexture(int sampler, TextureID texture);
   void ExpectActivateVertexStream(uint32_t stream,
                                   VertexBufferID vertex_buffer);
   void ExpectActivateIndexStream(IndexBufferID index_buffer);
-  void ExpectActivateConstantBuffer(int start_reg,
-                                    ConstantBufferID constant_buffer);
+  void ExpectActivateVertexConstantBuffer(int start_reg,
+                                          ConstantBufferID constant_buffer);
+  void ExpectActivatePixelConstantBuffer(int start_reg,
+                                         ConstantBufferID constant_buffer);
+  void ExpectActivateVertexSamplerState(int sampler,
+                                        SamplerStateID sampler_state);
+  void ExpectActivatePixelSamplerState(int sampler,
+                                       SamplerStateID sampler_state);
+  void ExpectActivateVertexTexture(int sampler, TextureID texture);
+  void ExpectActivatePixelTexture(int sampler, TextureID texture);
   void ExpectActivateDrawPrimitive(DrawPrimitive draw_primitive);
 
   // Draw

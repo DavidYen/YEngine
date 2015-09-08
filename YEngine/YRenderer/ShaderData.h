@@ -8,12 +8,14 @@
 
 namespace YEngine { namespace YRenderer {
 
+struct RenderDeviceState;
+
 class VertexDecl {
  public:
   VertexDecl(const YRenderDevice::VertexDeclElement* elements,
              uint8_t num_elements);
   void Release();
-  void Activate();
+  void Activate(RenderDeviceState& device_state);
 
   const YRenderDevice::VertexDeclElement* GetVertexDeclElements() const {
     return mVertexElements;
@@ -49,7 +51,8 @@ class ShaderFloatArg {
 
   void Initialize(YRenderDevice::UsageType usage);
   void Fill(const void* data, size_t data_size);
-  void Activate();
+  void ActivateVertexShaderArg(RenderDeviceState& device_state);
+  void ActivatePixelShaderArg(RenderDeviceState& device_state);
 
  private:
   const ShaderFloatParam* mFloatParam;
@@ -85,7 +88,8 @@ class ShaderTextureArg {
   void Fill(const void* data, size_t data_size);
   void FillMips(uint8_t mip_levels, const void** datas,
                 const size_t* data_sizes);
-  void Activate();
+  void ActivateVertexShaderTexture(RenderDeviceState& device_state);
+  void ActivatePixelShaderTexture(RenderDeviceState& device_state);
 
  private:
   const ShaderTextureParam* mTextureParam;
@@ -105,7 +109,7 @@ class VertexShader {
   void Release();
 
   void SetVertexShader(const void* shader_data, size_t shader_size);
-  void Activate();
+  void Activate(RenderDeviceState& device_state);
 
  private:
   uint64_t mShaderHash;
@@ -119,7 +123,7 @@ class PixelShader {
   void Release();
 
   void SetPixelShader(const void* shader_data, size_t shader_size);
-  void Activate();
+  void Activate(RenderDeviceState& device_state);
 
  private:
   uint64_t mShaderHash;

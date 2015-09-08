@@ -26,15 +26,33 @@ struct RenderDeviceState {
   void ActivateViewPort(YRenderDevice::ViewPortID id);
   void ActivateBlendState(YRenderDevice::RenderBlendStateID id);
   void ActivateRenderTarget(uint8_t target, YRenderDevice::RenderTargetID id);
+  void ActivateVertexDecl(YRenderDevice::VertexDeclID id);
+  void ActivateVertexFloatArg(uint8_t reg, uint8_t num_regs,
+                              YRenderDevice::ConstantBufferID id);
+  void ActivatePixelFloatArg(uint8_t reg, uint8_t num_regs,
+                             YRenderDevice::ConstantBufferID id);
+  void ActivateVertexSamplerState(uint8_t sampler,
+                                  YRenderDevice::SamplerStateID id);
+  void ActivatePixelSamplerState(uint8_t sampler,
+                                 YRenderDevice::SamplerStateID id);
+  void ActivateVertexTexture(uint8_t sampler,
+                             YRenderDevice::TextureID id);
+  void ActivatePixelTexture(uint8_t sampler,
+                            YRenderDevice::TextureID id);
+  void ActivateVertexShader(YRenderDevice::VertexShaderID id);
+  void ActivatePixelShader(YRenderDevice::PixelShaderID id);
 
  private:
   YRenderDevice::ViewPortID mSetViewPort;
   YRenderDevice::RenderBlendStateID mSetBlendStateID;
-  YRenderDevice::RenderTargetID mRenderTargetIDs[MAX_NUM_RENDER_TARGETS];
+  YRenderDevice::RenderTargetID mSetRenderTargetIDs[MAX_NUM_RENDER_TARGETS];
+  YRenderDevice::VertexDeclID mSetVertexDecl;
   YRenderDevice::ConstantBufferID mSetVertexFloatArg[MAX_NUM_SHADER_REGS];
   YRenderDevice::ConstantBufferID mSetPixelFloatArg[MAX_NUM_SHADER_REGS];
-  YRenderDevice::TextureID mSetPixelTextureArg[MAX_NUM_PIXEL_SAMPLERS];
+  YRenderDevice::SamplerStateID mSetVertexSamplerState[MAX_NUM_VERTEX_SAMPLERS];
+  YRenderDevice::SamplerStateID mSetPixelSamplerState[MAX_NUM_PIXEL_SAMPLERS];
   YRenderDevice::TextureID mSetVertexTextureArg[MAX_NUM_VERTEX_SAMPLERS];
+  YRenderDevice::TextureID mSetPixelTextureArg[MAX_NUM_PIXEL_SAMPLERS];
   YRenderDevice::VertexShaderID mSetVertexShader;
   YRenderDevice::PixelShaderID mSetPixelShader;
 };

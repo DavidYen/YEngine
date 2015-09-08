@@ -135,11 +135,16 @@ namespace RenderDevice {
   void ActivateVertexDeclaration(VertexDeclID vertex_decl);
   void ActivateVertexShader(VertexShaderID shader);
   void ActivatePixelShader(PixelShaderID shader);
-  void ActivateSamplerState(int sampler, SamplerStateID sampler_state);
-  void ActivateTexture(int sampler, TextureID texture);
   void ActivateVertexStream(uint32_t stream, VertexBufferID vertex_buffer);
   void ActivateIndexStream(IndexBufferID index_buffer);
-  void ActivateConstantBuffer(int start_reg, ConstantBufferID constant_buffer);
+  void ActivateVertexConstantBuffer(int start_reg,
+                                    ConstantBufferID constant_buffer);
+  void ActivatePixelConstantBuffer(int start_reg,
+                                   ConstantBufferID constant_buffer);
+  void ActivateVertexSamplerState(int sampler, SamplerStateID sampler_state);
+  void ActivatePixelSamplerState(int sampler, SamplerStateID sampler_state);
+  void ActivateVertexTexture(int sampler, TextureID texture);
+  void ActivatePixelTexture(int sampler, TextureID texture);
   void ActivateDrawPrimitive(DrawPrimitive draw_primitive);
 
   // Draw

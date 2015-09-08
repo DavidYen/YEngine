@@ -115,13 +115,19 @@ namespace {
     virtual void ActivateVertexDeclaration(VertexDeclID vertex_decl) = 0;
     virtual void ActivateVertexShader(VertexShaderID shader) = 0;
     virtual void ActivatePixelShader(PixelShaderID shader) = 0;
-    virtual void ActivateSamplerState(int sampler, SamplerStateID sampler_state) = 0;
-    virtual void ActivateTexture(int sampler, TextureID texture) = 0;
+    virtual void ActivateVertexSamplerState(int sampler,
+                                            SamplerStateID sampler_state) = 0;
+    virtual void ActivatePixelSamplerState(int sampler,
+                                           SamplerStateID sampler_state) = 0;
+    virtual void ActivateVertexTexture(int sampler, TextureID texture) = 0;
+    virtual void ActivatePixelTexture(int sampler, TextureID texture) = 0;
     virtual void ActivateVertexStream(uint32_t stream,
                                       VertexBufferID vertex_buffer) = 0;
     virtual void ActivateIndexStream(IndexBufferID index_buffer) = 0;
-    virtual void ActivateConstantBuffer(int start_reg,
-                                        ConstantBufferID constant_buffer) = 0;
+    virtual void ActivateVertexConstantBuffer(
+        int start_reg, ConstantBufferID constant_buffer) = 0;
+    virtual void ActivatePixelConstantBuffer(
+        int start_reg, ConstantBufferID constant_buffer) = 0;
     virtual void ActivateDrawPrimitive(DrawPrimitive draw_primitive) = 0;
 
     // Draw
@@ -250,14 +256,19 @@ namespace {
     MOCK_METHOD1(ActivateVertexDeclaration, void(VertexDeclID vertex_decl));
     MOCK_METHOD1(ActivateVertexShader, void(VertexShaderID shader));
     MOCK_METHOD1(ActivatePixelShader, void(PixelShaderID shader));
-    MOCK_METHOD2(ActivateSamplerState, void(int sampler,
-                                            SamplerStateID sampler_state));
-    MOCK_METHOD2(ActivateTexture, void(int sampler, TextureID texture));
     MOCK_METHOD2(ActivateVertexStream, void(uint32_t stream,
                                             VertexBufferID vertex_buffer));
     MOCK_METHOD1(ActivateIndexStream, void(IndexBufferID index_buffer));
-    MOCK_METHOD2(ActivateConstantBuffer,
+    MOCK_METHOD2(ActivateVertexConstantBuffer,
                  void(int start_reg, ConstantBufferID constant_buffer));
+    MOCK_METHOD2(ActivatePixelConstantBuffer,
+                 void(int start_reg, ConstantBufferID constant_buffer));
+    MOCK_METHOD2(ActivateVertexSamplerState,
+                 void(int sampler, SamplerStateID sampler_state));
+    MOCK_METHOD2(ActivatePixelSamplerState,
+                 void(int sampler, SamplerStateID sampler_state));
+    MOCK_METHOD2(ActivateVertexTexture, void(int sampler, TextureID texture));
+    MOCK_METHOD2(ActivatePixelTexture, void(int sampler, TextureID texture));
     MOCK_METHOD1(ActivateDrawPrimitive, void(DrawPrimitive draw_primitive));
 
     // Draw
@@ -341,11 +352,14 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   EXPECT_CALL(*gMockRenderDevice, ActivateVertexDeclaration(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateVertexShader(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivatePixelShader(_)).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, ActivateSamplerState(_, _)).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, ActivateTexture(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexSamplerState(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelSamplerState(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexTexture(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelTexture(_, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateVertexStream(_, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateIndexStream(_)).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, ActivateConstantBuffer(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexConstantBuffer(_, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelConstantBuffer(_, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ActivateDrawPrimitive(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, Draw(_, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, DrawInstanced(_, _, _, _)).Times(0);
@@ -608,12 +622,22 @@ void RenderDevice::ActivatePixelShader(PixelShaderID shader) {
   gMockRenderDevice->ActivatePixelShader(shader);
 }
 
-void RenderDevice::ActivateSamplerState(int sampler, SamplerStateID sampler_state) {
-  gMockRenderDevice->ActivateSamplerState(sampler, sampler_state);
+void RenderDevice::ActivateVertexSamplerState(int sampler,
+                                              SamplerStateID sampler_state) {
+  gMockRenderDevice->ActivateVertexSamplerState(sampler, sampler_state);
 }
 
-void RenderDevice::ActivateTexture(int sampler, TextureID texture) {
-  gMockRenderDevice->ActivateTexture(sampler, texture);
+void RenderDevice::ActivatePixelSamplerState(int sampler,
+                                             SamplerStateID sampler_state) {
+  gMockRenderDevice->ActivatePixelSamplerState(sampler, sampler_state);
+}
+
+void RenderDevice::ActivateVertexTexture(int sampler, TextureID texture) {
+  gMockRenderDevice->ActivateVertexTexture(sampler, texture);
+}
+
+void RenderDevice::ActivatePixelTexture(int sampler, TextureID texture) {
+  gMockRenderDevice->ActivatePixelTexture(sampler, texture);
 }
 
 void RenderDevice::ActivateVertexStream(uint32_t stream,
@@ -625,9 +649,14 @@ void RenderDevice::ActivateIndexStream(IndexBufferID index_buffer) {
   gMockRenderDevice->ActivateIndexStream(index_buffer);
 }
 
-void RenderDevice::ActivateConstantBuffer(int start_reg,
-                                          ConstantBufferID constant_buffer) {
-  gMockRenderDevice->ActivateConstantBuffer(start_reg, constant_buffer);
+void RenderDevice::ActivateVertexConstantBuffer(
+    int start_reg, ConstantBufferID constant_buffer) {
+  gMockRenderDevice->ActivateVertexConstantBuffer(start_reg, constant_buffer);
+}
+
+void RenderDevice::ActivatePixelConstantBuffer(
+    int start_reg, ConstantBufferID constant_buffer) {
+  gMockRenderDevice->ActivatePixelConstantBuffer(start_reg, constant_buffer);
 }
 
 void RenderDevice::ActivateDrawPrimitive(DrawPrimitive draw_primitive) {
@@ -1001,14 +1030,29 @@ void RenderDeviceMock::ExpectActivatePixelShader(PixelShaderID shader) {
       .Times(1);
 }
 
-void RenderDeviceMock::ExpectActivateSamplerState(
+void RenderDeviceMock::ExpectActivateVertexSamplerState(
     int sampler, SamplerStateID sampler_state) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateSamplerState(sampler, sampler_state))
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexSamplerState(sampler,
+                                                             sampler_state))
       .Times(1);
 }
 
-void RenderDeviceMock::ExpectActivateTexture(int sampler, TextureID texture) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateTexture(sampler, texture))
+void RenderDeviceMock::ExpectActivatePixelSamplerState(
+    int sampler, SamplerStateID sampler_state) {
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelSamplerState(sampler,
+                                                            sampler_state))
+      .Times(1);
+}
+
+void RenderDeviceMock::ExpectActivateVertexTexture(int sampler,
+                                                   TextureID texture) {
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexTexture(sampler, texture))
+      .Times(1);
+}
+
+void RenderDeviceMock::ExpectActivatePixelTexture(int sampler,
+                                                  TextureID texture) {
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelTexture(sampler, texture))
       .Times(1);
 }
 
@@ -1023,10 +1067,17 @@ void RenderDeviceMock::ExpectActivateIndexStream(IndexBufferID index_buffer) {
       .Times(1);
 }
 
-void RenderDeviceMock::ExpectActivateConstantBuffer(
+void RenderDeviceMock::ExpectActivateVertexConstantBuffer(
     int start_reg, ConstantBufferID constant_buffer) {
-  EXPECT_CALL(*gMockRenderDevice, ActivateConstantBuffer(start_reg,
-                                                         constant_buffer))
+  EXPECT_CALL(*gMockRenderDevice, ActivateVertexConstantBuffer(start_reg,
+                                                               constant_buffer))
+      .Times(1);
+}
+
+void RenderDeviceMock::ExpectActivatePixelConstantBuffer(
+    int start_reg, ConstantBufferID constant_buffer) {
+  EXPECT_CALL(*gMockRenderDevice, ActivatePixelConstantBuffer(start_reg,
+                                                              constant_buffer))
       .Times(1);
 }
 

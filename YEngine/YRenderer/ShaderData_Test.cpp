@@ -9,6 +9,7 @@
 #include <YEngine/YRenderDevice/SamplerState.h>
 
 #include "BasicRendererTest.h"
+#include "RenderDeviceState.h"
 
 namespace YEngine { namespace YRenderer {
 
@@ -30,6 +31,7 @@ TEST_F(ShaderDataTest, VertexDeclActivationTest) {
       YRenderDevice::kVertexElementUsage_Position },
   };
   VertexDecl vertex_decl(kElements, ARRAY_SIZE(kElements));
+  RenderDeviceState device_state;
 
   const YRenderDevice::VertexDeclID kVertexDeclID = 123;
   YRenderDevice::RenderDeviceMock::ExpectCreateVertexDeclaration(
@@ -38,12 +40,14 @@ TEST_F(ShaderDataTest, VertexDeclActivationTest) {
       vertex_decl.GetNumVertexElements());
   YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
       kVertexDeclID);
-  vertex_decl.Activate();
+  device_state.Reset();
+  vertex_decl.Activate(device_state);
 
   // Second activation should not create the declaration again
   YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
       kVertexDeclID);
-  vertex_decl.Activate();
+  device_state.Reset();
+  vertex_decl.Activate(device_state);
 
   YRenderDevice::RenderDeviceMock::ExpectReleaseVertexDeclaration(
       kVertexDeclID);
@@ -70,14 +74,22 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgInvalidFill,
   float_arg.Fill(kFloats, sizeof(kFloats));
 }
 
-TEST_FAILURE_F(ShaderDataFailTest, ShaderFloatArgActivateNoFill,
+TEST_FAILURE_F(ShaderDataFailTest, VertexShaderFloatArgActivateNoFill,
                "Cannot activate") {
   const ShaderFloatParam float_param(4, 0);
   ShaderFloatArg float_arg(&float_param);
   float_arg.Initialize(YRenderDevice::kUsageType_Static);
-  YRenderDevice::RenderDeviceMock::ExpectActivateConstantBuffer(
-      0, static_cast<YRenderDevice::ConstantBufferID>(-1));
-  float_arg.Activate();
+  RenderDeviceState device_state;
+  float_arg.ActivateVertexShaderArg(device_state);
+}
+
+TEST_FAILURE_F(ShaderDataFailTest, PixelShaderFloatArgActivateNoFill,
+               "Cannot activate") {
+  const ShaderFloatParam float_param(4, 0);
+  ShaderFloatArg float_arg(&float_param);
+  float_arg.Initialize(YRenderDevice::kUsageType_Static);
+  RenderDeviceState device_state;
+  float_arg.ActivatePixelShaderArg(device_state);
 }
 
 TEST_F(ShaderDataTest, ShaderFloatFillTest) {
@@ -119,6 +131,7 @@ TEST_F(ShaderDataTest, ShaderFloatFillTest) {
 }
 
 TEST_F(ShaderDataTest, ShaderFloatActivationTest) {
+  RenderDeviceState device_state;
   const ShaderFloatParam float_param(4, 3);
   ShaderFloatArg float_arg(&float_param);
   float_arg.Initialize(YRenderDevice::kUsageType_Static);
@@ -132,13 +145,13 @@ TEST_F(ShaderDataTest, ShaderFloatActivationTest) {
   float_arg.Fill(kFloats, sizeof(kFloats));
 
   // Activate
-  YRenderDevice::RenderDeviceMock::ExpectActivateConstantBuffer(
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexConstantBuffer(
       3, kConstantBufferID);
-  float_arg.Activate();
+  float_arg.ActivateVertexShaderArg(device_state);
 
-  YRenderDevice::RenderDeviceMock::ExpectActivateConstantBuffer(
+  YRenderDevice::RenderDeviceMock::ExpectActivatePixelConstantBuffer(
       3, kConstantBufferID);
-  float_arg.Activate();
+  float_arg.ActivatePixelShaderArg(device_state);
 
   // Release
   YRenderDevice::RenderDeviceMock::ExpectReleaseConstantBuffer(
@@ -191,19 +204,28 @@ TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgInvalidFillSize,
   texture_arg.Fill(kPixelData, sizeof(kPixelData));
 }
 
-TEST_FAILURE_F(ShaderDataFailTest, ShaderTexArgActivateNoFill,
+TEST_FAILURE_F(ShaderDataFailTest, VertexShaderTexArgActivateNoFill,
                "Cannot activate") {
+  RenderDeviceState device_state;
   const ShaderTextureParam texture_param(3, 0);
   ShaderTextureArg texture_arg(&texture_param);
   texture_arg.Initialize(YRenderDevice::kUsageType_Static,
                          123, 234, 1,
                          YRenderDevice::kPixelFormat_A8R8G8B8);
 
-  YRenderDevice::RenderDeviceMock::ExpectActivateSamplerState(
-      3, static_cast<YRenderDevice::SamplerStateID>(-1));
-  YRenderDevice::RenderDeviceMock::ExpectActivateTexture(
-      3, static_cast<YRenderDevice::TextureID>(-1));
-  texture_arg.Activate();
+  texture_arg.ActivateVertexShaderTexture(device_state);
+}
+
+TEST_FAILURE_F(ShaderDataFailTest, PixelShaderTexArgActivateNoFill,
+               "Cannot activate") {
+  RenderDeviceState device_state;
+  const ShaderTextureParam texture_param(3, 0);
+  ShaderTextureArg texture_arg(&texture_param);
+  texture_arg.Initialize(YRenderDevice::kUsageType_Static,
+                         123, 234, 1,
+                         YRenderDevice::kPixelFormat_A8R8G8B8);
+
+  texture_arg.ActivatePixelShaderTexture(device_state);
 }
 
 TEST_F(ShaderDataTest, ShaderTexFillTest) {
@@ -278,6 +300,7 @@ TEST_F(ShaderDataTest, ShaderTexFillMipTest) {
 }
 
 TEST_F(ShaderDataTest, ShaderTexActivationTest) {
+  RenderDeviceState device_state;
   // Sampler State.
   YRenderDevice::SamplerState sampler_state;
   const uint64_t sampler_hash =
@@ -307,10 +330,15 @@ TEST_F(ShaderDataTest, ShaderTexActivationTest) {
   const YRenderDevice::SamplerStateID kSamplerStateID = 234;
   YRenderDevice::RenderDeviceMock::ExpectCreateSamplerState(
       kSamplerStateID, *sampler_state_pointer);
-  YRenderDevice::RenderDeviceMock::ExpectActivateSamplerState(3,
-                                                              kSamplerStateID);
-  YRenderDevice::RenderDeviceMock::ExpectActivateTexture(3, kTextureID);
-  texture_arg.Activate();
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexSamplerState(
+      3, kSamplerStateID);
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexTexture(3, kTextureID);
+  texture_arg.ActivateVertexShaderTexture(device_state);
+
+  YRenderDevice::RenderDeviceMock::ExpectActivatePixelSamplerState(
+      3, kSamplerStateID);
+  YRenderDevice::RenderDeviceMock::ExpectActivatePixelTexture(3, kTextureID);
+  texture_arg.ActivatePixelShaderTexture(device_state);
 
   // Release.
   YRenderDevice::RenderDeviceMock::ExpectReleaseTexture(kTextureID);
@@ -367,6 +395,7 @@ TEST_F(ShaderDataTest, VertexShaderSet) {
 }
 
 TEST_F(ShaderDataTest, VertexShaderActivation) {
+  RenderDeviceState device_state;
   const char vertex_shader_data[] = "Test Vertex Shader Data.";
   VertexShader vertex_shader;
 
@@ -376,7 +405,7 @@ TEST_F(ShaderDataTest, VertexShaderActivation) {
   vertex_shader.SetVertexShader(vertex_shader_data, sizeof(vertex_shader_data));
 
   YRenderDevice::RenderDeviceMock::ExpectActivateVertexShader(kVertexShaderID);
-  vertex_shader.Activate();
+  vertex_shader.Activate(device_state);
 
   YRenderDevice::RenderDeviceMock::ExpectReleaseVertexShader(kVertexShaderID);
   vertex_shader.Release();
@@ -429,6 +458,7 @@ TEST_F(ShaderDataTest, PixelShaderSet) {
 }
 
 TEST_F(ShaderDataTest, PixelShaderActivation) {
+  RenderDeviceState device_state;
   const char pixel_shader_data[] = "Test Pixel Shader Data.";
   PixelShader pixel_shader;
 
@@ -438,7 +468,7 @@ TEST_F(ShaderDataTest, PixelShaderActivation) {
   pixel_shader.SetPixelShader(pixel_shader_data, sizeof(pixel_shader_data));
 
   YRenderDevice::RenderDeviceMock::ExpectActivatePixelShader(kPixelShaderID);
-  pixel_shader.Activate();
+  pixel_shader.Activate(device_state);
 
   YRenderDevice::RenderDeviceMock::ExpectReleasePixelShader(kPixelShaderID);
   pixel_shader.Release();

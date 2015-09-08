@@ -5,6 +5,7 @@
 
 #include <YCommon/YUtils/Hash.h>
 
+#include "RenderDeviceState.h"
 #include "RenderStateCache.h"
 
 #define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
@@ -34,14 +35,14 @@ void VertexDecl::Release() {
   }
 }
 
-void VertexDecl::Activate() {
+void VertexDecl::Activate(RenderDeviceState& device_state) {
   if (mVertexDeclID == INVALID_VERTEX_DECL) {
     mVertexDeclID =
         YRenderDevice::RenderDevice::CreateVertexDeclaration(
             mVertexElements, mNumVertexElements);
   }
 
-  YRenderDevice::RenderDevice::ActivateVertexDeclaration(mVertexDeclID);
+  device_state.ActivateVertexDecl(mVertexDeclID);
 }
 
 ShaderFloatArg::ShaderFloatArg(const ShaderFloatParam* float_param)
@@ -88,12 +89,24 @@ void ShaderFloatArg::Fill(const void* data, size_t data_size) {
   }
 }
 
-void ShaderFloatArg::Activate() {
+void ShaderFloatArg::ActivateVertexShaderArg(RenderDeviceState& device_state) {
   const uint8_t reg = mFloatParam->mReg;
+  const uint8_t num_floats = mFloatParam->mNumFloats;
+  const uint8_t num_regs = num_floats / 4 + (num_floats % 4 ? 1 : 0);
   YASSERT(mConstantBufferIDs[mActiveIndex] != INVALID_CONSTANT_BUFFER,
           "Cannot activate non-filled shader float argument.");
-  YRenderDevice::RenderDevice::ActivateConstantBuffer(
-      reg, mConstantBufferIDs[mActiveIndex]);
+  device_state.ActivateVertexFloatArg(reg, num_regs,
+                                      mConstantBufferIDs[mActiveIndex]);
+}
+
+void ShaderFloatArg::ActivatePixelShaderArg(RenderDeviceState& device_state) {
+  const uint8_t reg = mFloatParam->mReg;
+  const uint8_t num_floats = mFloatParam->mNumFloats;
+  const uint8_t num_regs = num_floats / 4 + (num_floats % 4 ? 1 : 0);
+  YASSERT(mConstantBufferIDs[mActiveIndex] != INVALID_CONSTANT_BUFFER,
+          "Cannot activate non-filled shader float argument.");
+  device_state.ActivatePixelFloatArg(reg, num_regs,
+                                     mConstantBufferIDs[mActiveIndex]);
 }
 
 ShaderTextureArg::ShaderTextureArg(const ShaderTextureParam* texture_param)
@@ -175,7 +188,8 @@ void ShaderTextureArg::FillMips(uint8_t mip_levels,
   }
 }
 
-void ShaderTextureArg::Activate() {
+void ShaderTextureArg::ActivateVertexShaderTexture(
+    RenderDeviceState& device_state) {
   YASSERT(mTextureIDs[mActiveIndex] != INVALID_TEXTURE,
           "Cannot activate texture which has not been filled.");
   const uint8_t slot_num = mTextureParam->mSlot;
@@ -183,9 +197,23 @@ void ShaderTextureArg::Activate() {
     mSamplerStateHash = mTextureParam->mSamplerStateHash;
     mSamplerStateID = RenderStateCache::GetSamplerStateID(mSamplerStateHash);
   }
-  YRenderDevice::RenderDevice::ActivateSamplerState(slot_num, mSamplerStateID);
-  YRenderDevice::RenderDevice::ActivateTexture(slot_num,
-                                               mTextureIDs[mActiveIndex]);
+
+  device_state.ActivateVertexSamplerState(slot_num, mSamplerStateID);
+  device_state.ActivateVertexTexture(slot_num, mTextureIDs[mActiveIndex]);
+}
+
+void ShaderTextureArg::ActivatePixelShaderTexture(
+    RenderDeviceState& device_state) {
+  YASSERT(mTextureIDs[mActiveIndex] != INVALID_TEXTURE,
+          "Cannot activate texture which has not been filled.");
+  const uint8_t slot_num = mTextureParam->mSlot;
+  if (mSamplerStateHash != mTextureParam->mSamplerStateHash) {
+    mSamplerStateHash = mTextureParam->mSamplerStateHash;
+    mSamplerStateID = RenderStateCache::GetSamplerStateID(mSamplerStateHash);
+  }
+
+  device_state.ActivatePixelSamplerState(slot_num, mSamplerStateID);
+  device_state.ActivatePixelTexture(slot_num, mTextureIDs[mActiveIndex]);
 }
 
 VertexShader::VertexShader()
@@ -222,9 +250,8 @@ void VertexShader::SetVertexShader(const void* shader_data,
   }
 }
 
-void VertexShader::Activate() {
-  YRenderDevice::RenderDevice::ActivateVertexShader(
-      mVertexShaderIDs[mActiveIndex]);
+void VertexShader::Activate(RenderDeviceState& device_state) {
+  device_state.ActivateVertexShader(mVertexShaderIDs[mActiveIndex]);
 }
 
 PixelShader::PixelShader()
@@ -261,9 +288,8 @@ void PixelShader::SetPixelShader(const void* shader_data,
   }
 }
 
-void PixelShader::Activate() {
-  YRenderDevice::RenderDevice::ActivatePixelShader(
-      mPixelShaderIDs[mActiveIndex]);
+void PixelShader::Activate(RenderDeviceState& device_state) {
+  device_state.ActivatePixelShader(mPixelShaderIDs[mActiveIndex]);
 }
 
 }} // namespace YEngine { namespace YRenderer {

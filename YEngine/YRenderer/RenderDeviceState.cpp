@@ -26,9 +26,90 @@ void RenderDeviceState::ActivateBlendState(
 
 void RenderDeviceState::ActivateRenderTarget(uint8_t target,
                                              YRenderDevice::RenderTargetID id) {
-  if (mRenderTargetIDs[target] != id) {
+  if (mSetRenderTargetIDs[target] != id) {
     YRenderDevice::RenderDevice::ActivateRenderTarget(target, id);
-    mRenderTargetIDs[target] = id;
+    mSetRenderTargetIDs[target] = id;
+  }
+}
+
+void RenderDeviceState::ActivateVertexDecl(YRenderDevice::VertexDeclID id) {
+  if (mSetVertexDecl != id) {
+    YRenderDevice::RenderDevice::ActivateVertexDeclaration(id);
+    mSetVertexDecl = id;
+  }
+}
+
+void RenderDeviceState::ActivateVertexFloatArg(
+    uint8_t reg, uint8_t num_regs, YRenderDevice::ConstantBufferID id) {
+  bool update = false;
+  for (uint8_t i = 0; i < num_regs; ++i) {
+    if (mSetVertexFloatArg[reg + i] != id) {
+      mSetVertexFloatArg[reg + i] = id;
+      update = true;
+    }
+  }
+
+  if (update)
+    YRenderDevice::RenderDevice::ActivateVertexConstantBuffer(reg, id);
+}
+
+void RenderDeviceState::ActivatePixelFloatArg(
+    uint8_t reg, uint8_t num_regs, YRenderDevice::ConstantBufferID id) {
+  bool update = false;
+  for (uint8_t i = 0; i < num_regs; ++i) {
+    if (mSetPixelFloatArg[reg + i] != id) {
+      mSetPixelFloatArg[reg + i] = id;
+      update = true;
+    }
+  }
+
+  if (update)
+    YRenderDevice::RenderDevice::ActivatePixelConstantBuffer(reg, id);
+}
+
+void RenderDeviceState::ActivateVertexSamplerState(
+    uint8_t sampler, YRenderDevice::SamplerStateID id) {
+  if (mSetVertexSamplerState[sampler] != id) {
+    YRenderDevice::RenderDevice::ActivateVertexSamplerState(sampler, id);
+    mSetVertexSamplerState[sampler] = id;
+  }
+}
+
+void RenderDeviceState::ActivatePixelSamplerState(
+    uint8_t sampler, YRenderDevice::SamplerStateID id) {
+  if (mSetPixelSamplerState[sampler] != id) {
+    YRenderDevice::RenderDevice::ActivatePixelSamplerState(sampler, id);
+    mSetPixelSamplerState[sampler] = id;
+  }
+}
+
+void RenderDeviceState::ActivateVertexTexture(
+    uint8_t sampler, YRenderDevice::TextureID id) {
+  if (mSetVertexTextureArg[sampler] != id) {
+    YRenderDevice::RenderDevice::ActivateVertexTexture(sampler, id);
+    mSetVertexTextureArg[sampler] = id;
+  }
+}
+
+void RenderDeviceState::ActivatePixelTexture(
+    uint8_t sampler, YRenderDevice::TextureID id) {
+  if (mSetPixelTextureArg[sampler] != id) {
+    YRenderDevice::RenderDevice::ActivatePixelTexture(sampler, id);
+    mSetPixelTextureArg[sampler] = id;
+  }
+}
+
+void RenderDeviceState::ActivateVertexShader(YRenderDevice::VertexShaderID id) {
+  if (mSetVertexShader != id) {
+    YRenderDevice::RenderDevice::ActivateVertexShader(id);
+    mSetVertexShader = id;
+  }
+}
+
+void RenderDeviceState::ActivatePixelShader(YRenderDevice::PixelShaderID id) {
+  if (mSetPixelShader != id) {
+    YRenderDevice::RenderDevice::ActivatePixelShader(id);
+    mSetPixelShader = id;
   }
 }
 
