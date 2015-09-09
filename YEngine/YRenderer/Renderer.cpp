@@ -222,23 +222,41 @@ namespace {
   YCommon::YContainers::TypedHashTable<ShdrTexParamInternal> gShdrTexParams;
 
   struct VertexShaderInternal : public RefCountBase {
-    VertexShaderInternal(uint64_t shader_hash,
-                         YRenderDevice::VertexShaderID shader_id)
+    VertexShaderInternal(const void* shader_data, size_t shader_size)
       : RefCountBase(),
-        mShaderHash(shader_hash),
-        mVertexShaderID(shader_id) {}
-    uint64_t mShaderHash;
+        mVertexShaderID(
+            YRenderDevice::RenderDevice::CreateVertexShader(shader_data,
+                                                            shader_size)) {
+    }
+
+    void Release() {
+      YRenderDevice::RenderDevice::ReleaseVertexShader(mVertexShaderID);
+    }
+
+    void Activate(RenderDeviceState& device_state) {
+      device_state.ActivateVertexShader(mVertexShaderID);
+    }
+
     YRenderDevice::VertexShaderID mVertexShaderID;
   };
   YCommon::YContainers::TypedHashTable<VertexShaderInternal> gVertexShaders;
 
   struct PixelShaderInternal : public RefCountBase {
-    PixelShaderInternal(uint64_t shader_hash,
-                        YRenderDevice::PixelShaderID shader_id)
+    PixelShaderInternal(const void* shader_data, size_t shader_size)
       : RefCountBase(),
-        mShaderHash(shader_hash),
-        mPixelShaderID(shader_id) {}
-    uint64_t mShaderHash;
+        mPixelShaderID(
+            YRenderDevice::RenderDevice::CreatePixelShader(shader_data,
+                                                           shader_size)) {
+    }
+
+    void Release() {
+      YRenderDevice::RenderDevice::ReleasePixelShader(mPixelShaderID);
+    }
+
+    void Activate(RenderDeviceState& device_state) {
+      device_state.ActivatePixelShader(mPixelShaderID);
+    }
+
     YRenderDevice::PixelShaderID mPixelShaderID;
   };
   YCommon::YContainers::TypedHashTable<PixelShaderInternal> gPixelShaders;
@@ -273,6 +291,13 @@ namespace {
       memcpy(mPixelShdrTexParams, pixel_shader_texture_params,
              num_pixel_shdr_texture_params * sizeof(mPixelShdrTexParams[0]));
     }
+
+    void Activate(RenderDeviceState& device_state) {
+      mVertexDecl->Activate(device_state);
+      mVertexShader->Activate(device_state);
+      mPixelShader->Activate(device_state);
+    }
+
     uint8_t mNumVertexShdrFloatParams, mNumPixelShdrFloatParams;
     uint8_t mNumVertexShdrTexParams, mNumPixelShdrTexParams;
     uint32_t mActivatedArrayIndex;
@@ -464,6 +489,29 @@ namespace {
     void ExecuteRenderKey(RenderDeviceState& device_state) const {
       mViewPort->Activate(device_state);
       mRenderPass->Activate(device_state);
+      mShaderData->Activate(device_state);
+
+      const uint8_t vertex_float_args = mNumVertexShaderFloatArgs;
+      for (uint8_t i = 0; i < vertex_float_args; ++i) {
+        mVertexShaderFloatArgs[i]->ActivateVertexShaderArg(device_state);
+      }
+
+      const uint8_t vertex_textures = mNumVertexShaderTexArgs;
+      for (uint8_t i = 0; i < vertex_textures; ++i) {
+        mVertexShaderTexArgs[i]->ActivateVertexShaderTexture(device_state);
+      }
+
+      const uint8_t pixel_float_args = mNumPixelShaderFloatArgs;
+      for (uint8_t i = 0; i < pixel_float_args; ++i) {
+        mPixelShaderFloatArgs[i]->ActivatePixelShaderArg(device_state);
+      }
+
+      const uint8_t pixel_textures = mNumPixelShaderTexArgs;
+      for (uint8_t i = 0; i < pixel_textures; ++i) {
+        mPixelShaderTexArgs[i]->ActivatePixelShaderTexture(device_state);
+      }
+
+      
     }
 
     uint64_t GetRenderKey(uint32_t key_num, uint32_t pass_num,
@@ -1029,10 +1077,8 @@ void Renderer::RegisterShaderData(
     VertexShaderInternal* vertex_shader =
         gVertexShaders.GetValue(vertex_shader_hash);
     if (nullptr == vertex_shader) {
-      VertexShaderInternal new_vertex_shader(
-          vertex_shader_hash,
-          YRenderDevice::RenderDevice::CreateVertexShader(vertex_shader_data,
-                                                          vertex_shader_size));
+      VertexShaderInternal new_vertex_shader(vertex_shader_data,
+                                             vertex_shader_size);
       vertex_shader = gVertexShaders.Insert(vertex_shader_hash,
                                             new_vertex_shader);
     }
@@ -1044,10 +1090,8 @@ void Renderer::RegisterShaderData(
     PixelShaderInternal* pixel_shader =
         gPixelShaders.GetValue(pixel_shader_hash);
     if (nullptr == pixel_shader) {
-      PixelShaderInternal new_pixel_shader(
-          pixel_shader_hash,
-          YRenderDevice::RenderDevice::CreatePixelShader(pixel_shader_data,
-                                                         pixel_shader_size));
+      PixelShaderInternal new_pixel_shader(pixel_shader_data,
+                                           pixel_shader_size);
       pixel_shader = gPixelShaders.Insert(pixel_shader_hash, new_pixel_shader);
     }
     pixel_shader->IncRef();
@@ -1357,17 +1401,15 @@ bool Renderer::ReleaseShaderData(const char* shader_name,
   if (shader_data->DecRef()) {
     PixelShaderInternal* pixel_shader = shader_data->mPixelShader;
     if (pixel_shader->DecRef()) {
-      YRenderDevice::RenderDevice::ReleasePixelShader(
-          pixel_shader->mPixelShaderID);
-      const bool removed = gPixelShaders.Remove(pixel_shader->mShaderHash);
+      pixel_shader->Release();
+      const bool removed = gPixelShaders.Remove(pixel_shader);
       YDEBUG_CHECK(removed, "Pixel shader removal sanity checked failed.");
     }
 
     VertexShaderInternal* vertex_shader = shader_data->mVertexShader;
     if (vertex_shader->DecRef()) {
-      YRenderDevice::RenderDevice::ReleaseVertexShader(
-          vertex_shader->mVertexShaderID);
-      const bool removed = gVertexShaders.Remove(vertex_shader->mShaderHash);
+      vertex_shader->Release();
+      const bool removed = gVertexShaders.Remove(vertex_shader);
       YASSERT(removed, "Vertex shader removal sanity checked failed.");
     }
 

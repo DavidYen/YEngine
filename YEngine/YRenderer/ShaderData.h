@@ -103,34 +103,6 @@ class ShaderTextureArg {
   YRenderDevice::TextureID mTextureIDs[2];
 };
 
-class VertexShader {
- public:
-  VertexShader();
-  void Release();
-
-  void SetVertexShader(const void* shader_data, size_t shader_size);
-  void Activate(RenderDeviceState& device_state);
-
- private:
-  uint64_t mShaderHash;
-  YRenderDevice::VertexShaderID mVertexShaderIDs[2];
-  uint8_t mActiveIndex;
-};
-
-class PixelShader {
- public:
-  PixelShader();
-  void Release();
-
-  void SetPixelShader(const void* shader_data, size_t shader_size);
-  void Activate(RenderDeviceState& device_state);
-
- private:
-  uint64_t mShaderHash;
-  uint8_t mActiveIndex;
-  YRenderDevice::PixelShaderID mPixelShaderIDs[2];
-};
-
 }} // namespace YEngine { namespace YRenderer {
 
 #endif // YENGINE_YRENDERER_SHADERDATA_H
