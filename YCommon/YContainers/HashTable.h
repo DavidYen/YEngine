@@ -132,6 +132,10 @@ class FullTypedHashTable : public TypedHashTable<T2> {
   bool Remove(const T1& key) {
     return TypedHashTable::Remove(&key, sizeof(key));
   }
+
+  bool Remove(const T2* value) {
+    return TypedHashTable::Remove(value);
+  }
 };
 
 template <typename T, size_t entries>
