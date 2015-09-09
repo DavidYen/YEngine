@@ -43,6 +43,19 @@ class BaseHashTableTest : public ::testing::Test {
     EXPECT_FALSE(hash_table.Remove(hash_key, sizeof(hash_key)));
   }
 
+  void DoRemoveValueTest() {
+    ContainedHT hash_table;
+
+    const char hash_key[] = "hash key";
+    int hash_value = 123;
+    void* value = hash_table.Insert(hash_key, sizeof(hash_key), hash_value);
+
+    EXPECT_EQ(1, hash_table.GetCurrentSize());
+    EXPECT_TRUE(hash_table.Remove(value));
+    EXPECT_EQ(0, hash_table.GetCurrentSize());
+    EXPECT_FALSE(hash_table.Remove(value));
+  }
+
   void DoGetValueTest() {
     ContainedHT hash_table;
 
@@ -102,6 +115,8 @@ class HashTableTest : public BaseHashTableTest<
 
 HASH_TABLE_TEST(ConstructorTest);
 HASH_TABLE_TEST(InsertionTest);
+HASH_TABLE_TEST(RemovalTest);
+HASH_TABLE_TEST(RemoveValueTest);
 HASH_TABLE_TEST(GetValueTest);
 HASH_TABLE_TEST(MultipleValuesTest);
 HASH_TABLE_TEST(GetEmptyValueTest);

@@ -33,6 +33,7 @@ class AtomicHashTable {
 
   bool Remove(const void* key, size_t key_size);
   bool Remove(uint64_t hash_key);
+  bool Remove(const void* hash_table_value);
 
   const void* const GetValue(const void* key, size_t key_size) const;
   const void* const GetValue(uint64_t hash_key) const;

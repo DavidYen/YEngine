@@ -141,6 +141,35 @@ bool AtomicHashTable::Remove(uint64_t hash_key) {
   return false;
 }
 
+bool AtomicHashTable::Remove(const void* hash_table_value) {
+  const size_t key_table_size = sizeof(uint64_t) * mNumEntries;
+  const uint8_t* hash_value_table =
+      static_cast<const uint8_t*>(mBuffer) + key_table_size;
+  const uint8_t* hash_value_end =
+      hash_value_table + (mMaxValueSize * mNumEntries);
+  const uint8_t* value_ptr = static_cast<const uint8_t*>(hash_table_value);
+  YASSERT(value_ptr >= hash_value_table &&
+          value_ptr < hash_value_end,
+          "Cannot remove hash table value that is out of range.");
+  YASSERT((value_ptr - hash_value_table) % mMaxValueSize == 0,
+          "Invalid hash table value pointer.");
+
+  uint64_t* hash_table = static_cast<uint64_t*>(mBuffer);
+  const uint64_t index = (value_ptr - hash_value_table) / mMaxValueSize;
+  const uint64_t hash_key = hash_table[index];
+
+  if (hash_key == REMOVED_VALUE || hash_key == EMPTY_VALUE)
+    return false;
+
+  if (YCommon::AtomicCmpSet64(&hash_table[index],
+                              hash_key,
+                              REMOVED_VALUE)) {
+    YCommon::AtomicAdd32(&mCurrentEntries, -1);
+    return true;
+  }
+  return false;
+}
+
 const void* const AtomicHashTable::GetValue(const void* key,
                                             size_t key_size) const {
   return GetValue(YCommon::YUtils::Hash::Hash64(key, key_size));
