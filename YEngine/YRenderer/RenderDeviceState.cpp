@@ -113,4 +113,18 @@ void RenderDeviceState::ActivatePixelShader(YRenderDevice::PixelShaderID id) {
   }
 }
 
+void RenderDeviceState::ActivateIndexStream(YRenderDevice::IndexBufferID id) {
+  if (mSetIndexStream != id) {
+    YRenderDevice::RenderDevice::ActivateIndexStream(id);
+    mSetIndexStream = id;
+  }
+}
+
+void RenderDeviceState::ActivateVertexStream(YRenderDevice::VertexBufferID id) {
+  if (mSetVertexStream != id) {
+    YRenderDevice::RenderDevice::ActivateVertexStream(0, id);
+    mSetVertexStream = id;
+  }
+}
+
 }} // namespace YEngine { namespace YRenderer {

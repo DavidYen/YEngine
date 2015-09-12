@@ -7,6 +7,7 @@ source_set("YRenderer_Common") {
     "RenderStateCache.cpp",
     "RenderTarget.cpp",
     "ShaderData.cpp",
+    "VertexBuffer.cpp",
     "ViewPort.cpp",
   ]
 
@@ -29,6 +30,7 @@ unit_test("YRenderer_Test") {
     "RenderStateCache_Test.cpp",
     "RenderTarget_Test.cpp",
     "ShaderData_Test.cpp",
+    "VertexBuffer_Test.cpp",
     "ViewPort_Test.cpp",
   ]
 

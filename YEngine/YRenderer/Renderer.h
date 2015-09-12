@@ -107,6 +107,7 @@ namespace Renderer {
   // Set Render Data Here, these store the pointers and uploads data.
   void SetVertexData(
       uint64_t vertex_data_hash,
+      YRenderDevice::DrawPrimitive draw_primitive,
       YRenderDevice::UsageType usage_type,
       size_t num_vertex_elements,
       TypedReadRefData<YRenderDevice::VertexElementType> data_types,
@@ -115,6 +116,7 @@ namespace Renderer {
       ReadRefData* vertex_datas);
   void AppendVertexData(
       uint64_t vertex_data_hash,
+      YRenderDevice::DrawPrimitive draw_primitive,
       YRenderDevice::UsageType usage_type,
       size_t num_vertex_elements,
       TypedReadRefData<YRenderDevice::VertexElementType> data_types,

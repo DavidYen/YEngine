@@ -11,6 +11,7 @@
 #include <YCommon/YContainers/UnorderedArray.h>
 #include <YCommon/YUtils/Hash.h>
 #include <YEngine/YCore/StringTable.h>
+#include <YEngine/YRenderDevice/DrawPrimitive.h>
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/SamplerState.h>
 
@@ -362,6 +363,7 @@ namespace {
     uint8_t mCurrentIndex;
     YRenderDevice::IndexBufferID mIndexBufferIDs[2];
     YRenderDevice::VertexBufferID mVertexBufferIDs[2];
+    YRenderDevice::DrawPrimitive mDrawPrimitive[2];
     VertexDeclInternal* mVertexDecl;
   };
   YCommon::YContainers::TypedMemPool<VertexBufferInternal> gVertexBuffers;
@@ -511,7 +513,7 @@ namespace {
         mPixelShaderTexArgs[i]->ActivatePixelShaderTexture(device_state);
       }
 
-      
+
     }
 
     uint64_t GetRenderKey(uint32_t key_num, uint32_t pass_num,

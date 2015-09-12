@@ -41,6 +41,8 @@ struct RenderDeviceState {
                             YRenderDevice::TextureID id);
   void ActivateVertexShader(YRenderDevice::VertexShaderID id);
   void ActivatePixelShader(YRenderDevice::PixelShaderID id);
+  void ActivateIndexStream(YRenderDevice::IndexBufferID id);
+  void ActivateVertexStream(YRenderDevice::VertexBufferID id);
 
  private:
   YRenderDevice::ViewPortID mSetViewPort;
@@ -55,6 +57,8 @@ struct RenderDeviceState {
   YRenderDevice::TextureID mSetPixelTextureArg[MAX_NUM_PIXEL_SAMPLERS];
   YRenderDevice::VertexShaderID mSetVertexShader;
   YRenderDevice::PixelShaderID mSetPixelShader;
+  YRenderDevice::IndexBufferID mSetIndexStream;
+  YRenderDevice::VertexBufferID mSetVertexStream;
 };
 
 }} // namespace YEngine { namespace YRenderer {
