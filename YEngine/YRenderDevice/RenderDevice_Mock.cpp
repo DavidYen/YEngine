@@ -33,7 +33,7 @@ namespace {
     virtual RenderTargetID CreateRenderTarget(uint32_t width, uint32_t height,
                                               PixelFormat format) = 0;
     virtual VertexDeclID CreateVertexDeclaration(
-        const VertexDeclElement* elements, size_t num_elements) = 0;
+        const VertexDeclElement* elements, uint32_t num_elements) = 0;
     virtual VertexShaderID CreateVertexShader(const void* shader_data,
                                               size_t shader_size) = 0;
     virtual PixelShaderID CreatePixelShader(const void* shader_data,
@@ -42,17 +42,18 @@ namespace {
     virtual TextureID CreateTexture(UsageType type,
                                     uint32_t width, uint32_t height,
                                     uint32_t mips, PixelFormat format,
-                                    const void* buffer, size_t buffer_size) = 0;
+                                    const void* buffer,
+                                    uint32_t buffer_size) = 0;
     virtual VertexBufferID CreateVertexBuffer(UsageType type, uint32_t stride,
                                               uint32_t count,
                                               const void* buffer,
-                                              size_t buffer_size) = 0;
+                                              uint32_t buffer_size) = 0;
     virtual IndexBufferID CreateIndexBuffer(UsageType type, uint32_t count,
                                             const void* buffer,
-                                            size_t buffer_size) = 0;
-    virtual ConstantBufferID CreateConstantBuffer(UsageType type, size_t size,
+                                            uint32_t buffer_size) = 0;
+    virtual ConstantBufferID CreateConstantBuffer(UsageType type, uint32_t size,
                                                   const void* buffer,
-                                                  size_t buffer_size) = 0;
+                                                  uint32_t buffer_size) = 0;
 
     // Command List
     virtual void BeginRecord() = 0;
@@ -64,26 +65,34 @@ namespace {
                              uint32_t width, uint32_t height,
                              float min_z, float max_z) = 0;
     virtual void FillTexture(TextureID texture,
-                             const void* buffer, size_t size) = 0;
+                             const void* buffer, uint32_t size) = 0;
     virtual void FillTextureMip(TextureID texture, uint32_t mip,
-                                const void* buffer, size_t size) = 0;
+                                const void* buffer, uint32_t size) = 0;
     virtual void ResetVertexBuffer(VertexBufferID vertex_buffer) = 0;
     virtual void AppendVertexBuffer(VertexBufferID vertex_buffer,
                                     uint32_t count,
-                                    const void* buffer, size_t buffer_size,
+                                    const void* buffer, uint32_t buffer_size,
                                     uint32_t* starting_offset) = 0;
     virtual void FillVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                                  const void* buffer, size_t buffer_size,
+                                  const void* buffer, uint32_t buffer_size,
                                   uint32_t index_offset) = 0;
+    virtual void FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
+                                             uint32_t count,
+                                             uint32_t num_interleaves,
+                                             uint32_t* stride_sizes,
+                                             const void* const* buffers,
+                                             uint32_t* buffer_sizes,
+                                             uint32_t index_offset);
     virtual void ResetIndexBuffer(IndexBufferID index_buffer) = 0;
     virtual void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                   const void* buffer, size_t buffer_size,
+                                   const void* buffer, uint32_t buffer_size,
                                    uint32_t* starting_offset) = 0;
     virtual void FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                 const void* buffer, size_t buffer_size,
+                                 const void* buffer, uint32_t buffer_size,
+                                 uint16_t vertex_offset,
                                  uint32_t index_offset) = 0;
     virtual void FillConstantBuffer(ConstantBufferID constant_buffer,
-                                    const void* buffer, size_t size) = 0;
+                                    const void* buffer, uint32_t size) = 0;
 
     // Accessors
     virtual void GetViewPort(ViewPortID viewport,
@@ -170,7 +179,7 @@ namespace {
                                 PixelFormat format));
     MOCK_METHOD2(CreateVertexDeclaration,
                  VertexDeclID(const VertexDeclElement* elements,
-                              size_t num_elements));
+                              uint32_t num_elements));
     MOCK_METHOD2(CreateVertexShader, VertexShaderID(const void* shader_data,
                                                     size_t shader_size));
     MOCK_METHOD2(CreatePixelShader, PixelShaderID(const void* shader_data,
@@ -180,17 +189,17 @@ namespace {
                                           uint32_t width, uint32_t height,
                                           uint32_t mips, PixelFormat format,
                                           const void* buffer,
-                                          size_t buffer_size));
+                                          uint32_t buffer_size));
     MOCK_METHOD5(CreateVertexBuffer,
                  VertexBufferID(UsageType type, uint32_t stride,
                                 uint32_t count, const void* buffer,
-                                size_t buffer_size));
+                                uint32_t buffer_size));
     MOCK_METHOD4(CreateIndexBuffer,
                  IndexBufferID(UsageType type, uint32_t count,
-                               const void* buffer, size_t buffer_size));
+                               const void* buffer, uint32_t buffer_size));
     MOCK_METHOD4(CreateConstantBuffer,
-                 ConstantBufferID(UsageType type, size_t size,
-                                  const void* buffer, size_t buffer_size));
+                 ConstantBufferID(UsageType type, uint32_t size,
+                                  const void* buffer, uint32_t buffer_size));
 
     // Command List
     MOCK_METHOD0(BeginRecord, void());
@@ -202,29 +211,34 @@ namespace {
                                    uint32_t width, uint32_t height,
                                    float min_z, float max_z));
     MOCK_METHOD3(FillTexture, void(TextureID texture,
-                                   const void* buffer, size_t size));
+                                   const void* buffer, uint32_t size));
     MOCK_METHOD4(FillTextureMip, void(TextureID texture, uint32_t mip,
-                                      const void* buffer, size_t size));
+                                      const void* buffer, uint32_t size));
     MOCK_METHOD1(ResetVertexBuffer, void(VertexBufferID vertex_buffer));
     MOCK_METHOD5(AppendVertexBuffer,
                  void(VertexBufferID vertex_buffer, uint32_t count,
-                      const void* buffer, size_t buffer_size,
+                      const void* buffer, uint32_t buffer_size,
                       uint32_t* starting_offset));
     MOCK_METHOD5(FillVertexBuffer,
                  void(VertexBufferID vertex_buffer, uint32_t count,
-                      const void* buffer, size_t buffer_size,
+                      const void* buffer, uint32_t buffer_size,
+                      uint32_t index_offset));
+    MOCK_METHOD7(FillVertexBufferInterleaved,
+                 void(VertexBufferID vertex_buffer, uint32_t count,
+                      uint32_t num_interleaves, uint32_t* stride_sizes,
+                      const void* const* buffers, uint32_t* buffer_sizes,
                       uint32_t index_offset));
     MOCK_METHOD1(ResetIndexBuffer, void(IndexBufferID index_buffer));
     MOCK_METHOD5(AppendIndexBuffer,
                  void(IndexBufferID index_buffer, uint32_t count,
-                      const void* buffer, size_t buffer_size,
+                      const void* buffer, uint32_t buffer_size,
                       uint32_t* starting_offset));
-    MOCK_METHOD5(FillIndexBuffer,
+    MOCK_METHOD6(FillIndexBuffer,
                  void(IndexBufferID index_buffer, uint32_t count,
-                      const void* buffer, size_t buffer_size,
-                      uint32_t index_offset));
+                      const void* buffer, uint32_t buffer_size,
+                      uint16_t vertex_offset, uint32_t index_offset));
     MOCK_METHOD3(FillConstantBuffer, void(ConstantBufferID constant_buffer,
-                                          const void* buffer, size_t size));
+                                          const void* buffer, uint32_t size));
 
     // Accessors
     MOCK_METHOD7(GetViewPort, void(ViewPortID viewport,
@@ -327,9 +341,11 @@ void RenderDevice::Initialize(const YCommon::YPlatform::PlatformHandle& handle,
   EXPECT_CALL(*gMockRenderDevice, ResetVertexBuffer(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, AppendVertexBuffer(_, _, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, FillVertexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillVertexBufferInterleaved(_, _, _, _, _, _,
+                                                              _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, ResetIndexBuffer(_)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, AppendIndexBuffer(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*gMockRenderDevice, FillIndexBuffer(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*gMockRenderDevice, FillIndexBuffer(_, _, _, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, FillConstantBuffer(_, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, GetViewPort(_, _, _, _, _, _, _)).Times(0);
   EXPECT_CALL(*gMockRenderDevice, GetVertexBufferCount(_)).Times(0);
@@ -409,7 +425,7 @@ RenderTargetID RenderDevice::CreateRenderTarget(uint32_t width, uint32_t height,
 }
 
 VertexDeclID RenderDevice::CreateVertexDeclaration(
-    const VertexDeclElement* elements, size_t num_elements) {
+    const VertexDeclElement* elements, uint32_t num_elements) {
   return gMockRenderDevice->CreateVertexDeclaration(elements, num_elements);
 }
 
@@ -430,7 +446,8 @@ SamplerStateID RenderDevice::CreateSamplerState(const SamplerState& state) {
 TextureID RenderDevice::CreateTexture(UsageType type,
                                       uint32_t width, uint32_t height,
                                       uint32_t mips, PixelFormat format,
-                                      const void* buffer, size_t buffer_size) {
+                                      const void* buffer,
+                                      uint32_t buffer_size) {
   return gMockRenderDevice->CreateTexture(type, width, height,
                                           mips, format,
                                           buffer, buffer_size);
@@ -439,20 +456,21 @@ TextureID RenderDevice::CreateTexture(UsageType type,
 VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
                                                 uint32_t count,
                                                 const void* buffer,
-                                                size_t buffer_size) {
+                                                uint32_t buffer_size) {
   return gMockRenderDevice->CreateVertexBuffer(type, stride, count,
                                                buffer, buffer_size);
 }
 
 IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
                                               const void* buffer,
-                                              size_t buffer_size) {
+                                              uint32_t buffer_size) {
   return gMockRenderDevice->CreateIndexBuffer(type, count, buffer, buffer_size);
 }
 
-ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type, size_t size,
+ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type,
+                                                    uint32_t size,
                                                     const void* buffer,
-                                                    size_t buffer_size) {
+                                                    uint32_t buffer_size) {
   return gMockRenderDevice->CreateConstantBuffer(type, size,
                                                  buffer, buffer_size);
 }
@@ -474,12 +492,12 @@ void RenderDevice::SetViewPort(ViewPortID viewport,
 }
 
 void RenderDevice::FillTexture(TextureID texture,
-                               const void* buffer, size_t size) {
+                               const void* buffer, uint32_t size) {
   gMockRenderDevice->FillTexture(texture, buffer, size);
 }
 
 void RenderDevice::FillTextureMip(TextureID texture, uint32_t mip,
-                                  const void* buffer, size_t size) {
+                                  const void* buffer, uint32_t size) {
   gMockRenderDevice->FillTextureMip(texture, mip, buffer, size);
 }
 
@@ -487,22 +505,28 @@ void RenderDevice::ResetVertexBuffer(VertexBufferID vertex_buffer) {
   gMockRenderDevice->ResetVertexBuffer(vertex_buffer);
 }
 
-void RenderDevice::AppendVertexBuffer(VertexBufferID vertex_buffer,
-                                      uint32_t count,
-                                      const void* buffer, size_t buffer_size,
-                                      uint32_t* starting_offset) {
-  gMockRenderDevice->AppendVertexBuffer(vertex_buffer, count,
-                                        buffer, buffer_size,
-                                        starting_offset);
-}
-
 void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
                                     uint32_t count,
-                                    const void* buffer, size_t buffer_size,
+                                    const void* buffer, uint32_t buffer_size,
                                     uint32_t index_offset) {
   gMockRenderDevice->FillVertexBuffer(vertex_buffer, count,
                                       buffer, buffer_size,
                                       index_offset);
+}
+
+void RenderDevice::FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
+                                               uint32_t count,
+                                               uint32_t num_interleaves,
+                                               uint32_t* stride_sizes,
+                                               const void* const* buffers,
+                                               uint32_t* buffer_sizes,
+                                               uint32_t index_offset) {
+  gMockRenderDevice->FillVertexBufferInterleaved(vertex_buffer, count,
+                                                 num_interleaves,
+                                                 stride_sizes,
+                                                 buffers,
+                                                 buffer_sizes,
+                                                 index_offset);
 }
 
 void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
@@ -510,21 +534,23 @@ void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
 }
 
 void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                     const void* buffer, size_t buffer_size,
+                                     const void* buffer, uint32_t buffer_size,
                                      uint32_t* starting_offset) {
   gMockRenderDevice->AppendIndexBuffer(index_buffer, count, buffer, buffer_size,
                                        starting_offset);
 }
 
 void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                   const void* buffer, size_t buffer_size,
+                                   const void* buffer, uint32_t buffer_size,
+                                   uint16_t vertex_offset,
                                    uint32_t index_offset) {
   gMockRenderDevice->FillIndexBuffer(index_buffer, count,
-                                     buffer, buffer_size, index_offset);
+                                     buffer, buffer_size,
+                                     vertex_offset, index_offset);
 }
 
 void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
-                                      const void* buffer, size_t size) {
+                                      const void* buffer, uint32_t size) {
   gMockRenderDevice->FillConstantBuffer(constant_buffer, buffer, size);
 }
 
@@ -745,7 +771,8 @@ void RenderDeviceMock::ExpectCreateRenderTarget(RenderTargetID ret,
 }
 
 void RenderDeviceMock::ExpectCreateVertexDeclaration(
-    VertexDeclID ret, const VertexDeclElement* elements, size_t num_elements) {
+    VertexDeclID ret, const VertexDeclElement* elements,
+    uint32_t num_elements) {
   EXPECT_CALL(*gMockRenderDevice, CreateVertexDeclaration(elements,
                                                           num_elements))
       .Times(1)
@@ -780,7 +807,7 @@ void RenderDeviceMock::ExpectCreateTexture(TextureID ret,
                                            uint32_t width, uint32_t height,
                                            uint32_t mips, PixelFormat format,
                                            const void* buffer,
-                                           size_t buffer_size) {
+                                           uint32_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateTexture(type, width, height, mips,
                                                format, buffer, buffer_size))
       .Times(1)
@@ -791,7 +818,7 @@ void RenderDeviceMock::ExpectCreateVertexBuffer(VertexBufferID ret,
                                                 UsageType type, uint32_t stride,
                                                 uint32_t count,
                                                 const void* buffer,
-                                                size_t buffer_size) {
+                                                uint32_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateVertexBuffer(type, stride, count,
                                                     buffer, buffer_size))
       .Times(1)
@@ -801,7 +828,7 @@ void RenderDeviceMock::ExpectCreateVertexBuffer(VertexBufferID ret,
 void RenderDeviceMock::ExpectCreateIndexBuffer(IndexBufferID ret,
                                                UsageType type, uint32_t count,
                                                const void* buffer,
-                                               size_t buffer_size) {
+                                               uint32_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateIndexBuffer(type, count,
                                                    buffer, buffer_size))
       .Times(1)
@@ -809,9 +836,9 @@ void RenderDeviceMock::ExpectCreateIndexBuffer(IndexBufferID ret,
 }
 
 void RenderDeviceMock::ExpectCreateConstantBuffer(ConstantBufferID ret,
-                                                  UsageType type, size_t size,
+                                                  UsageType type, uint32_t size,
                                                   const void* buffer,
-                                                  size_t buffer_size) {
+                                                  uint32_t buffer_size) {
   EXPECT_CALL(*gMockRenderDevice, CreateConstantBuffer(type, size,
                                                       buffer, buffer_size))
       .Times(1)
@@ -840,13 +867,13 @@ void RenderDeviceMock::ExpectSetViewPort(ViewPortID viewport,
 }
 
 void RenderDeviceMock::ExpectFillTexture(TextureID texture,
-                                         const void* buffer, size_t size) {
+                                         const void* buffer, uint32_t size) {
   EXPECT_CALL(*gMockRenderDevice, FillTexture(texture, buffer, size))
       .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillTextureMip(TextureID texture, uint32_t mip,
-                                            const void* buffer, size_t size) {
+                                            const void* buffer, uint32_t size) {
   EXPECT_CALL(*gMockRenderDevice, FillTextureMip(texture, mip, buffer, size))
       .Times(1);
 }
@@ -856,25 +883,29 @@ void RenderDeviceMock::ExpectResetVertexBuffer(VertexBufferID vertex_buffer) {
       .Times(1);
 }
 
-void RenderDeviceMock::ExpectAppendVertexBuffer(VertexBufferID vertex_buffer,
-                                                uint32_t count,
-                                                const void* buffer,
-                                                size_t buffer_size,
-                                                uint32_t* starting_offset) {
-  EXPECT_CALL(*gMockRenderDevice, AppendVertexBuffer(vertex_buffer, count,
-                                                    buffer, buffer_size,
-                                                    starting_offset))
-      .Times(1);
-}
-
 void RenderDeviceMock::ExpectFillVertexBuffer(VertexBufferID vertex_buffer,
                                               uint32_t count,
                                               const void* buffer,
-                                              size_t buffer_size,
+                                              uint32_t buffer_size,
                                               uint32_t index_offset) {
   EXPECT_CALL(*gMockRenderDevice, FillVertexBuffer(vertex_buffer, count,
                                                   buffer, buffer_size,
                                                   index_offset))
+      .Times(1);
+}
+
+void RenderDeviceMock::ExpectFillVertexBufferInterleaved(
+    VertexBufferID vertex_buffer, uint32_t count,
+    uint32_t num_interleaves, uint32_t* stride_sizes,
+    const void* const* buffers, uint32_t* buffer_sizes,
+    uint32_t index_offset) {
+  EXPECT_CALL(*gMockRenderDevice, FillVertexBufferInterleaved(vertex_buffer,
+                                                              count,
+                                                              num_interleaves,
+                                                              stride_sizes,
+                                                              buffers,
+                                                              buffer_sizes,
+                                                              index_offset))
       .Times(1);
 }
 
@@ -886,7 +917,7 @@ void RenderDeviceMock::ExpectResetIndexBuffer(IndexBufferID index_buffer) {
 void RenderDeviceMock::ExpectAppendIndexBuffer(IndexBufferID index_buffer,
                                                uint32_t count,
                                                const void* buffer,
-                                               size_t buffer_size,
+                                               uint32_t buffer_size,
                                                uint32_t* starting_offset) {
   EXPECT_CALL(*gMockRenderDevice, AppendIndexBuffer(index_buffer, count,
                                                    buffer, buffer_size,
@@ -897,16 +928,18 @@ void RenderDeviceMock::ExpectAppendIndexBuffer(IndexBufferID index_buffer,
 void RenderDeviceMock::ExpectFillIndexBuffer(IndexBufferID index_buffer,
                                              uint32_t count,
                                              const void* buffer,
-                                             size_t buffer_size,
+                                             uint32_t buffer_size,
+                                             uint16_t vertex_offset,
                                              uint32_t index_offset) {
   EXPECT_CALL(*gMockRenderDevice, FillIndexBuffer(index_buffer, count,
                                                  buffer, buffer_size,
+                                                 vertex_offset,
                                                  index_offset))
       .Times(1);
 }
 
 void RenderDeviceMock::ExpectFillConstantBuffer(
-    ConstantBufferID constant_buffer, const void* buffer, size_t size) {
+    ConstantBufferID constant_buffer, const void* buffer, uint32_t size) {
   EXPECT_CALL(*gMockRenderDevice, FillConstantBuffer(constant_buffer,
                                                     buffer, size))
       .Times(1);

@@ -350,7 +350,7 @@ namespace {
     UsageType usage;
     uint32_t stride;
     uint32_t total_count;
-    volatile uint32_t count;
+    uint32_t count;
 
     void Init() {
       vertex_buffer = NULL;
@@ -373,7 +373,7 @@ namespace {
     IDirect3DIndexBuffer9* index_buffer;
     UsageType usage;
     uint32_t total_count;
-    volatile uint32_t count;
+    uint32_t count;
 
     void Init() {
       index_buffer = NULL;
@@ -590,7 +590,7 @@ RenderTargetID RenderDevice::CreateRenderTarget(uint32_t width, uint32_t height,
 }
 
 VertexDeclID RenderDevice::CreateVertexDeclaration(
-    const VertexDeclElement* elements, size_t num_elements) {
+    const VertexDeclElement* elements, uint32_t num_elements) {
   YASSERT(num_elements < MAX_ELEMENTS_PER_VERTEX,
           "Maximum number of elements per vertex declaration is %u, %u given.",
           static_cast<uint32_t>(MAX_ELEMENTS_PER_VERTEX),
@@ -605,7 +605,7 @@ VertexDeclID RenderDevice::CreateVertexDeclaration(
   uint8_t max_streams = 0;
   bool stream_divisor_set[MAX_STREAM_SOURCES] = { false };
 
-  size_t element_iter = 0;
+  uint32_t element_iter = 0;
   while (element_iter < num_elements) {
     const VertexDeclElement& decl_element = elements[element_iter];
     const ElementUsage& element_usage =
@@ -711,7 +711,8 @@ SamplerStateID RenderDevice::CreateSamplerState(const SamplerState& state) {
 TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
                                       uint32_t height, uint32_t mips,
                                       PixelFormat format,
-                                      const void* buffer, size_t buffer_size) {
+                                      const void* buffer,
+                                      uint32_t buffer_size) {
   YASSERT(format > 0 && format < ARRAY_SIZE(kTextureFormats),
           "Invalid Pixel Format: %d", static_cast<int>(format));
   const D3DFORMAT d3d_format = kTextureFormats[format];
@@ -776,7 +777,7 @@ TextureID RenderDevice::CreateTexture(UsageType type, uint32_t width,
 VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
                                                 uint32_t count,
                                                 const void* buffer,
-                                                size_t buffer_size) {
+                                                uint32_t buffer_size) {
   const VertexBufferID vert_id = gVertexBuffers.AllocateID();
   YASSERT(vert_id != static_cast<VertexBufferID>(-1),
           "Maximum number of vertex buffers reached.");
@@ -830,7 +831,7 @@ VertexBufferID RenderDevice::CreateVertexBuffer(UsageType type, uint32_t stride,
 
 IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
                                               const void* buffer,
-                                              size_t buffer_size) {
+                                              uint32_t buffer_size) {
   const IndexBufferID indx_id = gIndexBuffers.AllocateID();
   YASSERT(indx_id != static_cast<IndexBufferID>(-1),
           "Maximum number of index buffers reached.");
@@ -881,9 +882,10 @@ IndexBufferID RenderDevice::CreateIndexBuffer(UsageType type, uint32_t count,
   return indx_id;
 }
 
-ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type, size_t size,
+ConstantBufferID RenderDevice::CreateConstantBuffer(UsageType type,
+                                                    uint32_t size,
                                                     const void* buffer,
-                                                    size_t buffer_size) {
+                                                    uint32_t buffer_size) {
   const ConstantBufferID buff_id = gConstBuffers.AllocateID();
   YASSERT(buff_id != static_cast<ConstantBufferID>(-1),
           "Maximum number of constant buffers reached.");
@@ -937,7 +939,7 @@ void RenderDevice::SetViewPort(ViewPortID viewport,
 }
 
 void RenderDevice::FillTexture(TextureID texture, const void* buffer,
-                               size_t size) {
+                               uint32_t size) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Filling Invalid Texture ID: %d.", static_cast<int>(texture));
 
@@ -955,8 +957,8 @@ void RenderDevice::FillTexture(TextureID texture, const void* buffer,
             texture_data.height, texture_data.mips);
 
     FillTextureMip(texture, i,
-                                 static_cast<uint8_t*>(buffer) + used_size,
-                                 current_size);
+                   static_cast<const uint8_t*>(buffer) + used_size,
+                   current_size);
 
     width = (width <= 1) ? 1 : (width >> 1);
     height = (height <= 1) ? 1 : (height >> 1);
@@ -970,7 +972,7 @@ void RenderDevice::FillTexture(TextureID texture, const void* buffer,
 }
 
 void RenderDevice::FillTextureMip(TextureID texture, uint32_t mip,
-                                  const void* buffer, size_t size) {
+                                  const void* buffer, uint32_t size) {
   YASSERT(texture < ARRAY_SIZE(gTextures.used) && gTextures.used[texture],
           "Filling Invalid Texture ID: %d.", static_cast<int>(texture));
 
@@ -1020,31 +1022,27 @@ void RenderDevice::ResetVertexBuffer(VertexBufferID vertex_buffer) {
   gVertexBuffers[vertex_buffer].count = 0;
 }
 
-void RenderDevice::AppendVertexBuffer(VertexBufferID vertex_buffer,
-                                      uint32_t count,
-                                      const void* buffer, size_t buffer_size,
-                                      uint32_t* starting_offset) {
-  YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
-          gVertexBuffers.used[vertex_buffer],
-          "Appending to Invalid Vertex Buffer ID: %d.",
-          static_cast<int>(vertex_buffer));
-
-  VertBuffData& vertex_buffer_data = gVertexBuffers[vertex_buffer];
-  uint32_t prev_count = YCommon::AtomicAdd32(&vertex_buffer_data.count,
-                                             count);
-  YASSERT(prev_count + count < vertex_buffer_data.total_count,
-          "Cannot append to Vertex Buffer ID (%d), maximum count reached.",
-          static_cast<int>(vertex_buffer));
-
-  FillVertexBuffer(vertex_buffer, count, buffer, buffer_size, prev_count);
-  if (starting_offset)
-    *starting_offset = prev_count;
-}
-
 void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
                                     uint32_t count,
-                                    const void* buffer, size_t buffer_size,
+                                    const void* buffer, uint32_t buffer_size,
                                     uint32_t index_offset) {
+  YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
+          gVertexBuffers.used[vertex_buffer],
+          "Filling Invalid Vertex Buffer ID: %d.",
+          static_cast<int>(vertex_buffer));
+
+    VertBuffData& vertex_buffer_data = gVertexBuffers[vertex_buffer];
+
+  FillVertexBufferInterleaved(vertex_buffer, count, 1,
+                              &vertex_buffer_data.stride,
+                              &buffer, &buffer_size,
+                              index_offset);
+}
+
+void RenderDevice::FillVertexBufferInterleaved(
+    VertexBufferID vertex_buffer, uint32_t count, uint32_t num_interleaves,
+    uint32_t* stride_sizes, const void* const* buffers, uint32_t* buffer_sizes,
+    uint32_t index_offset) {
   HRESULT hr = E_FAIL;
 
   YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&
@@ -1063,39 +1061,59 @@ void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
           "Could not fill vertex buffer ID %d, maximum count exceeded.",
           static_cast<int>(vertex_buffer));
 
-  for (uint32_t current_count = vertex_buffer_data.count;
-       index_end < current_count;
-       current_count = vertex_buffer_data.count) {
-    if (YCommon::AtomicCmpSet32(&vertex_buffer_data.count, current_count,
-                                index_end)) {
-      break;
-    }
+  vertex_buffer_data.count = index_end > vertex_buffer_data.count ?
+                             index_end :
+                             vertex_buffer_data.count;
+
+  uint32_t total_stride = 0;
+  uint32_t total_buffer_size = 0;
+  for (uint32_t i = 0; i < num_interleaves; ++i) {
+    total_stride += stride_sizes[i];
+    total_buffer_size += buffer_sizes[i];
   }
+  YASSERT(total_stride != vertex_buffer_data.stride,
+          "Total stride count (%u) does not match initialization stride (%u).",
+          total_stride, vertex_buffer_data.stride);
 
   const uint32_t stride = vertex_buffer_data.stride;
   const uint32_t fill_index = index_offset * stride;
-  const size_t fill_size = count * stride;
-  YASSERT(fill_size == buffer_size,
+  const uint32_t fill_size = count * stride;
+  YASSERT(fill_size == total_buffer_size,
           "Vertex Fill size (%u) did not match buffer size (%u).",
           static_cast<uint32_t>(fill_size),
-          static_cast<uint32_t>(buffer_size));
+          static_cast<uint32_t>(total_buffer_size));
 
   const DWORD flags = (vertex_buffer_data.usage == kUsageType_Dynamic) ?
-                      D3DLOCK_NOOVERWRITE :
-                      0;
+                       D3DLOCK_NOOVERWRITE :
+                       0;
   void* data = NULL;
   hr = vertex_buffer_data.vertex_buffer->Lock(
-      static_cast<UINT>(fill_index),  // [in]   UINT OffsetToLock,
-      static_cast<UINT>(buffer_size), // [in]   UINT SizeToLock,
-      &data,                          // [out]  VOID **ppbData,
-      flags                           // [in]   DWORD Flags
+      static_cast<UINT>(fill_index),        // [in]   UINT OffsetToLock,
+      static_cast<UINT>(total_buffer_size), // [in]   UINT SizeToLock,
+      &data,                                // [out]  VOID **ppbData,
+      flags                                 // [in]   DWORD Flags
   );
   YASSERT(D3D_OK == hr,
           "Could not lock vertex buffer ID (%u): 0x%08X.",
           static_cast<uint32_t>(vertex_buffer),
           static_cast<uint32_t>(hr));
 
-  memcpy(data, buffer, buffer_size);
+  if (num_interleaves == 1) {
+    memcpy(data, *buffers, total_buffer_size);
+  } else {
+    uint8_t* data_ptr = static_cast<uint8_t*>(data) + fill_index;
+    for (uint32_t i = 0; i < count; ++i) {
+      for (uint32_t n = 0; n < num_interleaves; ++n) {
+        const uint32_t buffer_stride = stride_sizes[n];
+        const uint8_t* buffer =
+            static_cast<const uint8_t*>(buffers[n]) + buffer_stride * i;
+        memcpy(data_ptr, buffer, buffer_stride);
+        data_ptr += buffer_stride;
+      }
+    }
+    YDEBUG_CHECK((data_ptr - static_cast<uint8_t*>(data)) == total_buffer_size,
+                 "Sanity interleaved fill check failed.");
+  }
 
   hr = vertex_buffer_data.vertex_buffer->Unlock();
   YASSERT(D3D_OK == hr,
@@ -1113,27 +1131,9 @@ void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
   gIndexBuffers[index_buffer].count = 0;
 }
 
-void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                     const void* buffer, size_t buffer_size,
-                                     uint32_t* starting_offset) {
-  YASSERT(index_buffer < ARRAY_SIZE(gIndexBuffers.used) &&
-          gIndexBuffers.used[index_buffer],
-          "Appending to Invalid Index Buffer ID: %d.",
-          static_cast<int>(index_buffer));
-
-  IndexBuffData& index_buffer_data = gIndexBuffers[index_buffer];
-  uint32_t prev_count = YCommon::AtomicAdd32(&index_buffer_data.count, count);
-  YASSERT(prev_count + count < index_buffer_data.total_count,
-          "Cannot append to Index Buffer ID (%d), maximum count reached.",
-          static_cast<int>(index_buffer));
-
-  FillIndexBuffer(index_buffer, count, buffer, buffer_size, prev_count);
-  if (starting_offset)
-    *starting_offset = prev_count;
-}
-
 void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                                   const void* buffer, size_t buffer_size,
+                                   const void* buffer, uint32_t buffer_size,
+                                   uint16_t vertex_offset,
                                    uint32_t index_offset) {
   HRESULT hr = E_FAIL;
 
@@ -1153,16 +1153,11 @@ void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
           "Could not fill index buffer ID %d, maximum count exceeded.",
           static_cast<int>(index_buffer));
 
-  for (uint32_t current_count = index_buffer_data.count;
-       index_end < current_count;
-       current_count = index_buffer_data.count) {
-    if (YCommon::AtomicCmpSet32(&index_buffer_data.count, current_count,
-                                index_end)) {
-      break;
-    }
-  }
+  index_buffer_data.count = index_end > index_buffer_data.count ?
+                            index_end :
+                            index_buffer_data.count;
 
-  const size_t fill_size = count * sizeof(uint16_t);
+  const uint32_t fill_size = count * sizeof(uint16_t);
   YASSERT(fill_size == buffer_size,
           "Index Fill size (%u) did not match buffer size (%u).",
           static_cast<uint32_t>(fill_size),
@@ -1183,7 +1178,18 @@ void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
           static_cast<uint32_t>(index_buffer),
           static_cast<uint32_t>(hr));
 
-  memcpy(data, buffer, buffer_size);
+  if (vertex_offset) {
+    memcpy(data, buffer, buffer_size);
+  } else {
+    uint16_t* data_ptr = static_cast<uint16_t*>(data);
+    const uint16_t* buffer_ptr = static_cast<const uint16_t*>(buffer);
+    YASSERT(buffer_size % sizeof(uint16_t) == 0,
+            "Data buffer not a multiple of uint16_t: %u",
+            static_cast<uint32_t>(buffer_size));
+    for (uint32_t i = 0; i < buffer_size; ++i) {
+      data_ptr[i] = buffer_ptr[i] + vertex_offset;
+    }
+  }
 
   hr = index_buffer_data.index_buffer->Unlock();
   YASSERT(D3D_OK == hr,
@@ -1193,7 +1199,7 @@ void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
 }
 
 void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
-                                      const void* buffer, size_t size) {
+                                      const void* buffer, uint32_t size) {
    YASSERT(constant_buffer < ARRAY_SIZE(gConstBuffers.used) &&
           gConstBuffers.used[constant_buffer],
           "Filling Invalid Constant Buffer ID: %d.",
@@ -1710,14 +1716,14 @@ void RenderDevice::DrawIndexedInstanced(uint32_t start_index,
 }
 
 // Render
-void RenderDevice::Begin() {
+void ExecuteCommandList(CommandListID commands) {
   HRESULT hr = gD3DDevice->BeginScene();
   YASSERT(hr == D3D_OK,
           "BeginScene() was not successful.");
-}
 
-void RenderDevice::End() {
-  HRESULT hr = gD3DDevice->EndScene();
+  static_cast<void>(commands);
+
+  hr = gD3DDevice->EndScene();
   YASSERT(hr == D3D_OK,
           "EndScene() was not successful.");
 }

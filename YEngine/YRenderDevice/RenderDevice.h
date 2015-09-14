@@ -57,23 +57,23 @@ namespace RenderDevice {
   RenderTargetID CreateRenderTarget(uint32_t width, uint32_t height,
                                     PixelFormat format);
   VertexDeclID CreateVertexDeclaration(const VertexDeclElement* elements,
-                                       size_t num_elements);
+                                       uint32_t num_elements);
   VertexShaderID CreateVertexShader(const void* shader_data,
                                     size_t shader_size);
   PixelShaderID CreatePixelShader(const void* shader_data, size_t shader_size);
   SamplerStateID CreateSamplerState(const SamplerState& state);
   TextureID CreateTexture(UsageType type, uint32_t width, uint32_t height,
                           uint32_t mips, PixelFormat format,
-                          const void* buffer = NULL, size_t buffer_size = 0);
+                          const void* buffer = NULL, uint32_t buffer_size = 0);
   VertexBufferID CreateVertexBuffer(UsageType type, uint32_t stride,
                                     uint32_t count, const void* buffer = NULL,
-                                    size_t buffer_size = 0);
+                                    uint32_t buffer_size = 0);
   IndexBufferID CreateIndexBuffer(UsageType type, uint32_t count,
                                   const void* buffer = NULL,
-                                  size_t buffer_size = 0);
-  ConstantBufferID CreateConstantBuffer(UsageType type, size_t size,
+                                  uint32_t buffer_size = 0);
+  ConstantBufferID CreateConstantBuffer(UsageType type, uint32_t size,
                                         const void* buffer = NULL,
-                                        size_t buffer_size = 0);
+                                        uint32_t buffer_size = 0);
 
   // Command List
   void BeginRecord();
@@ -85,25 +85,30 @@ namespace RenderDevice {
                    uint32_t width, uint32_t height,
                    float min_z, float max_z);
   void FillTexture(TextureID texture,
-                   const void* buffer, size_t size);
+                   const void* buffer, uint32_t size);
   void FillTextureMip(TextureID texture, uint32_t mip,
-                      const void* buffer, size_t size);
+                      const void* buffer, uint32_t size);
   void ResetVertexBuffer(VertexBufferID vertex_buffer);
-  void AppendVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                          const void* buffer, size_t buffer_size,
-                          uint32_t* starting_offset);
   void FillVertexBuffer(VertexBufferID vertex_buffer, uint32_t count,
-                        const void* buffer, size_t buffer_size,
+                        const void* buffer, uint32_t buffer_size,
                         uint32_t index_offset = 0);
+  void FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
+                                   uint32_t count,
+                                   uint32_t num_interleaves,
+                                   uint32_t* stride_sizes,
+                                   const void* const* buffers,
+                                   uint32_t* buffer_sizes,
+                                   uint32_t index_offset = 0);
   void ResetIndexBuffer(IndexBufferID index_buffer);
   void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                        const void* buffer, size_t buffer_size,
+                        const void* buffer, uint32_t buffer_size,
                         uint32_t* starting_offset);
   void FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                       const void* buffer, size_t buffer_size,
+                       const void* buffer, uint32_t buffer_size,
+                       uint16_t vertex_offset = 0,
                        uint32_t index_offset = 0);
   void FillConstantBuffer(ConstantBufferID constant_buffer,
-                          const void* buffer, size_t size);
+                          const void* buffer, uint32_t size);
 
   // Accessors
   void GetFrameBufferDimensions(uint32_t& width, uint32_t& height);
