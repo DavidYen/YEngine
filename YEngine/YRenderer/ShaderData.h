@@ -2,31 +2,10 @@
 #define YENGINE_YRENDERER_SHADERDATA_H
 
 #include <YEngine/YRenderDevice/RenderDevice.h>
-#include <YEngine/YRenderDevice/VertexDeclElement.h>
-
-#define MAX_VERTEX_ELEMENTS 8
 
 namespace YEngine { namespace YRenderer {
 
 struct RenderDeviceState;
-
-class VertexDecl {
- public:
-  VertexDecl(const YRenderDevice::VertexDeclElement* elements,
-             uint8_t num_elements);
-  void Release();
-  void Activate(RenderDeviceState& device_state);
-
-  const YRenderDevice::VertexDeclElement* GetVertexDeclElements() const {
-    return mVertexElements;
-  }
-  const uint8_t GetNumVertexElements() const { return mNumVertexElements; }
-
- private:
-  YRenderDevice::VertexDeclElement mVertexElements[MAX_VERTEX_ELEMENTS];
-  uint8_t mNumVertexElements;
-  YRenderDevice::VertexDeclID mVertexDeclID;
-};
 
 class ShaderFloatParam {
  public:
@@ -50,7 +29,7 @@ class ShaderFloatArg {
   uint8_t GetReg() const { return mFloatParam->mReg; }
 
   void Initialize(YRenderDevice::UsageType usage);
-  void Fill(const void* data, size_t data_size);
+  void Fill(const void* data, uint32_t data_size);
   void ActivateVertexShaderArg(RenderDeviceState& device_state);
   void ActivatePixelShaderArg(RenderDeviceState& device_state);
 
@@ -85,9 +64,9 @@ class ShaderTextureArg {
   void Initialize(YRenderDevice::UsageType usage,
                   uint32_t width, uint32_t height,
                   uint8_t num_mips, YRenderDevice::PixelFormat format);
-  void Fill(const void* data, size_t data_size);
+  void Fill(const void* data, uint32_t data_size);
   void FillMips(uint8_t mip_levels, const void** datas,
-                const size_t* data_sizes);
+                const uint32_t* data_sizes);
   void ActivateVertexShaderTexture(RenderDeviceState& device_state);
   void ActivatePixelShaderTexture(RenderDeviceState& device_state);
 

@@ -1,12 +1,43 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "VertexBuffer.h"
 
+#include <string.h>
+
 #include "RenderDeviceState.h"
 
+#define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
 #define INVALID_INDEX_BUFFER static_cast<YRenderDevice::IndexBufferID>(-1)
 #define INVALID_VERTEX_BUFFER static_cast<YRenderDevice::VertexBufferID>(-1)
 
 namespace YEngine { namespace YRenderer {
+
+VertexDecl::VertexDecl(const YRenderDevice::VertexDeclElement* elements,
+                       uint8_t num_elements)
+  : mNumVertexElements(num_elements),
+    mVertexDeclID(INVALID_VERTEX_DECL) {
+  YASSERT(num_elements < MAX_VERTEX_ELEMENTS,
+          "Maximum vertex elements (%d) exceeded: %d",
+          static_cast<int>(MAX_VERTEX_ELEMENTS),
+          static_cast<int>(num_elements));
+  memset(mVertexElements, 0, sizeof(mVertexElements));
+  memcpy(mVertexElements, elements, num_elements * sizeof(elements[0]));
+}
+
+void VertexDecl::Release() {
+  if (mVertexDeclID != INVALID_VERTEX_DECL) {
+    YRenderDevice::RenderDevice::ReleaseVertexDeclaration(mVertexDeclID);
+  }
+}
+
+void VertexDecl::Activate(RenderDeviceState& device_state) {
+  if (mVertexDeclID == INVALID_VERTEX_DECL) {
+    mVertexDeclID =
+        YRenderDevice::RenderDevice::CreateVertexDeclaration(
+            mVertexElements, mNumVertexElements);
+  }
+
+  device_state.ActivateVertexDecl(mVertexDeclID);
+}
 
 IndexBuffer::IndexBuffer()
   : mDirty(false),

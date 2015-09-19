@@ -1,14 +1,11 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "ShaderData.h"
 
-#include <string.h>
-
 #include <YCommon/YUtils/Hash.h>
 
 #include "RenderDeviceState.h"
 #include "RenderStateCache.h"
 
-#define INVALID_VERTEX_DECL static_cast<YRenderDevice::VertexDeclID>(-1)
 #define INVALID_CONSTANT_BUFFER static_cast<YRenderDevice::ConstantBufferID>(-1)
 #define INVALID_SAMPLER_STATE static_cast<YRenderDevice::SamplerStateID>(-1)
 #define INVALID_TEXTURE static_cast<YRenderDevice::TextureID>(-1)
@@ -16,34 +13,6 @@
 #define INVALID_PIXEL_SHADER static_cast<YRenderDevice::PixelShaderID>(-1)
 
 namespace YEngine { namespace YRenderer {
-
-VertexDecl::VertexDecl(const YRenderDevice::VertexDeclElement* elements,
-                       uint8_t num_elements)
-  : mNumVertexElements(num_elements),
-    mVertexDeclID(INVALID_VERTEX_DECL) {
-  YASSERT(num_elements < MAX_VERTEX_ELEMENTS,
-          "Maximum vertex elements (%d) exceeded: %d",
-          static_cast<int>(MAX_VERTEX_ELEMENTS),
-          static_cast<int>(num_elements));
-  memset(mVertexElements, 0, sizeof(mVertexElements));
-  memcpy(mVertexElements, elements, num_elements * sizeof(elements[0]));
-}
-
-void VertexDecl::Release() {
-  if (mVertexDeclID != INVALID_VERTEX_DECL) {
-    YRenderDevice::RenderDevice::ReleaseVertexDeclaration(mVertexDeclID);
-  }
-}
-
-void VertexDecl::Activate(RenderDeviceState& device_state) {
-  if (mVertexDeclID == INVALID_VERTEX_DECL) {
-    mVertexDeclID =
-        YRenderDevice::RenderDevice::CreateVertexDeclaration(
-            mVertexElements, mNumVertexElements);
-  }
-
-  device_state.ActivateVertexDecl(mVertexDeclID);
-}
 
 ShaderFloatArg::ShaderFloatArg(const ShaderFloatParam* float_param)
   : mFloatParam(float_param),
@@ -66,7 +35,7 @@ void ShaderFloatArg::Initialize(YRenderDevice::UsageType usage) {
   mUsageType = usage;
 }
 
-void ShaderFloatArg::Fill(const void* data, size_t data_size) {
+void ShaderFloatArg::Fill(const void* data, uint32_t data_size) {
   YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
           "Shader Float Argument has not been initialized.");
 
@@ -143,12 +112,12 @@ void ShaderTextureArg::Initialize(YRenderDevice::UsageType usage,
   mFormat = format;
 }
 
-void ShaderTextureArg::Fill(const void* data, size_t data_size) {
+void ShaderTextureArg::Fill(const void* data, uint32_t data_size) {
   FillMips(1, &data, &data_size);
 }
 
 void ShaderTextureArg::FillMips(uint8_t mip_levels,
-                                const void** datas, const size_t* data_sizes) {
+                                const void** datas, const uint32_t* data_sizes) {
   YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
           "Shader Texture Argument has not been initialized.");
   YASSERT(mip_levels == mNumMips,
@@ -168,7 +137,7 @@ void ShaderTextureArg::FillMips(uint8_t mip_levels,
   const uint32_t format_size = YRenderDevice::kPixelFormatSize[mFormat];
   for (uint8_t i = 0; i < mip_levels; ++i) {
     const void* data = datas[i];
-    const size_t data_size = data_sizes[i];
+    const uint32_t data_size = data_sizes[i];
     const uint32_t mip_width = mWidth >> i;
     const uint32_t mip_height = mHeight >> i;
     const uint32_t width = mip_width ? mip_width : 1;

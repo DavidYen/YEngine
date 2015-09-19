@@ -2,10 +2,31 @@
 #define YENGINE_YRENDERER_VERTEXBUFFER_H
 
 #include <YEngine/YRenderDevice/RenderDevice.h>
+#include <YEngine/YRenderDevice/VertexDeclElement.h>
+
+#define MAX_VERTEX_ELEMENTS 8
 
 namespace YEngine { namespace YRenderer {
 
 struct RenderDeviceState;
+
+class VertexDecl {
+ public:
+  VertexDecl(const YRenderDevice::VertexDeclElement* elements,
+             uint8_t num_elements);
+  void Release();
+  void Activate(RenderDeviceState& device_state);
+
+  const YRenderDevice::VertexDeclElement* GetVertexDeclElements() const {
+    return mVertexElements;
+  }
+  const uint8_t GetNumVertexElements() const { return mNumVertexElements; }
+
+ private:
+  YRenderDevice::VertexDeclElement mVertexElements[MAX_VERTEX_ELEMENTS];
+  uint8_t mNumVertexElements;
+  YRenderDevice::VertexDeclID mVertexDeclID;
+};
 
 class IndexBuffer {
  public:

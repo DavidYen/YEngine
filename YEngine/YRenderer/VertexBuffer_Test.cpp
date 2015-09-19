@@ -11,8 +11,47 @@
 
 namespace YEngine { namespace YRenderer {
 
+class VertexDeclTest : public BasicRendererTest {};
 class IndexBufferTest : public BasicRendererTest {};
 class VertexBufferTest : public BasicRendererTest {};
+
+TEST_F(VertexDeclTest, VertexDeclEmptyRelease) {
+  const YRenderDevice::VertexDeclElement kElements[] = {
+    { 0, 1, 1, YRenderDevice::kVertexElementType_Float,
+      YRenderDevice::kVertexElementUsage_Position },
+  };
+  VertexDecl vertex_decl(kElements, ARRAY_SIZE(kElements));
+  vertex_decl.Release();
+}
+
+TEST_F(VertexDeclTest, VertexDeclActivationTest) {
+  const YRenderDevice::VertexDeclElement kElements[] = {
+    { 0, 1, 1, YRenderDevice::kVertexElementType_Float,
+      YRenderDevice::kVertexElementUsage_Position },
+  };
+  VertexDecl vertex_decl(kElements, ARRAY_SIZE(kElements));
+  RenderDeviceState device_state;
+
+  const YRenderDevice::VertexDeclID kVertexDeclID = 123;
+  YRenderDevice::RenderDeviceMock::ExpectCreateVertexDeclaration(
+      kVertexDeclID,
+      vertex_decl.GetVertexDeclElements(),
+      vertex_decl.GetNumVertexElements());
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
+      kVertexDeclID);
+  device_state.Reset();
+  vertex_decl.Activate(device_state);
+
+  // Second activation should not create the declaration again
+  YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
+      kVertexDeclID);
+  device_state.Reset();
+  vertex_decl.Activate(device_state);
+
+  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexDeclaration(
+      kVertexDeclID);
+  vertex_decl.Release();
+}
 
 TEST_F(IndexBufferTest, IndexBufferEmptyRelease) {
   IndexBuffer index_buffer;

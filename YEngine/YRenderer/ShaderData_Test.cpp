@@ -16,44 +16,6 @@ namespace YEngine { namespace YRenderer {
 class ShaderDataTest : public BasicRendererTest {};
 class ShaderDataFailTest : public BasicRendererTest {};
 
-TEST_F(ShaderDataTest, VertexDeclEmptyRelease) {
-  const YRenderDevice::VertexDeclElement kElements[] = {
-    { 0, 1, 1, YRenderDevice::kVertexElementType_Float,
-      YRenderDevice::kVertexElementUsage_Position },
-  };
-  VertexDecl vertex_decl(kElements, ARRAY_SIZE(kElements));
-  vertex_decl.Release();
-}
-
-TEST_F(ShaderDataTest, VertexDeclActivationTest) {
-  const YRenderDevice::VertexDeclElement kElements[] = {
-    { 0, 1, 1, YRenderDevice::kVertexElementType_Float,
-      YRenderDevice::kVertexElementUsage_Position },
-  };
-  VertexDecl vertex_decl(kElements, ARRAY_SIZE(kElements));
-  RenderDeviceState device_state;
-
-  const YRenderDevice::VertexDeclID kVertexDeclID = 123;
-  YRenderDevice::RenderDeviceMock::ExpectCreateVertexDeclaration(
-      kVertexDeclID,
-      vertex_decl.GetVertexDeclElements(),
-      vertex_decl.GetNumVertexElements());
-  YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
-      kVertexDeclID);
-  device_state.Reset();
-  vertex_decl.Activate(device_state);
-
-  // Second activation should not create the declaration again
-  YRenderDevice::RenderDeviceMock::ExpectActivateVertexDeclaration(
-      kVertexDeclID);
-  device_state.Reset();
-  vertex_decl.Activate(device_state);
-
-  YRenderDevice::RenderDeviceMock::ExpectReleaseVertexDeclaration(
-      kVertexDeclID);
-  vertex_decl.Release();
-}
-
 TEST_F(ShaderDataTest, ShaderFloatArgEmptyRelease) {
   const ShaderFloatParam float_param(4, 0);
   ShaderFloatArg float_arg(&float_param);
@@ -279,8 +241,8 @@ TEST_F(ShaderDataTest, ShaderTexFillMipTest) {
   const uint32_t kTextureDataMip0[] = { 1, 2, 3, 4 };
   const uint32_t kTextureDataMip1[] = { 5 };
   const void* kTextureData[] = { kTextureDataMip0, kTextureDataMip1 };
-  const size_t kTextureDataSizes[] = { sizeof(kTextureDataMip0),
-                                       sizeof(kTextureDataMip1) };
+  const uint32_t kTextureDataSizes[] = { sizeof(kTextureDataMip0),
+                                         sizeof(kTextureDataMip1) };
   static_assert(ARRAY_SIZE(kTextureData) == ARRAY_SIZE(kTextureDataSizes),
                 "Sanity check failed.");
 
