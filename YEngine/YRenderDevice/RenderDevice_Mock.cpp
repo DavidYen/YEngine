@@ -82,7 +82,7 @@ namespace {
                                              uint32_t* stride_sizes,
                                              const void* const* buffers,
                                              uint32_t* buffer_sizes,
-                                             uint32_t index_offset);
+                                             uint32_t index_offset) = 0;
     virtual void ResetIndexBuffer(IndexBufferID index_buffer) = 0;
     virtual void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                                    const void* buffer, uint32_t buffer_size,

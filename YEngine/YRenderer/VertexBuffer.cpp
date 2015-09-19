@@ -37,12 +37,14 @@ void IndexBuffer::Initialize(YRenderDevice::UsageType usage, uint32_t count) {
 }
 
 void IndexBuffer::Fill(const uint16_t* data, uint32_t num_ints) {
-  FillMulti(1, &data, &num_ints);
+  uint16_t index_offsets = 0;
+  FillMulti(1, &data, &num_ints, &index_offsets);
 }
 
 void IndexBuffer::FillMulti(uint32_t arrays,
                             const uint16_t* const* datas,
-                            const uint32_t* num_ints) {
+                            const uint32_t* num_ints,
+                            const uint16_t* float_index_offsets) {
   YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
           "Index buffer has not been initialized.");
 
@@ -74,6 +76,7 @@ void IndexBuffer::FillMulti(uint32_t arrays,
                                                  count,
                                                  data,
                                                  sizeof(data[0]) * count,
+                                                 float_index_offsets[i],
                                                  current_offset);
     current_offset += count;
   }

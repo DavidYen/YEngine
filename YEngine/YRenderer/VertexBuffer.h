@@ -18,7 +18,8 @@ class IndexBuffer {
   void Fill(const uint16_t* data, uint32_t num_ints);
   void FillMulti(uint32_t arrays,
                  const uint16_t* const* datas,
-                 const uint32_t* num_ints);
+                 const uint32_t* num_ints,
+                 const uint16_t* float_index_offsets);
   void Activate(RenderDeviceState& device_state);
 
  private:

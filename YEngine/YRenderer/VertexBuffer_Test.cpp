@@ -60,6 +60,7 @@ TEST_F(IndexBufferTest, FillMultiTest) {
   uint16_t* kIndexDatas[2] = { kIndexData1, kIndexData2 };
   uint32_t kIndexDataSizes[2] = { ARRAY_SIZE(kIndexData1),
                                   ARRAY_SIZE(kIndexData2) };
+  uint16_t kIndexDataOffsets[2] = { 0, 0 };
   uint32_t kTotalSize = ARRAY_SIZE(kIndexData1) + ARRAY_SIZE(kIndexData2);
 
   IndexBuffer index_buffer;
@@ -81,10 +82,12 @@ TEST_F(IndexBufferTest, FillMultiTest) {
       ARRAY_SIZE(kIndexData2),
       kIndexData2,
       sizeof(kIndexData2),
+      0,
       ARRAY_SIZE(kIndexData1));
   index_buffer.FillMulti(ARRAY_SIZE(kIndexDatas),
                          kIndexDatas,
-                         kIndexDataSizes);
+                         kIndexDataSizes,
+                         kIndexDataOffsets);
 }
 
 TEST_FAILURE_F(IndexBufferTest, FillMaxSizeFails, "exceeded") {
@@ -93,6 +96,7 @@ TEST_FAILURE_F(IndexBufferTest, FillMaxSizeFails, "exceeded") {
   uint16_t* kIndexDatas[2] = { kIndexData1, kIndexData2 };
   uint32_t kIndexDataSizes[2] = { ARRAY_SIZE(kIndexData1),
                                   ARRAY_SIZE(kIndexData2) };
+  uint16_t kIndexDataOffsets[2] = { 0, 0 };
   uint32_t kTotalSize = ARRAY_SIZE(kIndexData1) + ARRAY_SIZE(kIndexData2);
 
   IndexBuffer index_buffer;
@@ -114,10 +118,12 @@ TEST_FAILURE_F(IndexBufferTest, FillMaxSizeFails, "exceeded") {
       ARRAY_SIZE(kIndexData2),
       kIndexData2,
       sizeof(kIndexData2),
+      0,
       ARRAY_SIZE(kIndexData1));
   index_buffer.FillMulti(ARRAY_SIZE(kIndexDatas),
                          kIndexDatas,
-                         kIndexDataSizes);
+                         kIndexDataSizes,
+                         kIndexDataOffsets);
 }
 
 TEST_FAILURE_F(IndexBufferTest, ActivateNoFillFails, "not been filled") {
