@@ -1,11 +1,25 @@
 #include <YCommon/Headers/stdincludes.h>
 #include "YFramework.h"
 
+#include <YCommon/YContainers/CommandTree.h>
 #include <YCommon/YPlatform/Platform.h>
 
 namespace YEngine { namespace YFramework {
 
 static volatile bool g_bDone = false;
+
+static uintptr_t PlatformUpdateRoutine(void*) {
+  YCommon::YPlatform::Platform::Update();
+  return 0;
+}
+
+static uintptr_t PrepareRenderRoutine(void*) {
+  return 0;
+}
+
+static uintptr_t RenderRoutine(void*) {
+  return 0;
+}
 
 YFramework::YFramework(const YCommon::YPlatform::PlatformHandle& handle,
                        uint32_t global_heap_size)
@@ -19,24 +33,32 @@ YFramework::~YFramework() {
   YCommon::YPlatform::Platform::Release();
 }
 
-void YFramework::RegisterGameObject(GameObject* game_object) {
-  (void) game_object;
+YCommon::YPlatform::ThreadRoutine YFramework::GetPlatformUpdateRoutine() {
+  return PlatformUpdateRoutine;
+}
+
+YCommon::YPlatform::ThreadRoutine YFramework::GetPrepareRenderRoutine() {
+  return PrepareRenderRoutine;
+}
+
+YCommon::YPlatform::ThreadRoutine YFramework::GetRenderRoutine() {
+  return RenderRoutine;
 }
 
 void YFramework::Run() {
   while( !g_bDone ) {
-    YCommon::YPlatform::Platform::Update();
+    if (mPendingTree) {
+      mCommandTree = mPendingTree;
+      mPendingTree = nullptr;
+    }
 
-    // m_pTaskManager->InitializeTaskManager();
-    // m_pGameUpdateTask->UpdateFrame( m_FrameTimer.MeasureDeltaTime() );
-
-    // m_pTaskManager->QueueTask( m_pGameRenderTask );
-    // m_pTaskManager->QueueTask( m_pGameUpdateTask );
-
-    // m_pTaskManager->ExecuteTasks();
-
-    // This call should be made as a queued task after everything is done being put in the renderer and renderer is finished, move it there later
-    // g_pRenderDevice->PostRender();
+    if (mCommandTree) {
+      uintptr_t ret_value = mCommandTree->ExecuteCommands();
+      (void) ret_value;
+      YASSERT(ret_value == 0, "Command Tree execution failed.");
+    } else {
+      PlatformUpdateRoutine(nullptr);
+    }
   }
 }
 

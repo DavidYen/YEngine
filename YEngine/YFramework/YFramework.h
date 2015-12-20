@@ -1,11 +1,14 @@
-#ifndef YFRAMEWORK_YFRAMEWORK_H
-#define YFRAMEWORK_YFRAMEWORK_H
+#ifndef YENGINE_YFRAMEWORK_YFRAMEWORK_H
+#define YENGINE_YFRAMEWORK_YFRAMEWORK_H
 
 #include <YCommon/YPlatform/PlatformHandle.h>
+#include <YCommon/YPlatform/Thread.h>
+
+namespace YCommon { namespace YContainers {
+class CommandTree;
+}}
 
 namespace YEngine { namespace YFramework {
-
-class GameObject;
 
 class YFramework {
 public:
@@ -13,7 +16,21 @@ public:
              uint32_t global_heap_size = 128 * 1024 * 1024);
   ~YFramework();
 
-  void RegisterGameObject(GameObject* game_object);
+  // [Common tasks that should be included in the command tree.]
+  // Call platform specific function calls, should be called regularly.
+  static YCommon::YPlatform::ThreadRoutine GetPlatformUpdateRoutine();
+  // Prepare the render, should be called after render device gets all the
+  // commands but before actual render call. Best called at the end of the
+  // previous frame.
+  static YCommon::YPlatform::ThreadRoutine GetPrepareRenderRoutine();
+  // Render call, called after Prepare Render to draw any commands prepared.
+  // Should probably be called at the beginning of a frame to draw the previous
+  // frame.
+  static YCommon::YPlatform::ThreadRoutine GetRenderRoutine();
+
+  // [Thread-Safe] Prepares command tree to be swapped at beginning of a frame.
+  void SetCommandTree(YCommon::YContainers::CommandTree* command_tree);
+
   void Run();
 
   static void EndFramework();
@@ -21,6 +38,10 @@ public:
 private:
   // Platform Variables
   YCommon::YPlatform::PlatformHandle mPlatformHandle;
+
+  // Command Tree
+  YCommon::YContainers::CommandTree* mCommandTree = NULL;
+  YCommon::YContainers::CommandTree* volatile mPendingTree = NULL;
 
   // Game Variables
   uint32_t mGlobalHeapSize;
@@ -35,4 +56,4 @@ private:
 
 }}
 
-#endif // YFRAMEWORK_YFRAMEWORK_H
+#endif // YENGINE_YFRAMEWORK_YFRAMEWORK_H
