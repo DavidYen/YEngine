@@ -2,7 +2,6 @@
 #include "DataLoader.h"
 
 #include <YCommon/YContainers/MemBuffer.h>
-#include <YCommon/YContainers/MemPool.h>
 
 #include "ShaderLoad.h"
 
