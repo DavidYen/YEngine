@@ -1,0 +1,23 @@
+{
+  "render_targets": [{
+    "name": "GBuffer.Color",
+    "width": 1.0,
+    "height": 1.0,
+    "format": "A8R8G8B8"
+  }, {
+    "name": "GBuffer.Normal",
+    "width": 1.0,
+    "height": 1.0,
+    "format": "A8R8G8B8"
+  }, {
+    "name": "GBuffer.Depth",
+    "width": 1.0,
+    "height": 1.0,
+    "format": "F32"
+  }, {
+    "name": "GBuffer.LightMap",
+    "width": 1.0,
+    "height": 1.0,
+    "format": "A8R8G8B8"
+  }]
+}

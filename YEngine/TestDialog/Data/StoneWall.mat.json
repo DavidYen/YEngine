@@ -1,0 +1,16 @@
+{
+  "textures": [{
+    "name": "stone-wall",
+    "file": "stone_wall.bmp",
+    "format": "DXT1"
+  }, {
+    "name": "stone-wall-normal-map",
+    "file": "stone_wall_normal_map.bmp",
+    "format": "A8R8G8B8"
+  }],
+
+  "properties": {
+    "ColorMap": "stone-wall",
+    "NormalMap": "stone-wall-normal-map"
+  }
+}
