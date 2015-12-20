@@ -112,8 +112,9 @@ namespace Renderer {
       size_t num_vertex_elements,
       TypedReadRefData<YRenderDevice::VertexElementType> data_types,
       TypedReadRefData<YRenderDevice::VertexElementUsage> data_usages,
-      TypedReadRefData<size_t> data_sizes,
-      ReadRefData* vertex_datas);
+      TypedReadRefData<uint16_t> index_data,
+      TypedReadRefData<float> vertex_datas,
+      TypedReadRefData<uint32_t> vertex_counts);
   void AppendVertexData(
       uint64_t vertex_data_hash,
       YRenderDevice::DrawPrimitive draw_primitive,
@@ -122,7 +123,8 @@ namespace Renderer {
       TypedReadRefData<YRenderDevice::VertexElementType> data_types,
       TypedReadRefData<YRenderDevice::VertexElementUsage> data_usages,
       TypedReadRefData<size_t> data_sizes,
-      ReadRefData* vertex_datas);
+      TypedReadRefData<uint16_t> index_data,
+      TypedReadRefData<float> vertex_datas);
   void SetShaderArg(
       uint64_t shader_arg_hash,
       YRenderDevice::UsageType usage_type,

@@ -95,14 +95,14 @@ namespace RenderDevice {
   void FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
                                    uint32_t count,
                                    uint32_t num_interleaves,
-                                   uint32_t* stride_sizes,
+                                   const uint32_t* stride_sizes,
                                    const void* const* buffers,
-                                   uint32_t* buffer_sizes,
+                                   const uint32_t* buffer_sizes,
                                    uint32_t index_offset = 0);
   void ResetIndexBuffer(IndexBufferID index_buffer);
   void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                         const void* buffer, uint32_t buffer_size,
-                        uint32_t* starting_offset);
+                        const uint32_t* starting_offset);
   void FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                        const void* buffer, uint32_t buffer_size,
                        uint16_t vertex_offset = 0,

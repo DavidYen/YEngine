@@ -79,14 +79,14 @@ namespace {
     virtual void FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
                                              uint32_t count,
                                              uint32_t num_interleaves,
-                                             uint32_t* stride_sizes,
+                                             const uint32_t* stride_sizes,
                                              const void* const* buffers,
-                                             uint32_t* buffer_sizes,
+                                             const uint32_t* buffer_sizes,
                                              uint32_t index_offset) = 0;
     virtual void ResetIndexBuffer(IndexBufferID index_buffer) = 0;
     virtual void AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                                    const void* buffer, uint32_t buffer_size,
-                                   uint32_t* starting_offset) = 0;
+                                   const uint32_t* starting_offset) = 0;
     virtual void FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                                  const void* buffer, uint32_t buffer_size,
                                  uint16_t vertex_offset,
@@ -225,14 +225,14 @@ namespace {
                       uint32_t index_offset));
     MOCK_METHOD7(FillVertexBufferInterleaved,
                  void(VertexBufferID vertex_buffer, uint32_t count,
-                      uint32_t num_interleaves, uint32_t* stride_sizes,
-                      const void* const* buffers, uint32_t* buffer_sizes,
+                      uint32_t num_interleaves, const uint32_t* stride_sizes,
+                      const void* const* buffers, const uint32_t* buffer_sizes,
                       uint32_t index_offset));
     MOCK_METHOD1(ResetIndexBuffer, void(IndexBufferID index_buffer));
     MOCK_METHOD5(AppendIndexBuffer,
                  void(IndexBufferID index_buffer, uint32_t count,
                       const void* buffer, uint32_t buffer_size,
-                      uint32_t* starting_offset));
+                      const uint32_t* starting_offset));
     MOCK_METHOD6(FillIndexBuffer,
                  void(IndexBufferID index_buffer, uint32_t count,
                       const void* buffer, uint32_t buffer_size,
@@ -517,9 +517,9 @@ void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
 void RenderDevice::FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
                                                uint32_t count,
                                                uint32_t num_interleaves,
-                                               uint32_t* stride_sizes,
+                                               const uint32_t* stride_sizes,
                                                const void* const* buffers,
-                                               uint32_t* buffer_sizes,
+                                               const uint32_t* buffer_sizes,
                                                uint32_t index_offset) {
   gMockRenderDevice->FillVertexBufferInterleaved(vertex_buffer, count,
                                                  num_interleaves,
@@ -535,7 +535,7 @@ void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
 
 void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
                                      const void* buffer, uint32_t buffer_size,
-                                     uint32_t* starting_offset) {
+                                     const uint32_t* starting_offset) {
   gMockRenderDevice->AppendIndexBuffer(index_buffer, count, buffer, buffer_size,
                                        starting_offset);
 }
@@ -896,8 +896,8 @@ void RenderDeviceMock::ExpectFillVertexBuffer(VertexBufferID vertex_buffer,
 
 void RenderDeviceMock::ExpectFillVertexBufferInterleaved(
     VertexBufferID vertex_buffer, uint32_t count,
-    uint32_t num_interleaves, uint32_t* stride_sizes,
-    const void* const* buffers, uint32_t* buffer_sizes,
+    uint32_t num_interleaves, const uint32_t* stride_sizes,
+    const void* const* buffers, const uint32_t* buffer_sizes,
     uint32_t index_offset) {
   EXPECT_CALL(*gMockRenderDevice, FillVertexBufferInterleaved(vertex_buffer,
                                                               count,

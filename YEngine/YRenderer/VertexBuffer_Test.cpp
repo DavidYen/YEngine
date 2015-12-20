@@ -237,7 +237,7 @@ TEST_F(VertexBufferTest, BasicFillTest) {
       ARRAY_SIZE(kVertexData),
       kVertexData,
       sizeof(kVertexData));
-  vertex_buffer.Fill(kVertexData, ARRAY_SIZE(kVertexData));
+  vertex_buffer.Fill(kVertexData, sizeof(kVertexData));
 }
 
 TEST_F(VertexBufferTest, FillMultiTest) {
@@ -374,7 +374,7 @@ TEST_F(VertexBufferTest, ActivationTest) {
       ARRAY_SIZE(kVertexData),
       kVertexData,
       sizeof(kVertexData));
-  vertex_buffer.Fill(kVertexData, ARRAY_SIZE(kVertexData));
+  vertex_buffer.Fill(kVertexData, sizeof(kVertexData));
 
   YRenderDevice::RenderDeviceMock::ExpectActivateVertexStream(0,
                                                               kVertexBufferID);

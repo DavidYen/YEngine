@@ -1041,8 +1041,8 @@ void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer,
 
 void RenderDevice::FillVertexBufferInterleaved(
     VertexBufferID vertex_buffer, uint32_t count, uint32_t num_interleaves,
-    uint32_t* stride_sizes, const void* const* buffers, uint32_t* buffer_sizes,
-    uint32_t index_offset) {
+    const uint32_t* stride_sizes, const void* const* buffers,
+    const uint32_t* buffer_sizes, uint32_t index_offset) {
   HRESULT hr = E_FAIL;
 
   YASSERT(vertex_buffer < ARRAY_SIZE(gVertexBuffers.used) &&

@@ -202,7 +202,7 @@ class ReadRefData : public BaseRefData {
     BaseRefData::Reset();
   }
 
-  const void* GetData() {
+  const void* GetData() const {
     YDEBUG_CHECK(mRefPointer == nullptr || mRefPointer->mPointer == mPointer,
                  "Reference Pointer out of date.");
     return mPointer;
@@ -240,7 +240,7 @@ class TypedReadRefData : public ReadRefData {
     Reset();
   }
 
-  const T* GetData() { return static_cast<const T*>(ReadRefData::GetData()); }
+  const T* GetData() const { return static_cast<const T*>(ReadRefData::GetData()); }
 };
 
 class WriteRefData : public BaseRefData {

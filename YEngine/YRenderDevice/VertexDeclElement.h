@@ -27,6 +27,15 @@ enum VertexElementUsage {
   NUM_VERTEX_ELEMENT_USAGES
 };
 
+static const uint32_t kVertexElementSize[] {
+  1 * sizeof(float),
+  2 * sizeof(float),
+  3 * sizeof(float),
+  4 * sizeof(float),
+};
+static_assert(ARRAY_SIZE(kVertexElementSize) == NUM_VERTEX_ELEMENT_TYPES,
+              "kVertexElementSize must be defined for every element type.");
+
 struct VertexDeclElement {
   uint8_t mStreamNum;
   uint8_t mElementOffset;

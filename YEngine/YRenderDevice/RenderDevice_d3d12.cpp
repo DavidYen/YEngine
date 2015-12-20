@@ -114,33 +114,33 @@ void RenderDevice::FillVertexBuffer(VertexBufferID vertex_buffer, uint32_t count
 void RenderDevice::FillVertexBufferInterleaved(VertexBufferID vertex_buffer,
                                  uint32_t count,
                                  uint32_t num_interleaves,
-                                 uint32_t* stride_sizes,
+                                 const uint32_t* stride_sizes,
                                  const void* const* buffers,
-                                 uint32_t* buffer_sizes,
+                                 const uint32_t* buffer_sizes,
                                  uint32_t index_offset) {
 }
 void RenderDevice::ResetIndexBuffer(IndexBufferID index_buffer) {
 }
 void RenderDevice::AppendIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                      const void* buffer, uint32_t buffer_size,
-                      uint32_t* starting_offset) {
+                                     const void* buffer, uint32_t buffer_size,
+                                     const uint32_t* starting_offset) {
 }
 void RenderDevice::FillIndexBuffer(IndexBufferID index_buffer, uint32_t count,
-                     const void* buffer, uint32_t buffer_size,
-                     uint16_t vertex_offset,
-                     uint32_t index_offset) {
+                                   const void* buffer, uint32_t buffer_size,
+                                   uint16_t vertex_offset,
+                                   uint32_t index_offset) {
 }
 void RenderDevice::FillConstantBuffer(ConstantBufferID constant_buffer,
-                        const void* buffer, uint32_t size) {
+                                      const void* buffer, uint32_t size) {
 }
 
 // Accessors
 void RenderDevice::GetFrameBufferDimensions(uint32_t& width, uint32_t& height) {
 }
 void RenderDevice::GetViewPort(ViewPortID viewport,
-                 uint32_t& top, uint32_t& left,
-                 uint32_t& width, uint32_t& height,
-                 float& min_z, float& max_z) {
+                               uint32_t& top, uint32_t& left,
+                               uint32_t& width, uint32_t& height,
+                               float& min_z, float& max_z) {
 }
 uint32_t GetVertexBufferCount(VertexBufferID vertex_buffer) {
   return 0;

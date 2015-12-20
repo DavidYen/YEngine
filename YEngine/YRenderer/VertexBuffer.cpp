@@ -57,6 +57,7 @@ void IndexBuffer::Release() {
       mIndexBufferIDs[i] = INVALID_INDEX_BUFFER;
     }
   }
+  mDirty = false;
 }
 
 void IndexBuffer::Initialize(YRenderDevice::UsageType usage, uint32_t count) {
@@ -90,7 +91,6 @@ void IndexBuffer::FillMulti(uint32_t arrays,
 
   if (mDirty) {
     Release();
-    mDirty = false;
   }
 
   mActiveIndex = !mActiveIndex;
@@ -139,6 +139,7 @@ void VertexBuffer::Release() {
       mVertexBufferIDs[i] = INVALID_VERTEX_BUFFER;
     }
   }
+  mDirty = false;
 }
 
 void VertexBuffer::Initialize(YRenderDevice::UsageType usage,
@@ -155,28 +156,36 @@ void VertexBuffer::Initialize(YRenderDevice::UsageType usage,
   }
 }
 
-void VertexBuffer::Fill(const float* data, uint32_t num_floats) {
-  FillMulti(1, &data, &num_floats);
+void VertexBuffer::Fill(const void* data, uint32_t data_size) {
+  FillMulti(1, &data, &data_size);
 }
 
 void VertexBuffer::FillMulti(uint32_t arrays,
-                             const float* const* datas,
+                             const float* const* floats,
                              const uint32_t* float_counts) {
+
+  FillMulti(arrays, reinterpret_cast<const void* const*>(floats),
+            float_counts, sizeof(floats[0][0]));
+}
+
+void VertexBuffer::FillMulti(uint32_t arrays,
+                             const void* const* datas,
+                             const uint32_t* data_sizes,
+                             uint32_t data_stride) {
   YASSERT(mUsageType != YRenderDevice::kUsageType_Invalid,
           "Vertex buffer has not been initialized.");
 
   mFillSize = 0;
   for (uint32_t i = 0; i < arrays; ++i) {
-    mFillSize += float_counts[i] * sizeof(float);
+    mFillSize += data_sizes[i] * data_stride;
   }
 
   YASSERT(mFillSize <= mTotalSize,
-          "Index buffer total size (%u) exceeded: %u",
+          "Vertex buffer total size (%u) exceeded: %u",
           mTotalSize, mFillSize);
 
   if (mDirty) {
     Release();
-    mDirty = false;
   }
 
   mActiveIndex = !mActiveIndex;
@@ -189,10 +198,11 @@ void VertexBuffer::FillMulti(uint32_t arrays,
 
   const YRenderDevice::VertexBufferID vertex_buffer_id =
       mVertexBufferIDs[mActiveIndex];
+
   uint32_t current_offset = 0;
   for (uint32_t i = 0; i < arrays; ++i) {
-    const float* data = datas[i];
-    const uint32_t data_size = float_counts[i] * sizeof(float);
+    const void* data = datas[i];
+    const uint32_t data_size = data_sizes[i] * data_stride;
 
     YASSERT(data_size % mStride == 0,
             "Buffer data size (%u) is not a multiple of the stride (%u).",

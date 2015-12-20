@@ -62,10 +62,14 @@ class VertexBuffer {
                   uint32_t count);
   uint32_t GetFillSize() const { return mFillSize; }
 
-  void Fill(const float* data, uint32_t num_floats);
+  void Fill(const void* data, uint32_t data_size);
   void FillMulti(uint32_t arrays,
-                 const float* const* datas,
+                 const float* const* floats,
                  const uint32_t* float_counts);
+  void FillMulti(uint32_t arrays,
+                 const void* const* datas,
+                 const uint32_t* data_sizes,
+                 uint32_t data_stride = 1);
   void Activate(RenderDeviceState& device_state);
 
  private:

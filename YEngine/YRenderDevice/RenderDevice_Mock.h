@@ -70,9 +70,9 @@ namespace RenderDeviceMock {
   void ExpectFillVertexBufferInterleaved(VertexBufferID vertex_buffer,
                                          uint32_t count,
                                          uint32_t num_interleaves,
-                                         uint32_t* stride_sizes,
+                                         const uint32_t* stride_sizes,
                                          const void* const* buffers,
-                                         uint32_t* buffer_sizes,
+                                         const uint32_t* buffer_sizes,
                                          uint32_t index_offset = 0);
 
   void ExpectResetIndexBuffer(IndexBufferID index_buffer);

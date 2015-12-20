@@ -15,6 +15,7 @@
 #include <YEngine/YRenderDevice/DrawPrimitive.h>
 #include <YEngine/YRenderDevice/RenderBlendState.h>
 #include <YEngine/YRenderDevice/SamplerState.h>
+#include <YEngine/YRenderDevice/VertexDeclElement.h>
 
 #include "RenderDeviceState.h"
 #include "RendererCommon.h"
@@ -60,6 +61,7 @@
 #define MAX_FLOAT_ARGS_PER_OBJ 8
 #define MAX_TEXTURE_ARGS_PER_OBJ 8
 #define MAX_VERTEX_BUFFERS_PER_DATA 8
+#define MAX_VERTEX_DATAS_PER_BUFFER 24
 
 // Maximum Actives
 #define MAX_ACTIVE_RENDEROBJS 128
@@ -345,32 +347,109 @@ namespace {
   };
   YCommon::YContainers::TypedHashTable<RenderTypeInternal> gRenderTypes;
 
-  struct VertexBufferInternal {
-    VertexBufferInternal(VertexDeclInternal* vertex_decl)
-      : mCurrentIndex(0),
-        mVertexDecl(vertex_decl) {
-      memset(mIndexBufferIDs, -1, sizeof(mIndexBufferIDs));
-      memset(mVertexBufferIDs, -1, sizeof(mVertexBufferIDs));
+  struct VertexFillData {
+    VertexFillData(
+        uint32_t num_vertexes,
+        uint16_t num_index,
+        uint16_t num_vertex_elements,
+        const TypedReadRefData<YRenderDevice::VertexElementType>& types,
+        const TypedReadRefData<YRenderDevice::VertexElementUsage>& usages,
+        const TypedReadRefData<uint16_t>& index,
+        const TypedReadRefData<float>* element_datas)
+      : mNumVertex(num_vertexes),
+        mNumIndexes(num_index),
+        mNumVertexElements(num_vertex_elements),
+        mIndexData(index),
+        mElementTypes(types),
+        mElementUsages(usages),
+        mVertexElementDatas(element_datas) {
     }
 
-    void Release() {
-      for (int i = 0; i < 2; ++i) {
-        if (mIndexBufferIDs[i] != INVALID_INDEX_BUFFER)
-          YRenderDevice::RenderDevice::ReleaseIndexBuffer(mIndexBufferIDs[i]);
-        if (mVertexBufferIDs[i] != INVALID_VERTEX_BUFFER)
-          YRenderDevice::RenderDevice::ReleaseVertexBuffer(mVertexBufferIDs[i]);
+    // Total number of vertexes.
+    uint32_t mNumVertex;
+
+    // Total number of indexes in mIndexData.
+    uint16_t mNumIndexes;
+
+    // Total number of vertex element types.
+    uint16_t mNumVertexElements;
+
+    const TypedReadRefData<uint16_t> mIndexData;
+
+    const TypedReadRefData<YRenderDevice::VertexElementType> mElementTypes;
+    const TypedReadRefData<YRenderDevice::VertexElementUsage> mElementUsages;
+    const TypedReadRefData<float>* mVertexElementDatas;
+  };
+
+  class IndexBufferInternal : public IndexBuffer {
+   public:
+    IndexBufferInternal()
+      : IndexBuffer() {
+    }
+
+    void Fill(uint32_t num_vertex_datas, VertexFillData* vertex_datas) {
+      const uint16_t* indexes[MAX_VERTEX_DATAS_PER_BUFFER];
+      uint32_t num_indexes[MAX_VERTEX_DATAS_PER_BUFFER];
+      uint16_t float_index_offsets[MAX_VERTEX_DATAS_PER_BUFFER];
+
+      uint16_t float_index_offset = 0;
+      for (uint32_t i = 0; i < num_vertex_datas; ++i) {
+        indexes[i] = vertex_datas[i].mIndexData.GetData();
+        num_indexes[i] = vertex_datas[i].mNumIndexes;
+        float_index_offsets[i] = float_index_offset;
+
+        float_index_offset += vertex_datas[i].mNumVertexElements;
       }
+
+      IndexBuffer::FillMulti(num_vertex_datas, indexes,
+                             num_indexes, float_index_offsets);
+    }
+  };
+
+  class VertexBufferInternal : public VertexBuffer {
+   public:
+    VertexBufferInternal(VertexDeclInternal* vertex_decl)
+      : VertexBuffer(),
+        mVertexDecl(vertex_decl) {
     }
 
-    uint8_t mCurrentIndex;
-    YRenderDevice::IndexBufferID mIndexBufferIDs[2];
-    YRenderDevice::VertexBufferID mVertexBufferIDs[2];
-    YRenderDevice::DrawPrimitive mDrawPrimitive[2];
+    void Fill(size_t /*num_vertex_datas*/, VertexFillData* /*vertex_datas*/) {
+      YASSERT(false, "Not implemented...");
+      /*float* float_data[YRenderDevice::NUM_VERTEX_ELEMENT_USAGES];
+      uint32_t float_sizes[YRenderDevice::NUM_VERTEX_ELEMENT_USAGES];
+
+      for (size_t i = 0; i < num_vertex_datas; ++i) {
+        VertexFillData& fill_data = vertex_datas[i];
+
+      }
+
+      const YRenderDevice::VertexDeclElement* elements =
+          mVertexDecl->GetVertexDeclElements();
+      const uint8_t num_elements = mVertexDecl->GetNumVertexElements();
+      for (uint8_t i = 0; i < num_elements; ++i) {
+        const YRenderDevice::VertexDeclElement& element = elements[i];
+        // float_data[element.mElementType] = 
+      }
+
+
+      static_cast<void>(num_vertex_datas);
+      static_cast<void>(vertex_datas);*/
+    }
+
+    bool IsVertexDecl(VertexDeclInternal* vertex_decl) const {
+      return mVertexDecl == vertex_decl;
+    }
+
+    bool IsInvalidIndex() const {
+      return mVertexDecl->mActivatedArrayIndex == INVALID_INDEX;
+    }
+
+   private:
     VertexDeclInternal* mVertexDecl;
   };
   YCommon::YContainers::TypedMemPool<VertexBufferInternal> gVertexBuffers;
 
-  struct VertexDataInternal : public RefCountBase { 
+  struct VertexDataInternal : public RefCountBase {
     VertexDataInternal()
       : RefCountBase() {
     }
@@ -378,7 +457,7 @@ namespace {
     VertexBufferInternal* GetVertexBuffer(VertexDeclInternal* vertex_decl) {
       const uint32_t num_buffers = mVertexBuffers.GetCount();
       for (uint32_t i = 0; i < num_buffers; ++i) {
-        if (mVertexBuffers[i]->mVertexDecl == vertex_decl)
+        if (mVertexBuffers[i]->IsVertexDecl(vertex_decl))
           return mVertexBuffers[i];
       }
       return nullptr;
@@ -392,8 +471,7 @@ namespace {
       const uint32_t num_buffers = mVertexBuffers.GetCount();
       for (uint32_t i = 0; i < num_buffers; ++i) {
         // Remove if vertex declaration is not activated.
-        VertexDeclInternal* vertex_decl = mVertexBuffers[i]->mVertexDecl;
-        if (vertex_decl->mActivatedArrayIndex == INVALID_INDEX) {
+        if (mVertexBuffers[i]->IsInvalidIndex()) {
           ClearVertexBuffer(i);
           return;
         }
