@@ -7,6 +7,7 @@
 #include <flatbuffers/flatbuffers.h>
 #include <gflags/gflags.h>
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 #include <rapidjson/filereadstream.h>
 #include <schemas/shader_generated.h>
 
@@ -15,6 +16,34 @@
 #include <YTools/YFileUtils/FileStream.h>
 
 #include "CompileShader.h"
+
+namespace {
+  void OutputJsonError(const char* file_path,
+                       const char* buffer,
+                       size_t offset,
+                       rapidjson::ParseErrorCode error_code) {
+    size_t line_num = 1;
+    size_t index = 0;
+    for (size_t i = 0; i < offset; ++i) {
+      if (buffer[i] == '\n') {
+        ++line_num;
+        index = 0;
+      } else {
+        ++index;
+      }
+    }
+
+    std::cerr << "Json Parsing Error "
+              << file_path
+              << ":"
+              << line_num
+              << ":"
+              << index
+              << " - "
+              << rapidjson::GetParseError_En(error_code)
+              << std::endl;
+  }
+}
 
 static bool ValidateExistingFile(const char* flagname,
                                  const std::string& value) {
@@ -71,6 +100,13 @@ int main(int argc, char** argv) {
   rapidjson::Document doc;
   doc.ParseStream<0>(stream);
   if (!doc.IsObject()) {
+    if (doc.HasParseError()) {
+      OutputJsonError(FLAGS_input_file.c_str(),
+                      readbuffer,
+                      doc.GetErrorOffset(),
+                      doc.GetParseError());
+    }
+
     std::cerr << "Could not parse json file: "
               << "\"" << FLAGS_input_file << "\"."
               << std::endl;

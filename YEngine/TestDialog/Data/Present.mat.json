@@ -1,0 +1,27 @@
+{
+  "render_targets": [
+    "GBuffer.Color",
+    "GBuffer.LightMap"
+  ],
+
+  "values": [{
+    "name": "half-pixel",
+    "type": "float2"
+  }, {
+    "name": "ambient-light",
+    "type": "float",
+    "default-value": "0.2"
+  }, {
+    "name": "ambient-color",
+    "type": "float3",
+    "default-value": "1.0, 1.0, 1.0"
+  }],
+
+  "properties": {
+    "half-pixel": "half-pixel",
+    "ambient-light": "ambient-light",
+    "ambient-color": "ambient-color",
+    "diffuse-map": "GBuffer.Color",
+    "light-map": "GBuffer.LightMap"
+  }
+}

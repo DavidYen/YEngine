@@ -1,0 +1,58 @@
+{
+  "name": "full-screen",
+  "file": "full-screen.hlsl",
+  "variants": [{
+    "name": "clear",
+    "vertex_declaration": "position",
+    "vertex_shader": "ClearGBufferVertexShader",
+    "pixel_shader": "ClearGBufferPixelShader",
+    "target": "2.0",
+    "debug": false,
+    "opt_level": 3,
+    "defines": []
+  }, {
+    "name": "present",
+    "vertex_declaration": "position_texture",
+    "vertex_shader": "PresentSceneVS",
+    "pixel_shader": "PresentScenePS",
+    "pixel_parameters": [{
+      "name": "half-pixel",
+      "type": "float2",
+      "slot": "c0"
+    }, {
+      "name": "ambient-light",
+      "type": "float",
+      "slot": "c0.z"
+    }, {
+      "name": "ambient-color",
+      "type": "float3",
+      "slot": "c1"
+    }, {
+      "name": "diffuse-map",
+      "type": "sampler",
+      "slot": "sampler0",
+      "sampler-state": {
+        "type": "texture",
+        "MAGFILTER": "POINT",
+        "MINFILTER": "POINT",
+        "MIPFILTER": "POINT",
+        "AddressU": "Clamp",
+        "AddressV": "Clamp"
+      }
+    }, {
+      "name": "light-map",
+      "type": "sampler",
+      "slot": "sampler1",
+      "sampler-state": {
+        "type": "texture",
+        "MAGFILTER": "POINT",
+        "MINFILTER": "POINT",
+        "MIPFILTER": "POINT",
+        "AddressU": "Clamp",
+        "AddressV": "Clamp"
+      }
+    }],
+    "target": "2.0",
+    "defines": []
+  }]
+}
