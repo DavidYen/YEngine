@@ -221,6 +221,18 @@ class ReadRefData : public BaseRefData {
 template <typename T>
 class TypedReadRefData : public ReadRefData {
  public:
+  TypedReadRefData(const TypedReadRefData& copy)
+    : ReadRefData(copy) {
+  }
+
+  TypedReadRefData(TypedReadRefData&& other)
+    : ReadRefData(other) {
+  }
+
+  ~TypedReadRefData() {
+    Reset();
+  }
+
   const T* GetData() { return static_cast<const T*>(ReadRefData::GetData()); }
 };
 
@@ -262,7 +274,7 @@ class WriteRefData : public BaseRefData {
     return *this;
   }
 
- private:
+ protected:
   friend class RefPointer;
   WriteRefData(RefPointer* ref_pointer)
     : BaseRefData(ref_pointer) {
