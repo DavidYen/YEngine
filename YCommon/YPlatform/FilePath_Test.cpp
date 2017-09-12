@@ -145,8 +145,8 @@ TEST(NormPathTest, CurrentDirTest) {
   const char test1[] = "a" PATH_SEP "." PATH_SEP;
   ASSERT_TRUE(FilePath::NormPath(test1, sizeof(test1)-1,
                                  dest, sizeof(dest), &dest_len));
-  EXPECT_STREQ("a" PATH_SEP, dest);
-  EXPECT_EQ(strlen("a" PATH_SEP), dest_len);
+  EXPECT_STREQ("a", dest);
+  EXPECT_EQ(strlen("a"), dest_len);
 
   const char test2[] = "." PATH_SEP "a";
   ASSERT_TRUE(FilePath::NormPath(test2, sizeof(test2)-1,
@@ -157,8 +157,8 @@ TEST(NormPathTest, CurrentDirTest) {
   const char test3[] = "." PATH_SEP "a" PATH_SEP;
   ASSERT_TRUE(FilePath::NormPath(test3, sizeof(test3)-1,
                                  dest, sizeof(dest), &dest_len));
-  EXPECT_STREQ("a" PATH_SEP, dest);
-  EXPECT_EQ(strlen("a" PATH_SEP), dest_len);
+  EXPECT_STREQ("a", dest);
+  EXPECT_EQ(strlen("a"), dest_len);
 }
 
 TEST(NormPathTest, InvalidCurrentDirTest) {
@@ -277,8 +277,8 @@ TEST(RelPathTest, PathSepEndTest) {
   ASSERT_TRUE(FilePath::RelPath(path2, strlen(path2),
                                 dir2, strlen(dir2),
                                 dest2, sizeof(dest2), &dest2_len));
-  EXPECT_STREQ("b" PATH_SEP, dest2);
-  EXPECT_EQ(strlen("b" PATH_SEP), dest2_len);
+  EXPECT_STREQ("b", dest2);
+  EXPECT_EQ(strlen("b"), dest2_len);
 }
 
 TEST(RelPathTest, FailedRelTest) {

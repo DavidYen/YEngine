@@ -5,7 +5,7 @@
 import("//build/config/compiler/VisualStudio/visual_studio_path.gni")
 
 # This script outputs environment.x86 and environment.x64
-exec_script("setup_environment.py", [compiler, visual_studio_path])
+exec_script("setup_environment.py", [visual_studio_path])
 
 # Some of GN's internal commands depend on chromium scripts for some reason,
 # duplicate those scripts here
@@ -113,24 +113,16 @@ template("vc_toolchain") {
     }
 
     tool("copy") {
-      command =  "copy {{source}} {{output}}"
+      command =  "cp {{source}} {{output}}"
       description = "COPY {{source}} {{output}}"
-    }
-
-    # When invoking this toolchain not as the default one, these args will be
-    # passed to the build. They are ignored when this is the default toolchain.
-    toolchain_args() {
-      cpu_arch = invoker.cpu_arch
     }
   }
 }
 
 vc_toolchain("32") {
   environment = "environment.x86"
-  cpu_arch = "x64"
 }
 
 vc_toolchain("64") {
   environment = "environment.x64"
-  cpu_arch = "x64"
 }

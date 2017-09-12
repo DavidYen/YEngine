@@ -32,24 +32,24 @@ void FileStream::Open(const std::string& file, FileMode mode, FileType type) {
   if (mode == kFileMode_Read) {
     if (mFileEnv)
       mFileEnv->AddReadFile(file);
-    std::ios_base::openmode mode = std::ofstream::in;
+    std::ios_base::openmode open_mode = std::ofstream::in;
     switch (type) {
-      case kFileType_Binary: mode |= std::ofstream::binary; break;
+      case kFileType_Binary: open_mode |= std::ofstream::binary; break;
       default: break;
     }
 
-    mInFile.open(file, mode);
+    mInFile.open(file, open_mode);
     mOpen = mInFile.is_open();
   } else if (mode == kFileMode_Write) {
     if (mFileEnv)
       mFileEnv->AddWrittenFile(file);
-    std::ios_base::openmode mode = std::ofstream::out;
+    std::ios_base::openmode open_mode = std::ofstream::out;
     switch (type) {
-      case kFileType_Binary: mode |= std::ofstream::binary; break;
+      case kFileType_Binary: open_mode |= std::ofstream::binary; break;
       default: break;
     }
 
-    mOutFile.open(file, mode);
+    mOutFile.open(file, open_mode);
     mOpen = mOutFile.is_open();
   }
 }

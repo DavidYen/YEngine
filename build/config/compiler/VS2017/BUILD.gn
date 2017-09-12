@@ -1,0 +1,30 @@
+
+import("config.gni")
+
+vs2017_config("compiler") {
+  cflags = []
+}
+
+vs2017_exceptions("exceptions") {
+  cflags = []
+}
+
+vs2017_noexceptions("noexceptions") {
+  cflags = []
+}
+
+vs2017_debug("debug") {
+  cflags = []
+}
+
+vs2017_release("release") {
+  cflags = []
+}
+
+vs2017_gold("gold") {
+  cflags = []
+}
+
+vs2017_platinum("platinum") {
+  cflags = []
+}

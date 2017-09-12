@@ -52,9 +52,11 @@ class DXIncludeData : public ID3DInclude {
     mWorkDirStack.push({ NULL, work_dir });
   }
 
-  HRESULT Open(D3D_INCLUDE_TYPE /* IncludeType */, LPCSTR pFileName,
-               LPCVOID /* pParentData */, LPCVOID *ppData,
-               UINT *pBytes) {
+  HRESULT STDMETHODCALLTYPE Open(D3D_INCLUDE_TYPE /* IncludeType */,
+                                 LPCSTR pFileName,
+                                 LPCVOID /* pParentData */,
+                                 LPCVOID *ppData,
+                                 UINT *pBytes) override {
     std::pair<const void*, std::string>& top = mWorkDirStack.top();
     std::string abspath = YFileUtils::FilePath::AbsPath(pFileName, top.second);
 
@@ -73,7 +75,7 @@ class DXIncludeData : public ID3DInclude {
     return S_OK;
   }
 
-  HRESULT Close(LPCVOID pData) {
+  HRESULT STDMETHODCALLTYPE Close(LPCVOID pData) override {
     std::pair<const void*, std::string>& top = mWorkDirStack.top();
     if (top.first != pData) {
       std::cerr << "DXIncludeData Open/Close mismatch." << std::endl;

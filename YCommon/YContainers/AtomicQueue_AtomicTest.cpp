@@ -94,19 +94,19 @@ class ThreadedDequeueTest : public ::testing::Test {
       DequeueThreadArg arg_data(&mQueue, &keep_going);
 
       // Start full
-      for (uint32_t i = 1; i <= QUEUE_SIZE; ++i) {
-        ASSERT_TRUE(mQueue.Enqueue(i));
+      for (uint32_t n = 1; n <= QUEUE_SIZE; ++n) {
+        ASSERT_TRUE(mQueue.Enqueue(n));
       }
 
       YCommon::YPlatform::Thread test_threads[NUM_THREADS];
-      for (int i = 0; i < NUM_THREADS; ++i) {
-        test_threads[i].Initialize(DequeueThreadRoutine, &arg_data);
-        test_threads[i].Run();
+      for (int n = 0; n < NUM_THREADS; ++n) {
+        test_threads[n].Initialize(DequeueThreadRoutine, &arg_data);
+        test_threads[n].Run();
       }
 
       bool error = false;
-      for (uint32_t i = QUEUE_SIZE+1; i < QUEUE_COUNT && !error; ++i) {
-        while (!mQueue.Enqueue(i)) {
+      for (uint32_t n = QUEUE_SIZE+1; n < QUEUE_COUNT && !error; ++n) {
+        while (!mQueue.Enqueue(n)) {
           if (keep_going == 0) {
             error = true;
             break;
@@ -116,9 +116,9 @@ class ThreadedDequeueTest : public ::testing::Test {
 
       keep_going = 0;
 
-      for (int i = 0; i < NUM_THREADS; ++i) {
-        test_threads[i].Join();
-        EXPECT_EQ(0, test_threads[i].ReturnValue());
+      for (int n = 0; n < NUM_THREADS; ++n) {
+        test_threads[n].Join();
+        EXPECT_EQ(0, test_threads[n].ReturnValue());
       }
 
       uint32_t last_item = 0;

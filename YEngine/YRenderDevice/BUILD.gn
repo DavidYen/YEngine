@@ -1,12 +1,8 @@
 
 static_library("YRenderDevice") {
-  sources = []
-
-  if (gfx == "dx9") {
-    sources += [
-      "RenderDevice_DX9.cpp",
-    ]
-  }
+  sources = [
+    "RenderDevice_${gfx}.cpp",
+  ]
 
   deps = [
     "//YCommon/YContainers",

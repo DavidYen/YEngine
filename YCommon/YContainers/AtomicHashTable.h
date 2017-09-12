@@ -1,6 +1,11 @@
 #ifndef YCOMMON_YCONTAINERS_ATOMICHASHTABLE_H
 #define YCOMMON_YCONTAINERS_ATOMICHASHTABLE_H
 
+#include <stdint.h>
+
+#include <YCommon/Headers/Macros.h>
+#include <YCommon/YUtils/Assert.h>
+
 /*******
 * AtomicHashTable atomically inserts/retrieves hash values.
 *   - It is undefined when the same hash value is inserted at the same time.

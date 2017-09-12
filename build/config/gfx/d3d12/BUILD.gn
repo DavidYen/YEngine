@@ -1,0 +1,19 @@
+
+windows_sdk_path = exec_script("//build/system_paths.py",
+                               ["output", "--name", "windows_sdk"],
+                               "trim string")
+windows_sdk_version = exec_script("//build/system_paths.py",
+                                  ["output", "--name", "windows_sdk_version"],
+                                  "trim string")
+
+config("gfx") {
+  include_dirs = [
+    "/${windows_sdk_path}/Include/${windows_sdk_version}/um",
+  ]
+}
+
+source_set("D3DCompiler") {
+  libs = [
+    "D3DCompiler.lib",
+  ]
+}

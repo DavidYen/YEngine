@@ -1,9 +1,9 @@
 vars = {
   "buildtools_git": "https://chromium.googlesource.com/chromium/buildtools.git",
-  "buildtools_revision": "05dd6a24723170d7c6ff35b537ee02947f619891",
+  "buildtools_revision": "cbc33b9c0a9d1bb913895a4319a742c504a2d541",
 
-  "gflags_git": "https://code.google.com/p/gflags.git",
-  "gflags_revision": "05b155ff59114735ec8cd089f669c4c3d8f59029",
+  "gflags_git": "https://github.com/gflags/gflags.git",
+  "gflags_revision": "v2.2.1",
 
   "gmock_git": "https://github.com/DavidYen/googlemock.git",
   "gmock_revision": "9b1a944ec48b7f84ad2f4466ed3babd232a20db5",
@@ -15,7 +15,7 @@ vars = {
   "rapidjson_revision": "879def80f2e466cdf4c86dc7e53ea2dd4cafaea0",
 
   "flatbuffers_git": "https://github.com/google/flatbuffers.git",
-  "flatbuffers_revision": "c967515da56fe5a8f0a5d18eaf2a741f5999697a",
+  "flatbuffers_revision": "v1.7.1",
 }
 
 deps = {

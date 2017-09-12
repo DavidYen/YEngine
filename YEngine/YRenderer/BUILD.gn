@@ -1,5 +1,5 @@
 
-source_set("YRenderer_Common") {
+static_library("YRenderer") {
   sources = [
     "RenderDeviceState.cpp",
     "Renderer.cpp",
@@ -14,12 +14,6 @@ source_set("YRenderer_Common") {
   deps = [
     "//YCommon/YContainers",
     "//YEngine/YCore",
-  ]
-}
-
-static_library("YRenderer") {
-  deps = [
-    ":YRenderer_Common",
     "//YEngine/YRenderDevice",
   ]
 }
@@ -35,7 +29,7 @@ unit_test("YRenderer_Test") {
   ]
 
   deps += [
-    ":YRenderer_Common",
+    ":YRenderer",
     "//YEngine/YRenderDevice:YRenderDevice_Mock",
     "//YCommon/YUtils:YUtils_TestLib",
   ]

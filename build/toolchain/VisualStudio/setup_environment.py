@@ -11,11 +11,17 @@ SCRIPT_DIR = os.path.dirname(__file__)
 ENVIRON32_FILE = 'environment.x86'
 ENVIRON64_FILE = 'environment.x64'
 
+VC_VARS_SCRIPTS = [
+  "vcvarsall.bat",
+  os.path.join("VC", "vcvarsall.bat"),
+  os.path.join("Community", "Common7", "Tools", "VsDevCmd.bat"),
+]
+
 def GetEnvDictFromSet(set_output):
   env_dict = {}
   for line in set_output.splitlines():
     line = line.strip()
-    if line:
+    if line and "=" in line:
       key, value = line.split('=', 1)
       env_dict[key] = value
 
@@ -23,11 +29,11 @@ def GetEnvDictFromSet(set_output):
 
 def GetVCVarsEnv(vc_vars_path):
   """Returns both the 32 and 64 bit environment dictionary as a tuple."""
-  env32 = subprocess.check_output([vc_vars_path, 'x86', '&&', 'set'],
+  env32 = subprocess.check_output([vc_vars_path, '&&', 'set'],
                                   shell=True)
   env32_dict = GetEnvDictFromSet(env32)
 
-  env64 = subprocess.check_output([vc_vars_path, 'x86_amd64', '&&', 'set'],
+  env64 = subprocess.check_output([vc_vars_path, '&&', 'set'],
                                   shell=True)
   env64_dict = GetEnvDictFromSet(env64)
 
@@ -43,14 +49,18 @@ def WriteWindowEnvFile(env_dict, env_file):
       f.write(key + '=' + value + '\n')
 
 def DoMain(argv):
-  if len(argv) != 2 or '--h' in argv or '--help' in argv or '\?' in argv:
-    print 'Usage: %s vs_name vs_path' % sys.argv[0]
+  if len(argv) != 1 or '--h' in argv or '--help' in argv or '\?' in argv:
+    print 'Usage: %s vs_path' % sys.argv[0]
     return 1
 
-  vs_name, vs_path = argv
-  if vs_name == 'SDK':
-    vc_vars_path = os.path.join(vs_path, 'vcvarsall.bat')
-  elif vs_name.startswith('VS'):
+  vs_path, = argv
+  for vc_vars_script in VC_VARS_SCRIPTS:
+    script_file = os.path.join(vs_path, vc_vars_script)
+    if os.path.isfile(script_file):
+      vc_vars_path = script_file
+      break
+  else:
+    assert False, "Could not determine VC Vars script path."
     vc_vars_path = os.path.join(vs_path, 'VC', 'vcvarsall.bat')
 
   env_dict32, env_dict64 = GetVCVarsEnv(vc_vars_path)

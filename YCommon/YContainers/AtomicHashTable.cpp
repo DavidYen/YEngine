@@ -1,4 +1,3 @@
-#include <YCommon/Headers/stdincludes.h>
 #include "AtomicHashTable.h"
 
 #include <string>

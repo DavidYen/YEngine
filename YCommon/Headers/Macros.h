@@ -1,8 +1,6 @@
 #ifndef YCOMMON_HEADERS_MACROS_H
 #define YCOMMON_HEADERS_MACROS_H
 
-#include <YCommon/YUtils/Assert.h>
-
 /***********
 * Power of 2 functions
 ************/
@@ -30,40 +28,5 @@ namespace array_size_helper {
   #define ALIGN_FRONT(x)
   #define ALIGN_BACK(x) __attribute__ ((aligned (x)))
 #endif
-
-/*******
-* Assert Macros
-********/
-#ifndef PLATINUM
-# define YFATAL(...) \
-  { \
-    char buffer[512]; \
-    snprintf(buffer, sizeof(buffer)-1, __VA_ARGS__); \
-    YCommon::YUtils::Assert::Assert(__FILE__, __LINE__, buffer); \
-  }
-# define YASSERT(cond, ...) \
-  if (!(cond)) { \
-    char buffer[512]; \
-    snprintf(buffer, sizeof(buffer)-1, __VA_ARGS__); \
-    YCommon::YUtils::Assert::Assert(__FILE__, __LINE__, buffer); \
-  }
-# define YWARN(cond, ...) \
-  if (!(cond)) { \
-    char buffer[512]; \
-    snprintf(buffer, sizeof(buffer)-1, __VA_ARGS__); \
-    YCommon::YUtils::Assert::Warn(__FILE__, __LINE__, buffer); \
-  }
-#else
-# define YFATAL(...)
-# define YASSERT(cond, ...) do { static_cast<void>(cond); } while(0)
-# define YWARN(cond, ...) do { static_cast<void>(cond); } while(0)
-#endif // PLATINUM
-
-#ifdef DEBUG
-# define YDEBUG_CHECK(cond, ...) YASSERT(cond, __VA_ARGS__)
-#else
-# define YDEBUG_CHECK(cond, ...) do { static_cast<void>(cond); } while(0)
-#endif
-
 
 #endif // YCOMMON_HEADERS_MACROS_H

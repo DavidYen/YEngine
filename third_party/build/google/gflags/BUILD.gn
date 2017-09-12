@@ -1,7 +1,7 @@
 
 cmake_path = exec_script("//build/system_paths.py",
                          ["output", "--name", "cmake"],
-                         "trim string")
+                          "trim string")
 
 action("gflags_cmake") {
   script = "//build/cmd_wrapper.py"
@@ -34,7 +34,6 @@ config("gflags_config") {
 
 tool_static_library("gflags") {
   sources = [
-    "$target_gen_dir/include/gflags/gflags.h",
     "//third_party/google/gflags/src/gflags.cc",
     "//third_party/google/gflags/src/gflags_completions.cc",
     "//third_party/google/gflags/src/gflags_reporting.cc",
@@ -47,6 +46,7 @@ tool_static_library("gflags") {
       "/wd4389", # Signed / unsigned mismatch
       "/wd4512", # Assignment operator
       "/wd4702", # Unreachable code
+      "/wd4459", # declaration hides global declaration
     ]
 
     sources += [

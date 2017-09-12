@@ -8,6 +8,7 @@ static_library("cityhash") {
   if (is_win) {
     cflags = [
       "/wd4018", # Signed / unsigned mismatch
+      "/wd4456", # Declaration hides previous declaration
     ]
   }
 

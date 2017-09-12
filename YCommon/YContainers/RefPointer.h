@@ -71,6 +71,13 @@ class RefPointer {
     return *this;
   }
 
+  RefPointer& operator=(RefPointer&& rhs) {
+    Reset();
+    mPointer = rhs.mPointer;
+    rhs.Reset();
+    return *this;
+  }
+
   bool operator==(const void* rhs) const {
     return mPointer == rhs;
   }

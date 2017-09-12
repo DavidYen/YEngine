@@ -15,7 +15,7 @@ void ShaderLoad::LoadData(const uint8_t* data, size_t size,
   num_shader_ids = 0;
 
   const YEngineData::Shader* shader_data = YEngineData::GetShader(data);
-  const char* shader_name = shader_data->name()->c_str();
+  //const char* shader_name = shader_data->name()->c_str();
 
   const auto variants = shader_data->variants();
   num_shader_ids = variants->size();
@@ -23,7 +23,7 @@ void ShaderLoad::LoadData(const uint8_t* data, size_t size,
       buffer->Allocate(sizeof(*shader_ids) * num_shader_ids));
   YASSERT(shader_ids, "Out of memory - could not load shader data.");
 
-  YRenderer::ShaderID* shader_id_iter = shader_ids;
+  /*YRenderer::ShaderID* shader_id_iter = shader_ids;
   for (auto variant_iter = variants->begin();
        variant_iter != variants->end();
        ++variant_iter) {
@@ -34,17 +34,17 @@ void ShaderLoad::LoadData(const uint8_t* data, size_t size,
         variant_iter->vertex_shader()->size(),
         variant_iter->pixel_shader()->Data(),
         variant_iter->pixel_shader()->size());
-  }
+  }*/
 }
 
 void ShaderLoad::Release() {
-  const size_t num_shaders = num_shader_ids;
+  /*const size_t num_shaders = num_shader_ids;
   for (size_t i = 0; i < num_shaders; ++i) {
     YRenderer::Renderer::ReleaseShader(shader_ids[i]);
   }
 
   shader_ids = nullptr;
-  num_shader_ids = 0;
+  num_shader_ids = 0;*/
 }
 
 }} // namespace YEngine { namespace YDataLoader {

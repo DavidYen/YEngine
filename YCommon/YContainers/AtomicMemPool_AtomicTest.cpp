@@ -51,8 +51,8 @@ uintptr_t AllocRemoveRoutine(void* arg) {
       break;
 
     // Remove all the allocated data
-    for (uint32_t i = 0; i < allocated_size; ++i) {
-      mem_pool->Remove(allocated_data[i]);
+    for (uint32_t n = 0; n < allocated_size; ++n) {
+      mem_pool->Remove(allocated_data[n]);
     }
   }
 

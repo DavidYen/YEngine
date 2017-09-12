@@ -1,0 +1,142 @@
+
+import("../VisualStudio/visual_studio_config.gni")
+
+template("vs2017_config") {
+  visual_studio_config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    # VS2012 doesn't need this, but VS2017 needs to serialize pdb generation.
+    cflags += [
+      "/FS", # Serialize PDB generation.
+    ]
+  }
+}
+
+template("vs2017_exceptions") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    cflags += [
+      "/EHsc",  # Enable Exceptions
+    ]
+  }
+}
+
+template("vs2017_noexceptions") {
+  config(target_name) {
+    cflags = []
+    ldflags = []
+    defines = []
+
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+
+    defines += [
+      "_HAS_EXCEPTIONS=0",  # Disable all exceptions for MSVC
+    ]
+  }
+}
+
+#########################
+# Optimization Settings #
+#########################
+template("vs2017_debug") {
+  visual_studio_debug(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2017_release") {
+  visual_studio_release(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2017_gold") {
+  visual_studio_config(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}
+
+template("vs2017_platinum") {
+  visual_studio_config(target_name) {
+    if (defined(invoker.cflags)) {
+      cflags = invoker.cflags
+    }
+
+    if (defined(invoker.ldflags)) {
+      ldflags = invoker.ldflags
+    }
+
+    if (defined(invoker.defines)) {
+      defines = invoker.defines
+    }
+  }
+}

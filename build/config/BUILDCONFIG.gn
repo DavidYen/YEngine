@@ -14,10 +14,10 @@ declare_args() {
   target_arch = "x86_64"
 
   # Compiler
-  compiler = "VS2013"
+  compiler = "VS2017"
 
   # Gfx
-  gfx = "dx9"
+  gfx = "d3d12"
 }
 
 ###################
@@ -135,7 +135,7 @@ template("tool_static_library") {
 #################
 is_visual_studio = false
 
-if (compiler == "VS2013") {
+if (compiler == "VS2013" || compiler == "VS2017") {
   is_visual_studio = true
 }
 
@@ -148,15 +148,15 @@ is_linux = false
 is_android = false
 is_ios = false
 
-if (os =="win") {
+if (host_os =="win") {
   is_win = true
-} else if (os == "mac") {
+} else if (host_os == "mac") {
   is_mac = true
-} else if (os == "linux") {
+} else if (host_os == "linux") {
   is_linux = true
-} else if (os == "android") {
+} else if (host_os == "android") {
   is_android = true
-} else if (os == "ios") {
+} else if (host_os == "ios") {
   is_ios = true
 }
 
@@ -165,7 +165,7 @@ if (os =="win") {
 ##################
 _compiler_configs = [
   "//build/config/compiler/${compiler}:compiler",
-  "//build/config/platform/${os}:platform",
+  "//build/config/platform/${host_os}:platform",
   "//build/config/compiler:default_include_dirs",
 ]
 _linker_configs = []
@@ -181,7 +181,7 @@ _compiler_configs += [
 ###################
 set_defaults("executable") {
   configs = _compiler_configs + _linker_configs + [
-    "//build/config/platform/${os}:default_libs",
+    "//build/config/platform/${host_os}:default_libs",
     "//build/config/compiler/${compiler}:noexceptions",
   ]
 }
@@ -194,7 +194,7 @@ set_defaults("static_library") {
 
 set_defaults("shared_library") {
   configs = _compiler_configs + _linker_configs + [
-    "//build/config/platform/${os}:default_libs",
+    "//build/config/platform/${host_os}:default_libs",
   ]
 }
 
@@ -209,14 +209,14 @@ set_defaults("unit_test") {
 
   configs = _compiler_configs + _linker_configs + [
     "//build/config/compiler/${compiler}:exceptions",
-    "//build/config/platform/${os}:default_libs",
+    "//build/config/platform/${host_os}:default_libs",
     "//third_party/build/google/gtest:gtest_config",
   ]
 }
 
 set_defaults("tool_executable") {
   configs = _compiler_configs + _linker_configs + [
-    "//build/config/platform/${os}:default_libs",
+    "//build/config/platform/${host_os}:default_libs",
     "//build/config/compiler/${compiler}:exceptions",
   ]
 }
@@ -233,9 +233,9 @@ set_defaults("tool_static_library") {
 host_toolchain = false
 if (is_win) {
   if (is_visual_studio) {
-    if (build_cpu_arch == "x64") {
+    if (host_cpu == "x64") {
       host_toolchain = "//build/toolchain/VisualStudio:64"
-    } else if (build_cpu_arch == "x86") {
+    } else if (host_cpu == "x86") {
       host_toolchain = "//build/toolchain/VisualStudio:32"
     }
 

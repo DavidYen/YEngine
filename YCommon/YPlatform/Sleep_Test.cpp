@@ -23,8 +23,8 @@ TEST(BasicTimerTest, MilliSleepTest) {
   Sleep::MilliSleep(100);
   test_timer.Pulse();
 
-  EXPECT_LE(90, test_timer.GetPulsedTimeMilli());
-  EXPECT_GE(110, test_timer.GetPulsedTimeMilli());
+  EXPECT_LE(80, test_timer.GetPulsedTimeMilli());
+  EXPECT_GE(120, test_timer.GetPulsedTimeMilli());
 }
 
 TEST(BasicTimerTest, SleepTest) {

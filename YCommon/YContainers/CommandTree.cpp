@@ -145,8 +145,8 @@ void CommandTree::ConstructTree(uint32_t num_nodes,
     if (num_dependencies) {
       for (uint8_t n = 0; n < num_dependencies; ++n) {
         const uint32_t dep_index = node.mDependencies[n];
-        int& children_nodes = current_children_nodes_array[dep_index];
-        command_nodes[dep_index].mChildren[children_nodes++] = &command_node;
+        int& children_node = current_children_nodes_array[dep_index];
+        command_nodes[dep_index].mChildren[children_node++] = &command_node;
       }
     } else {
       root_nodes[current_root_nodes++] = &command_node;

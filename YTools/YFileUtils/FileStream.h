@@ -55,7 +55,7 @@ class FileStream {
 
       mInFile.seekg(current_pos, std::ios_base::beg);
 
-      data.resize(length);
+      data.resize(static_cast<size_t>(length));
       mInFile.read(reinterpret_cast<char*>(data.data()), length);
       return true;
     }

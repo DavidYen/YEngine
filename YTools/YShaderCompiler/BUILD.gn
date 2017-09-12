@@ -26,5 +26,17 @@ tool_executable("YShaderCompiler") {
     deps += [
       "//build/config/gfx/dx11:D3DCompiler",
     ]
+  } else if (gfx == "d3d12" || gfx == "dx11") {
+    sources += [
+      "CompileShader_D3DShaderModel4.cpp",
+      "DXShaderCompiler.cpp",
+      "DXShaderCompiler.h",
+    ]
+
+    deps += [
+      "//build/config/gfx/${gfx}:D3DCompiler",
+    ]
+  } else {
+    assert(false, "No Shader compiler defined for ${gfx}.")
   }
 }

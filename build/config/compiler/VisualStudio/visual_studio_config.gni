@@ -30,6 +30,7 @@ template("visual_studio_config") {
       "/GR-", # No rtti
       "/wd4127", # Constant condition expression
       "/wd4324", # Structure was padded due to __declspec(align())
+      "/EHsc", # Exception handling
     ]
 
     defines += [

@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 #include <algorithm>
+#include <inttypes.h>
 
 #include <YCommon/Headers/Atomics.h>
 #include <YCommon/YContainers/HashTable.h>
@@ -21,6 +22,7 @@
 #include "RenderStateCache.h"
 #include "RenderTarget.h"
 #include "ShaderData.h"
+#include "VertexBuffer.h"
 #include "ViewPort.h"
 
 // Hash Table Sizes (~2x maximum)
@@ -546,7 +548,7 @@ namespace {
         const uint8_t field_type = static_cast<uint8_t>(fields[i].field_type);
         YASSERT(field_values[field_type] <
                 (static_cast<uint64_t>(1) << field_bits),
-                "Render key field (%d) needs more bits (%u): %u",
+                "Render key field (%d) needs more bits (%u): %" PRIu64,
                 field_type, field_bits, field_values[field_type]);
         key = (key << field_bits) | field_values[field_type];
         bits_left -= field_bits;

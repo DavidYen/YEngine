@@ -2,13 +2,17 @@
 config("flatbuffers_config") {
   include_dirs = [
     "//third_party/google/flatbuffers/include",
+    "//third_party/google/flatbuffers/grpc",
   ]
 }
 
 static_library("flatbuffers") {
   sources = [
+    "//third_party/google/flatbuffers/src/code_generators.cpp",
     "//third_party/google/flatbuffers/src/idl_parser.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_text.cpp",
+    "//third_party/google/flatbuffers/src/reflection.cpp",
+    "//third_party/google/flatbuffers/src/util.cpp",
   ]
 
   cflags = [
@@ -27,14 +31,22 @@ static_library("flatbuffers") {
 
 tool_executable("flatc") {
   sources = [
-    "//third_party/google/flatbuffers/src/flatc.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_cpp.cpp",
-    "//third_party/google/flatbuffers/src/idl_gen_fbs.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_general.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_go.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_js.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_php.cpp",
     "//third_party/google/flatbuffers/src/idl_gen_python.cpp",
-    "//third_party/google/flatbuffers/src/idl_gen_text.cpp",
-    "//third_party/google/flatbuffers/src/idl_parser.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_fbs.cpp",
+    "//third_party/google/flatbuffers/src/idl_gen_grpc.cpp",
+    "//third_party/google/flatbuffers/src/flatc.cpp",
+    "//third_party/google/flatbuffers/src/flatc_main.cpp",
+    "//third_party/google/flatbuffers/grpc/src/compiler/cpp_generator.cc",
+    "//third_party/google/flatbuffers/grpc/src/compiler/go_generator.cc",
+  ]
+
+  deps = [
+    ":flatbuffers",
   ]
 
   cflags = [

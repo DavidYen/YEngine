@@ -52,77 +52,93 @@ bool FilePath::JoinPaths(const char* dir, size_t dir_len,
 }
 
 // Normalize Path
+// This function strips multiple path separators (///, \\\) and 
+// interprets ./, ../
 bool FilePath::NormPath(const char* path, size_t path_len,
                         char* dest, size_t dest_size, size_t* dest_len) {
-  (void) path_len;
+  static_cast<void>(path_len);
 
   char* dest_iter = dest;
   char* dest_end = dest + dest_size - 1;
 
-  enum ParseMode {
-    kParseMode_Begin,
-    kParseMode_PathStart,
-    kParseMode_Path
-  } parse_mode = kParseMode_Begin;
+  const char* path_iter = path;
 
-  for (const char* path_iter = path; *path_iter != '\0'; ++path_iter) {
-    if (dest_iter == dest_end)
-      return false;
+  // First check if this is an absolute path. Absolute path is a special case
+  // where it begins with a path separator.
+  if (IS_PATH_SEP(*path_iter)) {
+    *dest_iter++ = PATH_SEP;
 
-    const char path_char = *path_iter;
+    ++path_iter;
+    while (IS_PATH_SEP(*path_iter)) {
+      ++path_iter;
+    }
+  }
 
-    if (IS_PATH_SEP(path_char)) {
-      // Only add sep if not already start of a directory.
-      if (parse_mode != kParseMode_PathStart)
-        *dest_iter++ = PATH_SEP;
-      parse_mode = kParseMode_PathStart;
-    } else {
-      // Process special rules if beginning of a directory.
-      if (parse_mode != kParseMode_Path) {
-        if (path_char == '.') {
-          const char next_path_char = *(path_iter + 1);
+  while (*path_iter != '\0') {
+    // Check for possible relative directory references.
+    if (*path_iter == '.') {
+      // Current dir must be in the form of "./", then collapse all path seps.
+      if (IS_PATH_SEP(path_iter[1]) || path_iter[1] == '\0') {
+        ++path_iter;
+        while (IS_PATH_SEP(*path_iter)) {
+          ++path_iter;
+        }
+        continue;
+      }
 
-          // Current Directory?
-          if (IS_PATH_SEP(next_path_char)) {
-            ++path_iter;
-            continue;
+      // Parent dir must be in the form of "../", then collapse all path seps.
+      if (path_iter[1] == '.' &&
+          (IS_PATH_SEP(path_iter[2]) || path_iter[2] == '\0')) {
+        // dest_iter must not be at the first directory, otherwise we can
+        // move up. The first directory is either going to be "" or "/", so
+        // checking if the current length is greater than 2 should be enough.
+        if (dest_iter - dest >= 2) {
+          char* prev_dir = dest_iter - 2;
+          while (prev_dir != dest && !IS_PATH_SEP(*prev_dir)) {
+            --prev_dir;
           }
 
-          // Parent Directory?
-          if (parse_mode == kParseMode_PathStart &&
-              next_path_char == '.') {
-            const char next_next_path_char = *(path_iter + 2);
-            if (IS_PATH_SEP(next_next_path_char) ||
-                next_next_path_char == '\0') {
-              // Go to parent directory
-              char* prev_dir = dest_iter - 2;
-              for (; prev_dir != dest; --prev_dir) {
-                if (*prev_dir == PATH_SEP) {
-                  ++prev_dir;
-                  break;
-                }
-              }
+          // We are at the previous path separator, move prev_dir to the directory name itself.
+          if (prev_dir != dest)
+            ++prev_dir;
 
-              // Check for "..\" here.
-              if (prev_dir[0] != '.' ||
-                  prev_dir[1] != '.' ||
-                  prev_dir[2] != PATH_SEP) {
-                if (prev_dir == dest) {
-                  dest_iter = dest;
-                  parse_mode = kParseMode_Begin;
-                } else {
-                  dest_iter = prev_dir;
-                }
-                path_iter += 2;
-                continue;
-              }
+          // Check if prev_dir is itself a parent directory, then we cannot
+          // remove it.
+          if ((dest_iter - prev_dir) != 3 ||
+              prev_dir[0] != '.' ||
+              prev_dir[1] != '.') {
+            dest_iter = prev_dir;
+
+            path_iter += 2;
+            while (IS_PATH_SEP(*path_iter)) {
+              ++path_iter;
             }
+            continue;
           }
         }
       }
-      *dest_iter++ = path_char;
-      parse_mode = kParseMode_Path;
     }
+
+    // Add the next directory to dest_iter.
+    while (!IS_PATH_SEP(*path_iter) && *path_iter != '\0') {
+      if (dest_iter == dest_end)
+        return false;
+      *dest_iter++ = *path_iter++;
+    }
+    if (dest_iter == dest_end && *path_iter != '\0')
+      return false;
+    *dest_iter++ = PATH_SEP;
+
+    // collapse remaining path separators.
+    while (IS_PATH_SEP(*path_iter)) {
+      ++path_iter;
+    }
+  }
+
+  // If the path ends with a slash and it is not the very first character,
+  // remove the slash.
+  if ((dest_iter - dest) > 1 && IS_PATH_SEP(*(dest_iter - 1))) {
+    --dest_iter;
   }
 
   if (dest_len)
@@ -160,8 +176,6 @@ bool FilePath::AbsPath(const char* path, size_t path_len,
 
   return NormPath(joined_dir, joined_dir_len, dest, dest_size, dest_len);
 }
-
-#include <stdio.h>
 
 // Relative Path
 bool FilePath::RelPath(const char* path, size_t path_len,
