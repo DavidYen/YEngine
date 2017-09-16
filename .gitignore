@@ -9,3 +9,6 @@ third_party/rapidjson
 
 # Ignore Output Directory
 out/
+
+# Ignore generated files
+build/config/.BUILDCONFIG.gn.swp
