@@ -1,11 +1,11 @@
 
 group("YEngine") {
   deps = [
-    "TestDialog",
-    "YCore",
-    "YDataLoader",
-    "YFramework",
-    "YRenderDevice",
-    "YRenderer",
+    "TestDialog:TestDialog",
+    "YCore:YCore",
+    "YDataLoader:YDataLoader",
+    "YFramework:YFramework",
+    "YRenderDevice:YRenderDevice",
+    "YRenderer:YRenderer",
   ]
 }

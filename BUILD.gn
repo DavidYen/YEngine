@@ -1,9 +1,9 @@
 
-group("root") {
+group("default") {
   deps = [
+    "//YCommon",
     "//YEngine",
     "//YTools",
-    "//third_party",
   ]
 }
 

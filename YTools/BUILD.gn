@@ -1,6 +1,7 @@
 
 group("YTools") {
   deps = [
-    "YShaderCompiler",
+    "YFileUtils:YFileUtils",
+    "YShaderCompiler:YShaderCompiler",
   ]
 }

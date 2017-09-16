@@ -1,0 +1,8 @@
+
+group("YCommon") {
+  deps = [
+    "YContainers:YContainers",
+    "YPlatform:YPlatform",
+    "YUtils:YUtils",
+  ]
+}
