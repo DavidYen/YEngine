@@ -24,7 +24,9 @@ declare_args() {
 # Other Templates #
 ###################
 template("unit_test") {
+  app_name = target_name
   executable(target_name) {
+    testonly = true
     sources = []
     deps = []
     configs = []
@@ -47,6 +49,21 @@ template("unit_test") {
     }
 
     sources += [ "//third_party/google/gtest/src/gtest_main.cc" ]
+  }
+
+  action("${app_name}_run") {
+    testonly = true
+    script = "//build/cmd_wrapper.py"
+    outputs = [ "${target_gen_dir}/${app_name}_run" ]
+    args = [
+      "--env", "GTEST_COLOR=1",
+      "--",
+      rebase_path("${root_out_dir}/${app_name}"),
+      "--",
+      "--gtest_color=yes",
+    ]
+
+    deps = [ ":${app_name}" ]
   }
 }
 

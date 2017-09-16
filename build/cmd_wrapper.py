@@ -1,25 +1,34 @@
 #!/usr/bin/python
 
-import optparse
+import argparse
 import os
 import subprocess
 import sys
 
 if __name__ == "__main__":
-  parser = optparse.OptionParser()
-  parser.add_option(
-    "--cwd",
-    default=None,
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+    "--cwd", default=None,
     help="Working directory.")
+  parser.add_argument(
+    "--env", default=[], action='append',
+    help="Environment variable A=B")
+  parser.add_argument(
+    "app_args", nargs="+",
+    help="Application arguments.")
 
-  options, args = parser.parse_args()
+  args = parser.parse_args()
 
   if len(sys.argv) == 1:
     print 'Usage: %s cmd cmdarg1 cmdarg2...' % sys.argv[0]
     sys.exit(1)
 
-  if options.cwd and not os.path.isdir(options.cwd):
+  if args.cwd and not os.path.isdir(args.cwd):
     os.makedirs(options.cwd)
 
-  subprocess.check_call(args, cwd=options.cwd)
+  env = None
+  if args.env:
+    env = dict(value.split("=") for value in args.env)
+
+  subprocess.check_call(args.app_args, cwd=args.cwd, env=env)
   sys.exit(0)

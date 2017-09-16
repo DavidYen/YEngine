@@ -6,3 +6,19 @@ group("root") {
     "//third_party",
   ]
 }
+
+group("tests") {
+  testonly = true
+  deps = [
+    "//YCommon/YContainers:YContainers_Test_run",
+    "//YCommon/YPlatform:YPlatform_Test_run",
+    "//YEngine/YRenderer:YRenderer_Test_run",
+  ]
+}
+
+group("atomic_tests") {
+  testonly = true
+  deps = [
+    "//YCommon/YContainers:YContainers_AtomicTest_run",
+  ]
+}
