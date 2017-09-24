@@ -1,0 +1,35 @@
+
+source_set("utils_common") {
+  sources = [
+    "hash.cpp",
+  ]
+
+  deps = [
+    "//third_party/build/google/cityhash",
+  ]
+}
+
+static_library("utils") {
+  sources = []
+
+  if (is_win) {
+    sources += [
+      "assert_win_msg_box.cpp",
+    ]
+  }
+
+  deps = [
+    ":utils_common",
+  ]
+}
+
+static_library("utils_test_lib") {
+  sources = [
+    "assert_gtest.cpp",
+  ]
+
+  deps = [
+    ":utils_common",
+    "//third_party/build/google/gtest",
+  ]
+}

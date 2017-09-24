@@ -1,0 +1,6 @@
+
+static_library("core") {
+  sources = [
+    "string_table.cpp",
+  ]
+}

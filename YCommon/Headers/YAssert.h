@@ -1,6 +1,0 @@
-#ifndef YCOMMON_HEADERS_YASSERT_H
-#define YCOMMON_HEADERS_YASSERT_H
-
-#include <YCommon/YUtils/Assert.h>
-
-#endif // YCOMMON_HEADERS_YASSERT_H

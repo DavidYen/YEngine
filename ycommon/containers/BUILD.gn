@@ -1,0 +1,49 @@
+
+static_library("containers") {
+  sources = [
+    "atomic_hash_table.cpp",
+    "atomic_mem_pool.cpp",
+    "atomic_queue.cpp",
+    "command_tree.cpp",
+    "hash_table.cpp",
+    "mem_buffer.cpp",
+    "mem_pool.cpp",
+    "ref_pointer.cpp",
+    "thread_pool.cpp",
+    "unordered_array.cpp",
+  ]
+
+  deps = [
+    "//ycommon/platform",
+  ]
+}
+
+unit_test("containers_test") {
+  sources = [
+    "atomic_queue_test.cpp",
+    "command_tree_test.cpp",
+    "hash_table_test.cpp",
+    "mem_pool_test.cpp",
+    "ref_pointer_test.cpp",
+    "thread_pool_test.cpp",
+    "unordered_array_test.cpp",
+  ]
+
+  deps += [
+    ":containers",
+    "//ycommon/utils:utils_test_lib",
+  ]
+}
+
+unit_test("containers_test_atomic") {
+  sources = [
+    "atomic_hash_table_test_atomic.cpp",
+    "atomic_mem_pool_test_atomic.cpp",
+    "atomic_queue_test_atomic.cpp",
+  ]
+
+  deps += [
+    ":containers",
+    "//ycommon/platform",
+  ]
+}

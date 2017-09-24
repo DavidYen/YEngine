@@ -1,0 +1,41 @@
+
+tool_executable("yshader_compiler") {
+  sources = [
+    "main.cpp",
+    "compile_shader.h",
+  ]
+
+  deps = [
+    "//schemas:compile_shader_schema",
+    "//third_party/build/google/gflags",
+    "//third_party/build/google/flatbuffers",
+    "//ytools/file_utils",
+  ]
+
+  public_configs = [
+    "//third_party/build/rapidjson",
+  ]
+
+  if (gfx == "dx9" || gfx == "d3d12" || gfx == "dx11") {
+    sources += [
+      "d3d_shader_compiler.cpp",
+      "d3d_shader_compiler.h",
+    ]
+
+    if (gfx == "d3d12" || gfx == "dx11") {
+      sources += [
+        "compile_shader_d3d_shader_model4.cpp",
+      ]
+    } else {
+      sources += [
+        "compile_shader_${gfx}.cpp",
+      ]
+    }
+
+    deps += [
+      "//build/config/gfx/${gfx}:D3DCompiler",
+    ]
+  } else {
+    assert(false, "No Shader compiler defined for ${gfx}.")
+  }
+}

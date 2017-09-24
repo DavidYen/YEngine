@@ -1,0 +1,15 @@
+
+tool_static_library("file_utils") {
+  sources = [
+    "file_env.cpp",
+    "file_env.h",
+    "file_path.cpp",
+    "file_path.h",
+    "file_stream.cpp",
+    "file_stream.h",
+  ]
+
+  deps = [
+    "//ycommon/platform",
+  ]
+}

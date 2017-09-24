@@ -1,4 +1,10 @@
 
+config("cityhash_config") {
+  include_dirs = [
+    "//third_party/google/cityhash/src",
+  ]
+}
+
 static_library("cityhash") {
   sources = [
     "//third_party/google/cityhash/src/city.h",
@@ -16,4 +22,6 @@ static_library("cityhash") {
     "//third_party/google/cityhash/src",
     ".",
   ]
+
+  all_dependent_configs = [ ":cityhash_config" ]
 }

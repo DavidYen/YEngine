@@ -1,24 +1,24 @@
 
 group("default") {
   deps = [
-    "//YCommon",
-    "//YEngine",
-    "//YTools",
+    "//ycommon",
+    "//yengine",
+    "//ytools",
   ]
 }
 
 group("tests") {
   testonly = true
   deps = [
-    "//YCommon/YContainers:YContainers_Test_run",
-    "//YCommon/YPlatform:YPlatform_Test_run",
-    "//YEngine/YRenderer:YRenderer_Test_run",
+    "//ycommon/containers:containers_test_run",
+    "//ycommon/platform:platform_test_run",
+    "//yengine/renderer:renderer_test_run",
   ]
 }
 
-group("atomic_tests") {
+group("large_tests") {
   testonly = true
   deps = [
-    "//YCommon/YContainers:YContainers_AtomicTest_run",
+    "//ycommon/containers:containers_test_atomic_run",
   ]
 }

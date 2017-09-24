@@ -1,0 +1,23 @@
+
+import("//ytools/tools.gni")
+
+compile_shader("fullscreen_shdr") {
+  shader_file = "Data/FullScreen.shdr.json"
+  output_file = "${root_build_dir}/data/FullScreen.shdr.bin"
+  inputs = [ "Data/full-screen.hlsl" ]
+}
+
+executable("test_dialog") {
+  sources = [
+    "Win/main.cpp",
+  ]
+
+  deps = [
+    "//yengine/framework",
+    "//ycommon/platform",
+  ]
+
+  data_deps = [
+    ":fullscreen_shdr"
+  ]
+}

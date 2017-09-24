@@ -1,0 +1,23 @@
+
+static_library("render_device") {
+  sources = [
+    "render_device_${gfx}.cpp",
+  ]
+
+  deps = [
+    "//ycommon/containers",
+    "//ycommon/utils",
+  ]
+
+  configs += [
+    "//build/config/gfx/${gfx}:gfx",
+  ]
+}
+
+static_library("render_device_mock") {
+  sources = [ "render_device_mock.cpp" ]
+
+  deps = [
+    "//third_party/build/google/gmock",
+  ]
+}

@@ -1,0 +1,18 @@
+
+static_library("data_loader") {
+  sources = [
+    "data_loader.cpp",
+    "shader_load.cpp",
+  ]
+
+  deps = [
+    "//schemas:compile_shader_schema",
+    "//third_party/build/google/flatbuffers",
+    "//ycommon/containers",
+    "//yengine/renderer",
+  ]
+
+  cflags = [
+    "/wd4239", # non-const reference bound to lvalue. (flat buffer verifier)
+  ]
+}

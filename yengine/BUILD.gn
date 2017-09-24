@@ -1,0 +1,11 @@
+
+group("yengine") {
+  deps = [
+    "test_dialog:test_dialog",
+    "core:core",
+    "data_loader:data_loader",
+    "framework:framework",
+    "render_device:render_device",
+    "renderer:renderer",
+  ]
+}

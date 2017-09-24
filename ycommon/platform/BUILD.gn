@@ -1,0 +1,45 @@
+
+static_library("platform") {
+  sources = [
+    "file_path.cpp",
+    "file_path.h",
+    "platform.h",
+    "platform_handle.h",
+    "semaphore.h",
+    "sleep.h",
+    "thread.h",
+    "timer.h",
+  ]
+
+  if (is_win) {
+    sources += [
+      "file_path_win.cpp",
+      "platform_win.cpp",
+      "platform_win.h",
+      "platform_handle_win.cpp",
+      "platform_handle_win.h",
+      "semaphore_win.cpp",
+      "sleep_win.cpp",
+      "thread_win.cpp",
+      "timer_win.cpp",
+    ]
+  }
+
+  deps = [
+    "//ycommon/utils",
+  ]
+}
+
+unit_test("platform_test") {
+  sources = [
+    "file_path_test.cpp",
+    "semaphore_test.cpp",
+    "sleep_test.cpp",
+    "thread_test.cpp",
+    "timer_test.cpp",
+  ]
+
+  deps += [
+    ":platform",
+  ]
+}

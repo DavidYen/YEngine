@@ -1,7 +1,0 @@
-
-group("YTools") {
-  deps = [
-    "YFileUtils:YFileUtils",
-    "YShaderCompiler:YShaderCompiler",
-  ]
-}

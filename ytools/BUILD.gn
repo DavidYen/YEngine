@@ -1,0 +1,7 @@
+
+group("ytools") {
+  deps = [
+    "file_utils",
+    "yshader_compiler",
+  ]
+}

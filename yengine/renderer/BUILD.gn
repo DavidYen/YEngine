@@ -1,0 +1,36 @@
+
+static_library("renderer") {
+  sources = [
+    "render_device_state.cpp",
+    "renderer.cpp",
+    "renderer_common.cpp",
+    "render_state_cache.cpp",
+    "render_target.cpp",
+    "shader_data.cpp",
+    "vertex_buffer.cpp",
+    "view_port.cpp",
+  ]
+
+  deps = [
+    "//ycommon/containers",
+    "//yengine/core",
+    "//yengine/render_device",
+  ]
+}
+
+unit_test("renderer_test") {
+  sources = [
+    "renderer_test.cpp",
+    "render_state_cache_test.cpp",
+    "render_target_test.cpp",
+    "shader_data_test.cpp",
+    "vertex_buffer_test.cpp",
+    "view_port_test.cpp",
+  ]
+
+  deps += [
+    ":renderer",
+    "//yengine/render_device:render_device_mock",
+    "//ycommon/utils:utils_test_lib",
+  ]
+}

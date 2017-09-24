@@ -1,6 +1,0 @@
-
-static_library("YCore") {
-  sources = [
-    "StringTable.cpp",
-  ]
-}
