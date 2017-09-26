@@ -24,7 +24,7 @@ tool_executable("yshader_compiler") {
 
     if (gfx == "d3d12" || gfx == "dx11") {
       sources += [
-        "compile_shader_d3d_shader_model4.cpp",
+        "compile_shader_d3d_shader_model5.cpp",
       ]
     } else {
       sources += [

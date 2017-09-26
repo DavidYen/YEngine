@@ -6,13 +6,13 @@
 
 namespace ytools { namespace YShaderCompiler {
 
-// Always support shader model 4.0
+// Always support shader model 5.1
 const char* kShaderTarget[NUM_SHADER_TYPES] = {
   // Vertex Shader Type.
-  "vs_4_0_level_9_3",
+  "vs_5_1",
 
   // Pixel Shader Type.
-  "ps_4_0_level_9_3"
+  "ps_5_1"
 };
 
 bool CompileShader(const std::string& source_file,
@@ -27,7 +27,7 @@ bool CompileShader(const std::string& source_file,
     return false;
   }
 
-  if (target_major < 0 || target_major > 4 || target_minor != 0) {
+  if (target_major != 5 || target_minor != 1) {
     std::cerr << "Unknown Shader Model: "
               << target_major << "." << target_minor << std::endl;
     return false;

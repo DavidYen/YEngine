@@ -33,32 +33,17 @@ ClearGBufferPSOut ClearGBufferPixelShader(float4 input : TEXCOORD) {
 /***************
 * Combines ambient, diffuse, and specular data and displays the scene
 ****************/
-cbuffer constant_data {
-  float2 halfPixel : packoffset(c0);
-
-  float ambientLight : packoffset(c0.z); // between 0~1
-  float3 ambientColor : packoffset(c1);
-}
-
-Texture2D diffuseMap;
-sampler diffuseSampler = sampler_state {
-  Texture = <diffuseMap>;
-  MAGFILTER = POINT;
-  MINFILTER = POINT;
-  MIPFILTER = POINT;
-  AddressU = Clamp;
-  AddressV = Clamp;
+struct AmbientData {
+  float3 color;
+  float light;
 };
 
-Texture2D lightMap;
-sampler lightSampler = sampler_state {
-  Texture = <lightMap>;
-  MAGFILTER = POINT;
-  MINFILTER = POINT;
-  MIPFILTER = POINT;
-  AddressU = Clamp;
-  AddressV = Clamp;
-};
+ConstantBuffer<AmbientData> ambient_data : register(b0, space1);
+Texture2D<float4> diffuse_map : register(t0, space1);
+sampler diffuse_sampler : register(s0, space1);
+
+Texture2D<float4> light_map : register(t1, space1);
+sampler light_sampler : register(s1, space1);
 
 struct VSIn {
   float3 Position : POSITION0;
@@ -74,7 +59,7 @@ VSOut PresentSceneVS(VSIn In) {
   VSOut Out;
 
   Out.Position = float4(In.Position, 1.0f);
-  Out.TexCoord = In.TexCoord - halfPixel;
+  Out.TexCoord = In.TexCoord;
 
   return Out;
 }
@@ -84,9 +69,9 @@ struct PSIn {
 };
 
 float4 PresentScenePS(PSIn In) : SV_TARGET {
-  float4 diffuseData = diffuseMap.Sample(diffuseSampler, In.TexCoord);
-  float4 lightData = lightMap.Sample(lightSampler, In.TexCoord);
-  lightData += float4(ambientColor, 0.0f) * ambientLight;
+  float4 diffuseData = diffuse_map.Sample(diffuse_sampler, In.TexCoord);
+  float4 lightData = light_map.Sample(light_sampler, In.TexCoord);
+  lightData += float4(ambient_data.color, 0.0f) * ambient_data.light;
 
   return float4(diffuseData.rgb * lightData.rgb + lightData.a, 1.0f);
 }

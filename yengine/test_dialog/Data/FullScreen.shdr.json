@@ -6,7 +6,7 @@
     "vertex_declaration": "position",
     "vertex_shader": "ClearGBufferVertexShader",
     "pixel_shader": "ClearGBufferPixelShader",
-    "target": "2.0",
+    "target": "5.1",
     "debug": false,
     "opt_level": 3,
     "defines": []
@@ -16,23 +16,22 @@
     "vertex_shader": "PresentSceneVS",
     "pixel_shader": "PresentScenePS",
     "pixel_parameters": [{
-      "name": "half-pixel",
-      "type": "float2",
-      "slot": "c0"
+      "name": "ambient-color",
+      "type": "float3",
+      "register": "b0.xyz"
     }, {
       "name": "ambient-light",
       "type": "float",
-      "slot": "c0.z"
-    }, {
-      "name": "ambient-color",
-      "type": "float3",
-      "slot": "c1"
+      "register": "b0.w"
     }, {
       "name": "diffuse-map",
+      "type": "texture",
+      "register": "t0"
+    }, {
+      "name": "diffuse-sampler",
       "type": "sampler",
-      "slot": "sampler0",
+      "register": "s0",
       "sampler-state": {
-        "type": "texture",
         "MAGFILTER": "POINT",
         "MINFILTER": "POINT",
         "MIPFILTER": "POINT",
@@ -41,10 +40,13 @@
       }
     }, {
       "name": "light-map",
+      "type": "texture",
+      "register": "t1"
+    }, {
+      "name": "light-sampler",
       "type": "sampler",
-      "slot": "sampler1",
+      "register": "s1",
       "sampler-state": {
-        "type": "texture",
         "MAGFILTER": "POINT",
         "MINFILTER": "POINT",
         "MIPFILTER": "POINT",
@@ -52,7 +54,7 @@
         "AddressV": "Clamp"
       }
     }],
-    "target": "2.0",
+    "target": "5.1",
     "defines": []
   }]
 }
