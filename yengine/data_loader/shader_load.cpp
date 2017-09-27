@@ -8,13 +8,13 @@ namespace yengine { namespace data_loader {
 
 void ShaderLoad::LoadData(const uint8_t* data, size_t size,
                           ycommon::containers::MemBuffer* buffer) {
-  YASSERT(YEngineData::VerifyShaderBuffer(flatbuffers::Verifier(data, size)),
+  YASSERT(yengine_data::VerifyShaderBuffer(flatbuffers::Verifier(data, size)),
           "Invalid Shader Data.");
 
   shader_ids = nullptr;
   num_shader_ids = 0;
 
-  const YEngineData::Shader* shader_data = YEngineData::GetShader(data);
+  const yengine_data::Shader* shader_data = yengine_data::GetShader(data);
   //const char* shader_name = shader_data->name()->c_str();
 
   const auto variants = shader_data->variants();

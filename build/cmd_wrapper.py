@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import argparse
 import os
@@ -37,7 +37,11 @@ if __name__ == "__main__":
     env = dict(value.split("=") for value in args.env)
 
   if args.capture:
-    output = subprocess.check_output(args.app_args, cwd=args.cwd, env=env)
+    try:
+      output = subprocess.check_output(args.app_args, cwd=args.cwd, env=env)
+    except subprocess.CalledProcessError as e:
+      print >> sys.stderr, e.output
+      sys.exit(e.returncode)
     with open(args.capture, "wb") as f:
       for filter_string in args.filter_capture:
         orig, replace = filter_string.split("=")

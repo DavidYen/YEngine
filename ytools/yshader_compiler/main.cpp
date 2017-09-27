@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::vector< flatbuffers::Offset<YEngineData::Variant> > variant_offsets;
+  std::vector< flatbuffers::Offset<yengine_data::Variant> > variant_offsets;
   for (rapidjson::Value::ValueIterator variant_iter = variants.Begin();
        variant_iter != variants.End();
        ++variant_iter) {
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
       return 1;
     }
 
-    variant_offsets.push_back(YEngineData::CreateVariant(
+    variant_offsets.push_back(yengine_data::CreateVariant(
         fbb,
         fbb.CreateString(variant_name->value.GetString()),
         fbb.CreateVector(vs_output),
@@ -282,11 +282,11 @@ int main(int argc, char** argv) {
   }
 
   // Create Shader
-  auto shader_loc = YEngineData::CreateShader(
+  auto shader_loc = yengine_data::CreateShader(
       fbb, fbb.CreateString(name_string), fbb.CreateVector(variant_offsets));
 
   // Finish building the shader
-  YEngineData::FinishShaderBuffer(fbb, shader_loc);
+  yengine_data::FinishShaderBuffer(fbb, shader_loc);
 
   ytools::file_utils::FileStream output_file(
       FLAGS_output_file,

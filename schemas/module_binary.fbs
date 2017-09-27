@@ -1,0 +1,16 @@
+namespace yengine_data;
+
+file_identifier "MODB";
+file_extension "modb";
+
+enum BinaryType : byte {
+  kShader,
+}
+
+table ModuleBinary {
+  name:[string];
+  binary_type:[BinaryType];
+  binary_data:[ubyte];
+}
+
+root_type ModuleBinary;

@@ -9,7 +9,7 @@ template("compile_schema") {
   action(target_name) {
     schema = invoker.schema
 
-    script = "//build/cmd_wrapper.py"
+    script = "//build/compile_flatbuffer.py"
     inputs = [
       "//schemas/${schema}.fbs",
     ]
@@ -17,10 +17,10 @@ template("compile_schema") {
       "${root_build_dir}/include/schemas/${schema}_generated.h",
     ]
 
-    args = [ "--capture", rebase_path("${target_gen_dir}/${target_name}.d"),
-             "--filter-capture", rebase_path("${root_build_dir}/") + "=",
-             "--", "flatc", "-c", "-M",
-             "-o", rebase_path("${root_build_dir}/include/schemas/"),
+    args = [ "--depfile", rebase_path("${target_gen_dir}/${target_name}.d"),
+             "--","flatc", "-c", "--scoped-enums",
+             "-o", rebase_path("${root_build_dir}/include/schemas/",
+                               root_build_dir),
              rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
 
     deps = [
@@ -35,4 +35,8 @@ template("compile_schema") {
 
 compile_schema("compile_shader_schema") {
   schema = "shader"
+}
+
+compile_schema("compile_module_binary_schema") {
+  schema = "module_binary"
 }
