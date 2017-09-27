@@ -1,6 +1,6 @@
 {
-  "name": "full-screen",
-  "file": "full-screen.hlsl",
+  "name": "full_screen",
+  "file": "full_screen.hlsl",
   "variants": [{
     "name": "clear",
     "vertex_declaration": "position",
