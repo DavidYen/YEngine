@@ -17,13 +17,17 @@ template("compile_schema") {
       "${root_build_dir}/include/schemas/${schema}_generated.h",
     ]
 
-    args = [ "--", "flatc", "-c",
+    args = [ "--capture", rebase_path("${target_gen_dir}/${target_name}.d"),
+             "--filter-capture", rebase_path("${root_build_dir}/") + "=",
+             "--", "flatc", "-c", "-M",
              "-o", rebase_path("${root_build_dir}/include/schemas/"),
              rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
 
     deps = [
       "//third_party/build/google/flatbuffers:flatc"
     ]
+
+    depfile = "${target_gen_dir}/${target_name}.d"
 
     all_dependent_configs = [ ":schema_config" ]
   }

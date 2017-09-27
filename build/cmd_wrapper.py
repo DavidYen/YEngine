@@ -14,6 +14,12 @@ if __name__ == "__main__":
     "--env", default=[], action='append',
     help="Environment variable A=B")
   parser.add_argument(
+    "--capture", default=None,
+    help="Capture output into a file.")
+  parser.add_argument(
+    "--filter-capture", default=[], action='append',
+    help="Filter captured output by replacing A:B")
+  parser.add_argument(
     "app_args", nargs="+",
     help="Application arguments.")
 
@@ -30,5 +36,13 @@ if __name__ == "__main__":
   if args.env:
     env = dict(value.split("=") for value in args.env)
 
-  subprocess.check_call(args.app_args, cwd=args.cwd, env=env)
+  if args.capture:
+    output = subprocess.check_output(args.app_args, cwd=args.cwd, env=env)
+    with open(args.capture, "wb") as f:
+      for filter_string in args.filter_capture:
+        orig, replace = filter_string.split("=")
+        output = output.replace(orig, replace)
+      f.write(output)
+  else:
+    subprocess.check_call(args.app_args, cwd=args.cwd, env=env)
   sys.exit(0)
