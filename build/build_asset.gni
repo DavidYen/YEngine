@@ -1,0 +1,64 @@
+
+template("compile_flatbuffer_json") {
+  schema_file = invoker.schema_file
+  input_json = invoker.input_json
+  output_binary = invoker.output_binary
+
+  action(target_name) {
+    script = "//build/compile_flatbuffer.py"
+    outputs = [ output_binary ]
+
+    args = [ "--depfile", rebase_path("${target_gen_dir}/${target_name}.d"),
+             "--","flatc",
+             "-o", rebase_path(get_path_info(output_binary, "dir"),
+                               root_build_dir),
+             "-b", rebase_path(schema_file, root_build_dir),
+             rebase_path(schema_file, root_build_dir),
+             rebase_path(input_json, root_build_dir),
+
+             rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
+
+    deps = [
+      "//third_party/build/google/flatbuffers:flatc"
+    ]
+
+    depfile = "${target_gen_dir}/${target_name}.d"
+  }
+}
+
+template("compile_shader") {
+  action(target_name) {
+    script = "//build/cmd_wrapper.py"
+    shader_file = invoker.shader_file
+    shader_output = invoker.shader_output
+
+    inputs = invoker.inputs
+    sources = [ shader_file ]
+    outputs = [ shader_output ]
+
+    args = [ "--", "yshader_compiler",
+             "--input_file", rebase_path(shader_file, root_build_dir),
+             "--output_file", rebase_path(shader_output, root_build_dir) ]
+
+    deps = [
+      "//ytools/yshader_compiler",
+    ]
+  }
+}
+
+template("compile_asset_database") {
+  action(target_name) {
+    script = "//ytools/yasset_database/yasset_database.py"
+
+    sources = invoker.sources
+    outputs = [ invoker.output ]
+
+    args = [
+      rebase_path("${root_build_dir}/python"),
+    ] + rebase_path(outputs) + rebase_path(sources)
+
+    deps = [
+      "//schemas:shader_schema_python",
+    ] + invoker.deps
+  }
+}

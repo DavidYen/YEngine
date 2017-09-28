@@ -47,17 +47,21 @@ template("compile_schema") {
     # on the fact that all flatbuffers will be in the yengine_data and there
     # will be a file produced named the schema_class.
     outputs = [
-      "${root_build_dir}/python_schemas/yengine_data/${schema_class}.py"
+      "${root_build_dir}/python/yengine_data/${schema_class}.py"
     ]
 
     args = [ "--","flatc", "-p",
-             "-o", rebase_path("${root_build_dir}/python_schemas/",
+             "-o", rebase_path("${root_build_dir}/python/",
                                root_build_dir),
              rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
 
     deps = [
       ":${schema_target}_cpp",
       "//third_party/build/google/flatbuffers:flatc",
+    ]
+
+    data_deps = [
+      "//third_party/build/google/flatbuffers:flatbuffers_python",
     ]
 
     all_dependent_configs = [ ":schema_config" ]
@@ -72,9 +76,4 @@ compile_schema("shader_schema") {
 compile_schema("module_binary_schema") {
   schema = "module_binary"
   schema_class = "ModuleBinary"
-}
-
-compile_schema("asset_database_schema") {
-  schema = "asset_database"
-  schema_class = "AssetDatabase"
 }

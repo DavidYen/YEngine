@@ -1,7 +1,12 @@
-import("//ytools/tools.gni")
+import("//build/build_asset.gni")
 
-compile_shader("fullscreen_shdr") {
-  shader_file = "shaders/full_screen.shdr.json"
-  output_file = "${root_build_dir}/data/full_screen.shdr"
-  inputs = [ "shaders/full_screen.hlsl" ]
+compile_asset_database("test_dialog_asset_database") {
+  sources = [
+    "${root_build_dir}/data/full_screen.shdr",
+  ]
+  output = "${root_build_dir}/data/test_dialog_assets.json"
+
+  deps = [
+    "shaders:fullscreen_shdr",
+  ]
 }

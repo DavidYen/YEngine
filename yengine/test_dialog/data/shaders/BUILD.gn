@@ -1,0 +1,7 @@
+import("//build/build_asset.gni")
+
+compile_shader("fullscreen_shdr") {
+  shader_file = "full_screen.shdr.json"
+  shader_output = "${root_build_dir}/data/full_screen.shdr"
+  inputs = [ "full_screen.hlsl" ]
+}

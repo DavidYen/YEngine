@@ -10,6 +10,6 @@ executable("test_dialog") {
   ]
 
   data_deps = [
-    "data:fullscreen_shdr"
+    "data:test_dialog_asset_database"
   ]
 }

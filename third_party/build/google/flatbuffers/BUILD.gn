@@ -29,6 +29,20 @@ static_library("flatbuffers") {
   ]
 }
 
+copy("flatbuffers_python") {
+  sources = [
+    "//third_party/google/flatbuffers/python/flatbuffers/__init__.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/builder.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/compat.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/encode.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/number_types.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/packer.py",
+    "//third_party/google/flatbuffers/python/flatbuffers/table.py",
+  ]
+
+  outputs = [ "${root_build_dir}/python/flatbuffers/{{source_file_part}}" ]
+}
+
 tool_executable("flatc") {
   sources = [
     "//third_party/google/flatbuffers/src/idl_gen_cpp.cpp",
