@@ -6,7 +6,7 @@ static_library("data_loader") {
   ]
 
   deps = [
-    "//schemas:compile_shader_schema",
+    "//schemas:shader_schema_cpp",
     "//third_party/build/google/flatbuffers",
     "//ycommon/containers",
     "//yengine/renderer",

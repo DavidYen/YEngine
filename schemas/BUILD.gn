@@ -6,18 +6,16 @@ config("schema_config") {
 }
 
 template("compile_schema") {
-  action(target_name) {
+  schema_target = target_name
+  action("${schema_target}_cpp") {
     schema = invoker.schema
 
     script = "//build/compile_flatbuffer.py"
-    inputs = [
-      "//schemas/${schema}.fbs",
-    ]
     outputs = [
       "${root_build_dir}/include/schemas/${schema}_generated.h",
     ]
 
-    args = [ "--depfile", rebase_path("${target_gen_dir}/${target_name}.d"),
+    args = [ "--depfile", rebase_path("${target_gen_dir}/${schema_target}_cpp.d"),
              "--","flatc", "-c", "--scoped-enums",
              "-o", rebase_path("${root_build_dir}/include/schemas/",
                                root_build_dir),
@@ -27,16 +25,56 @@ template("compile_schema") {
       "//third_party/build/google/flatbuffers:flatc"
     ]
 
-    depfile = "${target_gen_dir}/${target_name}.d"
+    depfile = "${target_gen_dir}/${schema_target}_cpp.d"
+
+    all_dependent_configs = [ ":schema_config" ]
+  }
+
+  action("${schema_target}_python") {
+    schema = invoker.schema
+    schema_class = invoker.schema_class
+
+    script = "//build/compile_flatbuffer.py"
+
+    # The dep format does not seem to work for python, so we should rely
+    # on the C++ depfile instead. This should be ok because more things depend
+    # on the C++ schema anyways.
+    inputs = [
+      "${root_build_dir}/include/schemas/${schema}_generated.h",
+    ]
+
+    # There is a python file produced for each table/struct, we will just rely
+    # on the fact that all flatbuffers will be in the yengine_data and there
+    # will be a file produced named the schema_class.
+    outputs = [
+      "${root_build_dir}/python_schemas/yengine_data/${schema_class}.py"
+    ]
+
+    args = [ "--","flatc", "-p",
+             "-o", rebase_path("${root_build_dir}/python_schemas/",
+                               root_build_dir),
+             rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
+
+    deps = [
+      ":${schema_target}_cpp",
+      "//third_party/build/google/flatbuffers:flatc",
+    ]
 
     all_dependent_configs = [ ":schema_config" ]
   }
 }
 
-compile_schema("compile_shader_schema") {
+compile_schema("shader_schema") {
   schema = "shader"
+  schema_class = "Shader"
 }
 
-compile_schema("compile_module_binary_schema") {
+compile_schema("module_binary_schema") {
   schema = "module_binary"
+  schema_class = "ModuleBinary"
+}
+
+compile_schema("asset_database_schema") {
+  schema = "asset_database"
+  schema_class = "AssetDatabase"
 }

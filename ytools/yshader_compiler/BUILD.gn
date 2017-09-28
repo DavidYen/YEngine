@@ -6,7 +6,7 @@ tool_executable("yshader_compiler") {
   ]
 
   deps = [
-    "//schemas:compile_shader_schema",
+    "//schemas:shader_schema_cpp",
     "//third_party/build/google/gflags",
     "//third_party/build/google/flatbuffers",
     "//ytools/file_utils",

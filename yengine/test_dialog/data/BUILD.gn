@@ -2,6 +2,6 @@ import("//ytools/tools.gni")
 
 compile_shader("fullscreen_shdr") {
   shader_file = "shaders/full_screen.shdr.json"
-  output_file = "${root_build_dir}/data/full_screen.shdr.bin"
+  output_file = "${root_build_dir}/data/full_screen.shdr"
   inputs = [ "shaders/full_screen.hlsl" ]
 }
