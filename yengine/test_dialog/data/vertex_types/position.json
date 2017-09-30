@@ -1,0 +1,9 @@
+{
+  "name": "position-vertex",
+  "vertex_streams": [{
+    "vertex_members": [{
+      "type": "kFloat3",
+      "usage": "kPosition",
+    }],
+  }],
+}

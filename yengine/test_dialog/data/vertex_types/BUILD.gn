@@ -1,0 +1,9 @@
+import("//build/build_asset.gni")
+
+compile_vertex_declaration("position") {
+  vertex_decl_json = "position.json"
+}
+
+compile_vertex_declaration("position_texcoord") {
+  vertex_decl_json = "position_texcoord.json"
+}

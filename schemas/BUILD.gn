@@ -76,16 +76,6 @@ template("compile_schema") {
   }
 }
 
-compile_schema("shader_schema") {
-  schema = "shader"
-  schema_class = "Shader"
-}
-
-compile_schema("module_binary_types_schema") {
-  schema = "module_binary_types"
-  schema_class = "BinaryTypes"
-}
-
 compile_schema("module_binary_schema") {
   schema = "module_binary"
   schema_class = "ModuleBinary"
@@ -93,4 +83,19 @@ compile_schema("module_binary_schema") {
   data_deps_cpp = [
     ":module_binary_types_schema_cpp",
   ]
+}
+
+compile_schema("module_binary_types_schema") {
+  schema = "module_binary_types"
+  schema_class = "BinaryTypes"
+}
+
+compile_schema("shader_schema") {
+  schema = "shader"
+  schema_class = "Shader"
+}
+
+compile_schema("vertex_decl_schema") {
+  schema = "vertex_decl"
+  schema_class = "VertexDecl"
 }

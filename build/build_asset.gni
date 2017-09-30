@@ -2,7 +2,13 @@
 template("compile_flatbuffer_json") {
   schema_file = invoker.schema_file
   input_json = invoker.input_json
-  output_binary = invoker.output_binary
+  output_extension = invoker.output_extension
+
+  input_basename = get_path_info(input_json, "name")
+  output_binary = "${target_gen_dir}/${input_basename}.${output_extension}"
+
+  assert(get_path_info(input_json, "extension") == "json",
+         "Flatbuffer JSON compiler must compile a .json file: ${input_json}")
 
   action(target_name) {
     script = "//build/compile_flatbuffer.py"
@@ -14,15 +20,22 @@ template("compile_flatbuffer_json") {
                                root_build_dir),
              "-b", rebase_path(schema_file, root_build_dir),
              rebase_path(schema_file, root_build_dir),
-             rebase_path(input_json, root_build_dir),
-
-             rebase_path("//schemas/${schema}.fbs", root_build_dir) ]
+             rebase_path(input_json, root_build_dir)]
 
     deps = [
       "//third_party/build/google/flatbuffers:flatc"
     ]
 
     depfile = "${target_gen_dir}/${target_name}.d"
+  }
+}
+
+template("compile_vertex_declaration") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.vertex_decl_json
+
+    schema_file = "//schemas/vertex_decl.fbs"
+    output_extension = "vtxd"
   }
 }
 
@@ -60,7 +73,7 @@ template("compile_asset_database") {
     ] + rebase_path(outputs) + rebase_path(sources)
 
     deps = [
-      "//schemas:shader_schema_python",
+      "//ytools/yasset_database",
     ] + invoker.deps
   }
 }

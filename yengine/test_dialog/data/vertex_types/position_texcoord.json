@@ -1,0 +1,12 @@
+{
+  "name": "position_texcoord-vertex",
+  "vertex_streams": [{
+    "vertex_members": [{
+      "type": "kFloat3",
+      "usage": "kPosition",
+    }, {
+      "type": "kFloat2",
+      "usage": "kTexCoord",
+    }],
+  }],
+}

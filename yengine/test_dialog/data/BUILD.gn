@@ -3,12 +3,16 @@ import("//build/build_asset.gni")
 compile_asset_database("test_dialog_asset_database") {
   sources = [
     "${target_gen_dir}/shaders/full_screen.shdr",
+    "${target_gen_dir}/vertex_types/position.vtxd",
+    "${target_gen_dir}/vertex_types/position_texcoord.vtxd",
   ]
 
   output = "${target_gen_dir}/${target_name}.json"
 
   deps = [
     "shaders:full_screen",
+    "vertex_types:position",
+    "vertex_types:position_texcoord",
   ]
 }
 

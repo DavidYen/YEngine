@@ -2,4 +2,5 @@ namespace yengine_data;
 
 enum BinaryType : byte {
   kShader,
+  kVertexDecl,
 }

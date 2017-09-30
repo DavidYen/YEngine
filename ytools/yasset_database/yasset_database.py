@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 
+import importlib
 import json
 import os
 import sys
 
 # This map must be kept up to date with module_binary_types.fbs.
-BINARY_TYPE_SHADER, = xrange(1)
+BINARY_TYPE_SHADER, \
+BINARY_TYPE_VERTEXDECL = xrange(2)
+
+DATA_CLASS_MAP = {
+  ".shdr": (BINARY_TYPE_SHADER, "Shader"),
+  ".vtxd": (BINARY_TYPE_VERTEXDECL, "VertexDecl"),
+}
 
 def do_main(argv):
   if len(argv) < 3:
@@ -14,11 +21,6 @@ def do_main(argv):
     return 1
 
   sys.path.append(argv[0])
-  import yengine_data.Shader
-
-  data_class_map = {
-    ".shdr": (BINARY_TYPE_SHADER, yengine_data.Shader.Shader.GetRootAsShader),
-  }
 
   output_file = argv[1]
   asset_database = {}
@@ -26,12 +28,19 @@ def do_main(argv):
   # Read each asset based on their file extension.
   for file_path in argv[2:]:
     base_name, file_ext = os.path.splitext(file_path)
-    data_info = data_class_map.get(file_ext)
+    data_info = DATA_CLASS_MAP.get(file_ext)
     assert data_info, "Unknown File Extension: %s" % file_path
 
-    binary_type, data_class = data_info
+    binary_type, class_name = data_info
+
+    # Import the data class
+    yengine_data = importlib.import_module("yengine_data.%s" % class_name)
+    class_module = getattr(yengine_data, class_name)
+    data_class = getattr(class_module, class_name)
+    create_data_func = getattr(data_class, "GetRootAs%s" % class_name)
+
     with open(file_path, "rb") as f:
-      data_object = data_class(bytearray(f.read()), 0)
+      data_object = create_data_func(bytearray(f.read()), 0)
 
     data_name = data_object.Name()
 

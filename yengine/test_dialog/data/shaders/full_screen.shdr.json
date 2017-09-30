@@ -3,7 +3,7 @@
   "file": "full_screen.hlsl",
   "variants": [{
     "name": "clear",
-    "vertex_declaration": "position",
+    "vertex_declaration": "position-vertex",
     "vertex_shader": "ClearGBufferVertexShader",
     "pixel_shader": "ClearGBufferPixelShader",
     "target": "5.1",
@@ -12,7 +12,7 @@
     "defines": []
   }, {
     "name": "present",
-    "vertex_declaration": "position_texture",
+    "vertex_declaration": "position_texcoord-vertex",
     "vertex_shader": "PresentSceneVS",
     "pixel_shader": "PresentScenePS",
     "pixel_parameters": [{
