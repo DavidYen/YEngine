@@ -6,62 +6,17 @@
 #include <flatbuffers/flatbuffers.h>
 #include <gflags/gflags.h>
 #include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
-#include <rapidjson/filereadstream.h>
 #include <schemas/shader_generated.h>
 
 #include "ytools/file_utils/file_env.h"
 #include "ytools/file_utils/file_path.h"
 #include "ytools/file_utils/file_stream.h"
+#include "ytools/report_utils/gflags_validators.h"
+#include "ytools/report_utils/json_errors.h"
 #include "ytools/yshader_compiler/compile_shader.h"
 
-namespace {
-  void OutputJsonError(const char* file_path,
-                       const char* buffer,
-                       size_t offset,
-                       rapidjson::ParseErrorCode error_code) {
-    size_t line_num = 1;
-    size_t index = 0;
-    for (size_t i = 0; i < offset; ++i) {
-      if (buffer[i] == '\n') {
-        ++line_num;
-        index = 0;
-      } else {
-        ++index;
-      }
-    }
-
-    std::cerr << "Json Parsing Error "
-              << file_path
-              << ":"
-              << line_num
-              << ":"
-              << index
-              << " - "
-              << rapidjson::GetParseError_En(error_code)
-              << std::endl;
-  }
-}
-
-static bool ValidateExistingFile(const char* flagname,
-                                 const std::string& value) {
-  if (!value.empty() && ytools::file_utils::FilePath::IsFile(value))
-    return true;
-
-  std::cerr << "Invalid value for --" << flagname << "." << std::endl;
-  std::cerr << "  Expected valid file: " << value << std::endl;
-  return false;
-}
-
-static bool ValidateFlagExists(const char* flagname,
-                               const std::string& value) {
-  (void) flagname;
-  return !value.empty();
-}
-
-static bool ValidateOptLevel(const char* flagname,
-                             int32_t value) {
-  (void) flagname;
+static bool ValidateOptLevel(const char* /* flagname */,
+                      int32_t value) {
   if (value >= 1 && value <= 3)
     return true;
 
@@ -76,36 +31,31 @@ DEFINE_string(dep_file, "", "Dependency File.");
 DEFINE_bool(debug, false, "Default shaders to have debug information.");
 DEFINE_int32(opt_level, 3, "Optimization level between -1~3 where -1 is none.");
 
-static const bool input_check =
-    gflags::RegisterFlagValidator(&FLAGS_input_file, ValidateExistingFile);
+static const bool input_check = gflags::RegisterFlagValidator(
+  &FLAGS_input_file,
+  ytools::report_utils::GFlagsValidators::ValidateExistingFile);
 
-static const bool output_check =
-    gflags::RegisterFlagValidator(&FLAGS_output_file, ValidateFlagExists);
+static const bool output_check = gflags::RegisterFlagValidator(
+  &FLAGS_output_file,
+  ytools::report_utils::GFlagsValidators::ValidateFlagExists);
 
-static const bool opt_level_check =
-    gflags::RegisterFlagValidator(&FLAGS_opt_level, ValidateOptLevel);
+static const bool opt_level_check = gflags::RegisterFlagValidator(
+  &FLAGS_opt_level, ValidateOptLevel);
 
 int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   ytools::file_utils::FileEnv file_env;
 
-  FILE* file = fopen(FLAGS_input_file.c_str(), "r");
   file_env.AddReadFile(FLAGS_input_file);
-
-  static char readbuffer[4096];
-  rapidjson::FileReadStream stream(file, readbuffer, sizeof(readbuffer));
   rapidjson::Document doc;
-  doc.ParseStream<0>(stream);
-  if (!doc.IsObject()) {
-    if (doc.HasParseError()) {
-      OutputJsonError(FLAGS_input_file.c_str(),
-                      readbuffer,
-                      doc.GetErrorOffset(),
-                      doc.GetParseError());
-    }
+  if (!ytools::report_utils::JsonErrors::ParseJsonFile(FLAGS_input_file.c_str(),
+                                                       doc)) {
+    return 1;
+  }
 
-    std::cerr << "Could not parse json file: "
+  if (!doc.IsObject()) {
+    std::cerr << "Expected top level dict object: "
               << "\"" << FLAGS_input_file << "\"."
               << std::endl;
     return 1;

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 import subprocess
 import sys
 
@@ -19,6 +20,9 @@ if __name__ == "__main__":
   if args.depfile:
     deps_output = subprocess.check_output([args.flatc_args[0], "-M"] +
                                           args.flatc_args[1:])
+    dep_dir = os.path.dirname(args.depfile)
+    if not os.path.isdir(dep_dir):
+      os.makedirs(dep_dir)
     with open(args.depfile, "wb") as f:
       f.write(deps_output)
   sys.exit(0)

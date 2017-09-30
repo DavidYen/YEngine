@@ -1,0 +1,9 @@
+{
+  "name": "test_level",
+  "module_commands": [{
+    "command_type": "RegisterShader",
+    "command_args": [
+      "full_screen"
+    ]
+  }]
+}

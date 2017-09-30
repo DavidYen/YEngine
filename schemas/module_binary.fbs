@@ -2,13 +2,30 @@ include "module_binary_types.fbs";
 
 namespace yengine_data;
 
-file_identifier "MODB";
-file_extension "modb";
+file_identifier "MDBF";
+file_extension "mdbf";
+
+enum ModuleCommandType : byte {
+  kInvalidModuleCommandType,
+
+  // RegisterShader(shader_name)
+  //   Registers a shader and makes the shader available.
+  RegisterShader,
+}
+
+table BinaryData {
+  binary_type:BinaryType;
+  binary_data:[ubyte];
+}
+
+table ModuleCommand {
+  command_type:ModuleCommandType;
+  command_args:[BinaryData];
+}
 
 table ModuleBinary {
-  names:[string];
-  binary_types:[BinaryType];
-  binary_datas:[ubyte];
+  module_name:string;
+  module_commands:[ModuleCommand];
 }
 
 root_type ModuleBinary;

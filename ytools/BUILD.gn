@@ -2,6 +2,8 @@
 group("ytools") {
   deps = [
     "file_utils",
+    "report_utils",
+    "ymodule_binary_compiler",
     "yshader_compiler",
   ]
 }

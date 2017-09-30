@@ -30,15 +30,17 @@ template("compile_shader") {
   action(target_name) {
     script = "//build/cmd_wrapper.py"
     shader_file = invoker.shader_file
-    shader_output = invoker.shader_output
+    shader_output = "${target_gen_dir}/${target_name}.shdr"
 
     inputs = invoker.inputs
     sources = [ shader_file ]
     outputs = [ shader_output ]
+    depfile = "${target_gen_dir}/${target_name}.d"
 
     args = [ "--", "yshader_compiler",
              "--input_file", rebase_path(shader_file, root_build_dir),
-             "--output_file", rebase_path(shader_output, root_build_dir) ]
+             "--output_file", rebase_path(shader_output, root_build_dir),
+             "--dep_file", rebase_path(depfile, root_build_dir) ]
 
     deps = [
       "//ytools/yshader_compiler",
@@ -59,6 +61,28 @@ template("compile_asset_database") {
 
     deps = [
       "//schemas:shader_schema_python",
+    ] + invoker.deps
+  }
+}
+
+template("compile_module_binary") {
+  action(target_name) {
+    script =  "//build/cmd_wrapper.py"
+    database_file = invoker.asset_database
+    input_json_file = invoker.input
+    output_bin_file = invoker.output
+
+    outputs = [ output_bin_file ]
+    depfile = "${target_gen_dir}/${target_name}.d"
+
+    args = [ "--", "ymodule_binary_compiler",
+             "--database_file", rebase_path(database_file, root_build_dir),
+             "--input_file", rebase_path(input_json_file, root_build_dir),
+             "--output_file", rebase_path(output_bin_file, root_build_dir),
+             "--dep_file", rebase_path(depfile, root_build_dir) ]
+
+    deps = [
+      "//ytools/ymodule_binary_compiler",
     ] + invoker.deps
   }
 }

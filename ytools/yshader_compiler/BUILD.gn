@@ -9,11 +9,9 @@ tool_executable("yshader_compiler") {
     "//schemas:shader_schema_cpp",
     "//third_party/build/google/gflags",
     "//third_party/build/google/flatbuffers",
-    "//ytools/file_utils",
-  ]
-
-  public_configs = [
     "//third_party/build/rapidjson",
+    "//ytools/file_utils",
+    "//ytools/report_utils",
   ]
 
   if (gfx == "dx9" || gfx == "d3d12" || gfx == "dx11") {

@@ -2,11 +2,22 @@ import("//build/build_asset.gni")
 
 compile_asset_database("test_dialog_asset_database") {
   sources = [
-    "${root_build_dir}/data/full_screen.shdr",
+    "${target_gen_dir}/shaders/full_screen.shdr",
   ]
-  output = "${root_build_dir}/data/test_dialog_assets.json"
+
+  output = "${target_gen_dir}/${target_name}.json"
 
   deps = [
-    "shaders:fullscreen_shdr",
+    "shaders:full_screen",
+  ]
+}
+
+compile_module_binary("test_level_data") {
+  asset_database = "${target_gen_dir}/test_dialog_asset_database.json"
+  input = "test_level_data.mdbf.json"
+  output = "${root_build_dir}/data/test_level_data.mdbf"
+
+  deps = [
+    ":test_dialog_asset_database",
   ]
 }

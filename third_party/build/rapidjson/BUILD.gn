@@ -1,6 +1,10 @@
 
-config("rapidjson") {
+config("rapidjson_config") {
   include_dirs = [
     "//third_party/rapidjson/include",
   ]
+}
+
+group("rapidjson") {
+  all_dependent_configs = [ ":rapidjson_config" ]
 }

@@ -1,0 +1,19 @@
+
+tool_executable("ymodule_binary_compiler") {
+  sources = [
+    "asset_database.cpp",
+    "asset_database.h",
+    "main.cpp",
+    "module_data.cpp",
+    "module_data.h",
+  ]
+
+  deps = [
+    "//schemas:module_binary_schema_cpp",
+    "//third_party/build/google/gflags",
+    "//third_party/build/google/flatbuffers",
+    "//third_party/build/rapidjson",
+    "//ytools/file_utils",
+    "//ytools/report_utils",
+  ]
+}

@@ -25,6 +25,14 @@ template("compile_schema") {
       "//third_party/build/google/flatbuffers:flatc"
     ]
 
+    if (defined(invoker.deps_cpp)) {
+      deps += invoker.deps_cpp
+    }
+
+    if (defined(invoker.data_deps_cpp)) {
+      data_deps = invoker.data_deps_cpp
+    }
+
     depfile = "${target_gen_dir}/${schema_target}_cpp.d"
 
     all_dependent_configs = [ ":schema_config" ]
@@ -73,7 +81,16 @@ compile_schema("shader_schema") {
   schema_class = "Shader"
 }
 
+compile_schema("module_binary_types_schema") {
+  schema = "module_binary_types"
+  schema_class = "BinaryTypes"
+}
+
 compile_schema("module_binary_schema") {
   schema = "module_binary"
   schema_class = "ModuleBinary"
+
+  data_deps_cpp = [
+    ":module_binary_types_schema_cpp",
+  ]
 }

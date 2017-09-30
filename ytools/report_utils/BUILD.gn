@@ -1,0 +1,14 @@
+
+tool_static_library("report_utils") {
+  sources = [
+    "gflags_validators.cpp",
+    "gflags_validators.h",
+    "json_errors.cpp",
+    "json_errors.h",
+  ]
+
+  deps = [
+    "//third_party/build/rapidjson",
+    "//ytools/file_utils",
+  ]
+}
