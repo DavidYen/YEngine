@@ -12,7 +12,7 @@ vars = {
   "gtest_revision": "1197daf3571161590dce2bc4879512ef7bc1ba67",
 
   "rapidjson_git": "https://github.com/miloyip/rapidjson.git",
-  "rapidjson_revision": "879def80f2e466cdf4c86dc7e53ea2dd4cafaea0",
+  "rapidjson_revision": "v1.1.0",
 
   "flatbuffers_git": "https://github.com/google/flatbuffers.git",
   "flatbuffers_revision": "v1.7.1",
