@@ -20,7 +20,9 @@ FileStream::FileStream(const std::string& file, FileMode mode, FileType type,
   Open(file, mode, type);
 }
 
-FileStream::~FileStream() {}
+FileStream::~FileStream() {
+  Close();
+}
 
 void FileStream::Open(const std::string& file, FileMode mode, FileType type) {
   Close();

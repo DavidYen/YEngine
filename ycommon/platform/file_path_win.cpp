@@ -42,4 +42,8 @@ bool FilePath::GetCurrentWorkingDirectory(char* dir, size_t dir_size,
   return true;
 }
 
+bool FilePath::CreateDir(const char* dirpath) {
+  return ::CreateDirectory(dirpath, NULL) == TRUE;
+}
+
 }} // namespace ycommon { namespace platform {

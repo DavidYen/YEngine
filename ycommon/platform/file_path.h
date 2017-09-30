@@ -15,6 +15,8 @@ namespace FilePath {
   bool GetCurrentWorkingDirectory(char* dir, size_t dir_size,
                                   size_t* dest_len = nullptr);
 
+  bool CreateDir(const char* dirpath);
+
   /********
   * Platform Independent Functions.
   *********/
@@ -40,6 +42,9 @@ namespace FilePath {
   // Directory Path
   bool DirPath(const char* path, size_t path_len,
                char* dest, size_t dest_size, size_t* dest_len = nullptr);
+
+  // Directory Creation functions
+  bool EnsureDirectoryExists(const char* path, size_t path_len);
 } // namespace FilePath
 
 }} // namespace ycommon { namespace platform {

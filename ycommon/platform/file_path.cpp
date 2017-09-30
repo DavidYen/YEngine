@@ -306,4 +306,29 @@ bool FilePath::DirPath(const char* path, size_t path_len,
   return true;
 }
 
+// Directory Creation functions
+bool FilePath::EnsureDirectoryExists(const char* path, size_t path_len) {
+  if (Exists(path))
+    return true;
+  else if (path_len == 0)
+    return false;
+
+  char parent_dir[256];
+  size_t parent_dir_len = 0;
+  if (!DirPath(path, path_len,
+               parent_dir, sizeof(parent_dir), &parent_dir_len)) {
+    return false;
+  }
+
+  if (!EnsureDirectoryExists(parent_dir, parent_dir_len)) {
+    return false;
+  }
+
+  if (!CreateDir(path)) {
+    return false;
+  }
+
+  return true;
+}
+
 }} // namespace ycommon { namespace platform {

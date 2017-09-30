@@ -11,6 +11,8 @@ namespace FilePath {
   bool Exists(const std::string& path);
   std::string GetCurrentWorkingDirectory();
 
+  bool CreateDir(const std::string& path);
+
   // Join Paths
   std::string JoinPaths(const std::string& dir, const std::string path);
 
@@ -26,6 +28,8 @@ namespace FilePath {
 
   // Directory Path
   std::string DirPath(const std::string& path);
+
+  bool EnsureDirectoryExists(const std::string& path);
 
 } // namespace FilePath {
 

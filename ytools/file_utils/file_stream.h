@@ -23,9 +23,9 @@ class FileStream {
     kFileType_Text
   };
 
-  FileStream(FileEnv* file_env = NULL);
+  FileStream(FileEnv* file_env = nullptr);
   FileStream(const std::string& file, FileMode mode, FileType type,
-             FileEnv* file_env = NULL);
+             FileEnv* file_env = nullptr);
   ~FileStream();
 
   void Open(const std::string& file, FileMode mode, FileType type);
