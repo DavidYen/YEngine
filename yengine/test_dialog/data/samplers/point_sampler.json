@@ -1,0 +1,8 @@
+{
+  "name": "point-sampler",
+  "mag_filter": "kPoint",
+  "min_filter": "kPoint",
+  "mip_filter": "kPoint",
+  "AddressU": "kClamp",
+  "AddressV": "kClamp",
+}

@@ -10,6 +10,6 @@ executable("test_dialog") {
   ]
 
   data_deps = [
-    "data:test_dialog_asset_database"
+    "data:test_level_data"
   ]
 }

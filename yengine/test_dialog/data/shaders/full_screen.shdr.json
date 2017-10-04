@@ -17,41 +17,40 @@
     "pixel_shader": "PresentScenePS",
     "pixel_parameters": [{
       "name": "ambient-color",
-      "type": "float3",
-      "register": "b0.xyz"
+      "type": "kFloat3",
+      "register": {
+        "index": 0
+      }
     }, {
       "name": "ambient-light",
-      "type": "float",
-      "register": "b0.w"
+      "type": "kFloat",
+      "register": {
+        "index": 0,
+        "offset": 3
+      }
     }, {
       "name": "diffuse-map",
-      "type": "texture",
-      "register": "t0"
+      "type": "kTexture",
+      "register": {
+        "index": 0
+      }
     }, {
       "name": "diffuse-sampler",
-      "type": "sampler",
-      "register": "s0",
-      "sampler-state": {
-        "MAGFILTER": "POINT",
-        "MINFILTER": "POINT",
-        "MIPFILTER": "POINT",
-        "AddressU": "Clamp",
-        "AddressV": "Clamp"
+      "type": "kSampler",
+      "register": {
+        "index": 0
       }
     }, {
       "name": "light-map",
-      "type": "texture",
-      "register": "t1"
+      "type": "kTexture",
+      "register": {
+        "index": 1
+      }
     }, {
       "name": "light-sampler",
-      "type": "sampler",
-      "register": "s1",
-      "sampler-state": {
-        "MAGFILTER": "POINT",
-        "MINFILTER": "POINT",
-        "MIPFILTER": "POINT",
-        "AddressU": "Clamp",
-        "AddressV": "Clamp"
+      "type": "kSampler",
+      "register": {
+        "index": 1
       }
     }],
     "target": "5.1",

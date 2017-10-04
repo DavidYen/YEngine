@@ -46,7 +46,9 @@ bool JsonErrors::ParseJsonFile(const char* file_path,
   static char readbuffer[4096];
   FILE* file = fopen(file_path, "rb");
   rapidjson::FileReadStream stream(file, readbuffer, sizeof(readbuffer));
-  doc.ParseStream<0>(stream);
+  doc.ParseStream<rapidjson::kParseTrailingCommasFlag |
+                  rapidjson::kParseCommentsFlag>(
+      stream);
   fclose(file);
   if (doc.HasParseError()) {
     OutputJsonError(file_path,

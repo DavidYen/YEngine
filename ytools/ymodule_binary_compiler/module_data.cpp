@@ -6,6 +6,8 @@
 
 #include <rapidjson/document.h>
 #include <schemas/module_binary_generated.h>
+#include <schemas/shader_generated.h>
+#include <schemas/vertex_decl_generated.h>
 
 #include "ytools/file_utils/file_env.h"
 #include "ytools/file_utils/file_stream.h"
@@ -27,6 +29,7 @@ namespace {
   struct CommandArg {
     std::string arg_name;
     ytools::ymodule_binary_compiler::AssetData arg_data;
+    std::vector<uint8_t> arg_binary;
   };
 
   // The ModuleCommandValidation class runs through each command in order
@@ -44,8 +47,13 @@ namespace {
         std::cerr << "Invalid Module Command Type: " << command_type_name
                   << std::endl;
         return false;
+
+      case yengine_data::ModuleCommandType::RegisterVertexDecl:
+        return ValidateRegisterVertDecl(command_args);
+
       case yengine_data::ModuleCommandType::RegisterShader:
         return ValidateRegisterShader(command_args);
+
       default:
         std::cerr << "Unimplemented Command Type:" << command_type_name
                   << std::endl;
@@ -54,6 +62,44 @@ namespace {
     }
 
    private:
+    bool ValidateRegisterVertDecl(const std::vector<CommandArg>& command_args) {
+      if (command_args.size() != 1) {
+        std::cerr << "Register Vertex Declaration expected 1 argument."
+                  << std::endl;
+        return false;
+      }
+      const CommandArg& command_arg = command_args.front();
+      const std::string& decl_name = command_arg.arg_name;
+      const ytools::ymodule_binary_compiler::AssetData& decl_asset =
+        command_arg.arg_data;
+
+      if (decl_asset.binary_type != yengine_data::BinaryType::kVertexDecl) {
+        std::cerr << "Vertex Decl Registration expected kVertexDecl type, got "
+                  << "\""
+                  << yengine_data::EnumNameBinaryType(decl_asset.binary_type)
+                  << "\": " << decl_name << std::endl;
+        return false;
+      }
+
+      if (mVertexDecls.count(decl_name)) {
+        std::cerr << "Vertex Declaration \"" << decl_name
+                  << "\" has already been registered." << std::endl;
+        return false;
+      }
+
+      // Validate the binary file
+      flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                     command_arg.arg_binary.size());
+      if (!yengine_data::VerifyVertexDeclBuffer(verifier)) {
+        std::cerr << "Invalid Vertex Declaration Binary: "
+                  << command_arg.arg_data.file_path << std::endl;
+        return false;
+      }
+
+      mVertexDecls.insert(decl_name);
+      return true;
+    }
+
     bool ValidateRegisterShader(const std::vector<CommandArg>& command_args) {
       if (command_args.size() != 1) {
         std::cerr << "Register Shader command expected 1 shader argument."
@@ -77,10 +123,42 @@ namespace {
                   << "\" has already been registered." << std::endl;
         return false;
       }
+
+      // Validate the binary file.
+      flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                     command_arg.arg_binary.size());
+      if (!yengine_data::VerifyShaderBuffer(verifier)) {
+        std::cerr << "Invalid Shader Binary: "
+                  << command_arg.arg_data.file_path << std::endl;
+        return false;
+      }
+
+      // Validate Shader Data
+      const yengine_data::Shader* shader =
+          yengine_data::GetShader(command_arg.arg_binary.data());
+
+      if (shader->variants()->size() == 0) {
+        std::cerr << "Shader \"" << shader_name << "\""
+                  << " does not contain any shader variants."
+                  << std::endl;
+        return false;
+      }
+
+      for (const yengine_data::Variant* variant : *shader->variants()) {
+        if (!mVertexDecls.count(variant->vertex_decl()->c_str())) {
+          std::cerr << "Shader \"" << shader_name << "\""
+                    << " uses unknown vertex declaration: "
+                    << variant->vertex_decl()->c_str()
+                    << std::endl;
+          return false;
+        }
+      }
+
       mShaders.insert(shader_name);
       return true;
     }
 
+    std::unordered_set<std::string> mVertexDecls;
     std::unordered_set<std::string> mShaders;
   };
 }
@@ -221,7 +299,31 @@ bool ModuleData::ProcessModuleData(ytools::file_utils::FileEnv* file_env,
           return false;
         }
 
-        command_args.push_back({ std::move(arg_name), std::move(asset_data) });
+        file_utils::FileStream file(asset_data.file_path,
+                                    file_utils::FileStream::kFileMode_Read,
+                                    file_utils::FileStream::kFileType_Binary,
+                                    file_env);
+
+        if (!file.IsOpen()) {
+          std::cerr << "Error loading asset \"" << arg_name << "\"."
+                    << " Could not open file: "
+                    << asset_data.file_path
+                    << std::endl;
+          return false;
+        }
+
+        std::vector<uint8_t> file_data;
+        if (!file.Read(file_data)) {
+          std::cerr << "Error loading asset \"" << arg_name << "\"."
+                    << " Error reading file: "
+                    << asset_data.file_path
+                    << std::endl;
+          return false;
+        }
+
+        command_args.push_back({ std::move(arg_name),
+                                 std::move(asset_data),
+                                 std::move(file_data) });
       }
     }
 
@@ -235,33 +337,14 @@ bool ModuleData::ProcessModuleData(ytools::file_utils::FileEnv* file_env,
       return false;
     }
 
-    // Everything checks out, create the module command data.
+    // Create the module command data.
     ModuleCommand module_command_data;
     module_command_data.command_type = command_type;
     for (const CommandArg& command_arg : command_args) {
-      BinaryData binary_data;
-      binary_data.binary_type = command_arg.arg_data.binary_type;
-      file_utils::FileStream file(command_arg.arg_data.file_path,
-                                  file_utils::FileStream::kFileMode_Read,
-                                  file_utils::FileStream::kFileType_Binary,
-                                  file_env);
-
-      if (!file.IsOpen()) {
-        std::cerr << "Error loading asset \"" << command_arg.arg_name << "\"."
-                  << " Could not open file: "
-                  << command_arg.arg_data.file_path
-                  << std::endl;
-        return false;
-      }
-
-      if (!file.Read(binary_data.data)) {
-        std::cerr << "Error loading asset \"" << command_arg.arg_name << "\"."
-                  << " Error reading file: "
-                  << command_arg.arg_data.file_path
-                  << std::endl;
-        return false;
-      }
-      module_command_data.command_args.push_back(std::move(binary_data));
+      module_command_data.command_args.push_back({
+        command_arg.arg_data.binary_type,
+        std::move(command_arg.arg_binary),
+      });
     }
 
     mModuleCommands.push_back(std::move(module_command_data));

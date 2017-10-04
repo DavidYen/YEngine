@@ -12,6 +12,14 @@ namespace ytools { namespace ymodule_binary_compiler {
 
 AssetDatabase::AssetDatabase(ytools::file_utils::FileEnv* file_env,
                              const std::string& file_path) {
+  // Populate binary type string -> binary type map.
+  std::unordered_map<std::string, yengine_data::BinaryType> binary_type_map;
+  for (yengine_data::BinaryType i = yengine_data::BinaryType::MIN;
+       i <= yengine_data::BinaryType::MAX;
+       i = static_cast<yengine_data::BinaryType>(static_cast<int>(i) + 1)) {
+    binary_type_map[yengine_data::EnumNameBinaryType(i)] = i;
+  }
+
   rapidjson::Document doc;
   if (!report_utils::JsonErrors::ParseJsonFile(file_path.c_str(),
                                                doc,
@@ -42,18 +50,21 @@ AssetDatabase::AssetDatabase(ytools::file_utils::FileEnv* file_env,
     const auto& member_dict = member.value.GetObject();
 
     const auto& asset_binary_type = member_dict["binary_type"];
-    if (!asset_binary_type.IsInt()) {
+    if (!asset_binary_type.IsString()) {
       std::cerr << "Asset \"" << member_name
-                << "\" expected integer binary_type value." << std::endl;
+                << "\" expected string binary_type value." << std::endl;
       return;
     }
-    int binary_type_int = asset_binary_type.GetInt();
-    if (binary_type_int < static_cast<int>(yengine_data::BinaryType::MIN) ||
-        binary_type_int > static_cast<int>(yengine_data::BinaryType::MAX)) {
-      std::cerr << "Asset \"" << member_name << "\" has invalid binary_type: "
-                << binary_type_int << std::endl;
+
+    auto binary_type_iter = binary_type_map.find(asset_binary_type.GetString());
+    if (binary_type_iter == binary_type_map.end()) {
+      std::cerr << "Asset \"" << member_name
+                << "\" has invalid binary_type value: "
+                << asset_binary_type.GetString()
+                << std::endl;
       return;
     }
+    yengine_data::BinaryType binary_type_value = binary_type_iter->second;
 
     const auto& asset_file_path = member_dict["file_path"];
     if (!asset_file_path.IsString()) {
@@ -64,8 +75,7 @@ AssetDatabase::AssetDatabase(ytools::file_utils::FileEnv* file_env,
 
     mAssetDatabaseMap.insert(std::make_pair(
       std::string(member_name),
-      AssetData({ static_cast<yengine_data::BinaryType>(binary_type_int),
-                  std::string(asset_file_path.GetString()) })));
+      AssetData({ binary_type_value, asset_file_path.GetString() })));
   }
 
   mValid = true;

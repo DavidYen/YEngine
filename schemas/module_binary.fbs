@@ -8,6 +8,10 @@ file_extension "mdbf";
 enum ModuleCommandType : byte {
   kInvalidModuleCommandType,
 
+  // RegisterVertexDecl(vertex_decl_name)
+  //   Registers a vertex declaration and makes it available.
+  RegisterVertexDecl,
+
   // RegisterShader(shader_name)
   //   Registers a shader and makes the shader available.
   RegisterShader,

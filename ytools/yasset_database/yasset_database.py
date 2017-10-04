@@ -5,13 +5,12 @@ import json
 import os
 import sys
 
-# This map must be kept up to date with module_binary_types.fbs.
-BINARY_TYPE_SHADER, \
-BINARY_TYPE_VERTEXDECL = xrange(2)
 
+# This map must be kept up to date with module_binary_types.fbs.
 DATA_CLASS_MAP = {
-  ".shdr": (BINARY_TYPE_SHADER, "Shader"),
-  ".vtxd": (BINARY_TYPE_VERTEXDECL, "VertexDecl"),
+  # File Extension: (Binary Type Enum, Root Class Name)
+  ".shdr": ("kShader", "Shader"),
+  ".vtxd": ("kVertexDecl", "VertexDecl"),
 }
 
 def do_main(argv):
@@ -34,8 +33,7 @@ def do_main(argv):
     binary_type, class_name = data_info
 
     # Import the data class
-    yengine_data = importlib.import_module("yengine_data.%s" % class_name)
-    class_module = getattr(yengine_data, class_name)
+    class_module = importlib.import_module("yengine_data.%s" % class_name)
     data_class = getattr(class_module, class_name)
     create_data_func = getattr(data_class, "GetRootAs%s" % class_name)
 

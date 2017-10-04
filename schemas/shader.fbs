@@ -3,10 +3,33 @@ namespace yengine_data;
 file_identifier "SHDR";
 file_extension "shdr";
 
+enum ParamType : ubyte {
+  kInvalid,
+  kFloat,
+  kFloat2,
+  kFloat3,
+  kTexture,
+  kSampler,
+}
+
+struct RegisterOffset {
+  index:ubyte;
+  offset:ubyte = 0;
+}
+
+table ParamData {
+  name:string;
+  param_type:ParamType;
+  param_register:RegisterOffset;
+}
+
 table Variant {
   name:string;
+  vertex_decl:string;
   vertex_shader:[ubyte];
+  vertex_params:[ParamData];
   pixel_shader:[ubyte];
+  pixel_params:[ParamData];
 }
 
 table Shader {
