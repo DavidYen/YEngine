@@ -39,6 +39,15 @@ template("compile_vertex_declaration") {
   }
 }
 
+template("compile_sampler_declaration") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.sampler_json
+
+    schema_file = "//schemas/sampler.fbs"
+    output_extension = "smpl"
+  }
+}
+
 template("compile_shader") {
   action(target_name) {
     script = "//build/cmd_wrapper.py"

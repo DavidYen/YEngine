@@ -6,6 +6,7 @@
 
 #include <rapidjson/document.h>
 #include <schemas/module_binary_generated.h>
+#include <schemas/sampler_generated.h>
 #include <schemas/shader_generated.h>
 #include <schemas/vertex_decl_generated.h>
 
@@ -49,10 +50,13 @@ namespace {
         return false;
 
       case yengine_data::ModuleCommandType::RegisterVertexDecls:
-        return ValidateRegisterVertDecl(command_args);
+        return ValidateRegisterVertDecls(command_args);
+
+      case yengine_data::ModuleCommandType::RegisterSamplers:
+        return ValidateRegisterSamplers(command_args);
 
       case yengine_data::ModuleCommandType::RegisterShaders:
-        return ValidateRegisterShader(command_args);
+        return ValidateRegisterShaders(command_args);
 
       default:
         std::cerr << "Unimplemented Command Type:" << command_type_name
@@ -62,7 +66,7 @@ namespace {
     }
 
    private:
-    bool ValidateRegisterVertDecl(const std::vector<CommandArg>& command_args) {
+    bool ValidateRegisterVertDecls(const std::vector<CommandArg>& command_args) {
       if (command_args.empty()) {
         std::cerr << "Register Vertex Declaration expected arguments."
                   << std::endl;
@@ -101,7 +105,47 @@ namespace {
       return true;
     }
 
-    bool ValidateRegisterShader(const std::vector<CommandArg>& command_args) {
+    bool ValidateRegisterSamplers(const std::vector<CommandArg>& command_args) {
+      if (command_args.empty()) {
+        std::cerr << "Register Samplers expected sampler arguments."
+                  << std::endl;
+        return false;
+      }
+
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& asset =
+          command_arg.arg_data;
+
+        if (asset.binary_type != yengine_data::BinaryType::kSampler) {
+          std::cerr << "Sampler Registration expected kSampler type, got "
+                    << "\""
+                    << yengine_data::EnumNameBinaryType(asset.binary_type)
+                    << "\": " << name << std::endl;
+          return false;
+        }
+
+        if (mSamplers.count(name)) {
+          std::cerr << "Sampler Declaration \"" << name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifySamplerBuffer(verifier)) {
+          std::cerr << "Invalid Sampler Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        mSamplers.insert(name);
+      }
+      return true;
+    }
+
+    bool ValidateRegisterShaders(const std::vector<CommandArg>& command_args) {
       if (command_args.empty()) {
         std::cerr << "Register Shader command expected shader arguments."
                   << std::endl;
@@ -162,6 +206,7 @@ namespace {
     }
 
     std::unordered_set<std::string> mVertexDecls;
+    std::unordered_set<std::string> mSamplers;
     std::unordered_set<std::string> mShaders;
   };
 }

@@ -1,0 +1,29 @@
+namespace yengine_data;
+
+file_identifier "SMPL";
+file_extension "smpl";
+
+enum FilterType : ubyte {
+  kInvalid,
+  kLinear,
+  kPoint,
+}
+
+enum TextureAddressType : ubyte {
+  kInvalid,
+  kWrap,
+  kMirror,
+  kClamp,
+}
+
+table Sampler {
+  name:string;
+  mag_filter:FilterType = kInvalid;
+  min_filter:FilterType = kInvalid;
+  mip_filter:FilterType = kInvalid;
+  address_u:TextureAddressType = kInvalid;
+  address_v:TextureAddressType = kInvalid;
+  address_w:TextureAddressType = kInvalid;
+}
+
+root_type Sampler;

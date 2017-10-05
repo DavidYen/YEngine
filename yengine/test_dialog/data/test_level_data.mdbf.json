@@ -7,6 +7,11 @@
       "position_texcoord-vertex",
     ],
   }, {
+    "command_type": "RegisterSamplers",
+    "command_args": [
+      "point-sampler",
+    ],
+  }, {
     "command_type": "RegisterShaders",
     "command_args": [
       "full_screen",

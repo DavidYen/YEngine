@@ -90,6 +90,11 @@ compile_schema("module_binary_types_schema") {
   schema_class = "BinaryTypes"
 }
 
+compile_schema("sampler_schema") {
+  schema = "sampler"
+  schema_class = "Sampler"
+}
+
 compile_schema("shader_schema") {
   schema = "shader"
   schema_class = "Shader"

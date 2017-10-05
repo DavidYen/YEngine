@@ -11,6 +11,7 @@ DATA_CLASS_MAP = {
   # File Extension: (Binary Type Enum, Root Class Name)
   ".shdr": ("kShader", "Shader"),
   ".vtxd": ("kVertexDecl", "VertexDecl"),
+  ".smpl": ("kSampler", "Sampler"),
 }
 
 def do_main(argv):

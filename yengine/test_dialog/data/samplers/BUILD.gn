@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_sampler_declaration("point_sampler") {
+  sampler_json = "point_sampler.json"
+}

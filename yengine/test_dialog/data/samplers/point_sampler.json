@@ -3,6 +3,6 @@
   "mag_filter": "kPoint",
   "min_filter": "kPoint",
   "mip_filter": "kPoint",
-  "AddressU": "kClamp",
-  "AddressV": "kClamp",
+  "address_u": "kClamp",
+  "address_v": "kClamp",
 }
