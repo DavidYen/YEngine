@@ -48,10 +48,10 @@ namespace {
                   << std::endl;
         return false;
 
-      case yengine_data::ModuleCommandType::RegisterVertexDecl:
+      case yengine_data::ModuleCommandType::RegisterVertexDecls:
         return ValidateRegisterVertDecl(command_args);
 
-      case yengine_data::ModuleCommandType::RegisterShader:
+      case yengine_data::ModuleCommandType::RegisterShaders:
         return ValidateRegisterShader(command_args);
 
       default:
@@ -63,98 +63,101 @@ namespace {
 
    private:
     bool ValidateRegisterVertDecl(const std::vector<CommandArg>& command_args) {
-      if (command_args.size() != 1) {
-        std::cerr << "Register Vertex Declaration expected 1 argument."
+      if (command_args.empty()) {
+        std::cerr << "Register Vertex Declaration expected arguments."
                   << std::endl;
         return false;
       }
-      const CommandArg& command_arg = command_args.front();
-      const std::string& decl_name = command_arg.arg_name;
-      const ytools::ymodule_binary_compiler::AssetData& decl_asset =
-        command_arg.arg_data;
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& decl_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& decl_asset =
+          command_arg.arg_data;
 
-      if (decl_asset.binary_type != yengine_data::BinaryType::kVertexDecl) {
-        std::cerr << "Vertex Decl Registration expected kVertexDecl type, got "
-                  << "\""
-                  << yengine_data::EnumNameBinaryType(decl_asset.binary_type)
-                  << "\": " << decl_name << std::endl;
-        return false;
+        if (decl_asset.binary_type != yengine_data::BinaryType::kVertexDecl) {
+          std::cerr << "Vertex Decl Registration expected kVertexDecl type, got "
+                    << "\""
+                    << yengine_data::EnumNameBinaryType(decl_asset.binary_type)
+                    << "\": " << decl_name << std::endl;
+          return false;
+        }
+
+        if (mVertexDecls.count(decl_name)) {
+          std::cerr << "Vertex Declaration \"" << decl_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyVertexDeclBuffer(verifier)) {
+          std::cerr << "Invalid Vertex Declaration Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        mVertexDecls.insert(decl_name);
       }
-
-      if (mVertexDecls.count(decl_name)) {
-        std::cerr << "Vertex Declaration \"" << decl_name
-                  << "\" has already been registered." << std::endl;
-        return false;
-      }
-
-      // Validate the binary file
-      flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
-                                     command_arg.arg_binary.size());
-      if (!yengine_data::VerifyVertexDeclBuffer(verifier)) {
-        std::cerr << "Invalid Vertex Declaration Binary: "
-                  << command_arg.arg_data.file_path << std::endl;
-        return false;
-      }
-
-      mVertexDecls.insert(decl_name);
       return true;
     }
 
     bool ValidateRegisterShader(const std::vector<CommandArg>& command_args) {
-      if (command_args.size() != 1) {
-        std::cerr << "Register Shader command expected 1 shader argument."
+      if (command_args.empty()) {
+        std::cerr << "Register Shader command expected shader arguments."
                   << std::endl;
         return false;
       }
-      const CommandArg& command_arg = command_args.front();
-      const std::string& shader_name = command_arg.arg_name;
-      const ytools::ymodule_binary_compiler::AssetData& shader_asset =
-        command_arg.arg_data;
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& shader_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& shader_asset =
+          command_arg.arg_data;
 
-      if (shader_asset.binary_type != yengine_data::BinaryType::kShader) {
-        std::cerr << "Shader Registration expected Shader type, got \""
-                  << yengine_data::EnumNameBinaryType(shader_asset.binary_type)
-                  << "\": " << shader_name << std::endl;
-        return false;
-      }
+        if (shader_asset.binary_type != yengine_data::BinaryType::kShader) {
+          std::cerr << "Shader Registration expected Shader type, got \""
+                    << yengine_data::EnumNameBinaryType(shader_asset.binary_type)
+                    << "\": " << shader_name << std::endl;
+          return false;
+        }
 
-      if (mShaders.count(shader_name)) {
-        std::cerr << "Shader \"" << shader_name
-                  << "\" has already been registered." << std::endl;
-        return false;
-      }
+        if (mShaders.count(shader_name)) {
+          std::cerr << "Shader \"" << shader_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
 
-      // Validate the binary file.
-      flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
-                                     command_arg.arg_binary.size());
-      if (!yengine_data::VerifyShaderBuffer(verifier)) {
-        std::cerr << "Invalid Shader Binary: "
-                  << command_arg.arg_data.file_path << std::endl;
-        return false;
-      }
+        // Validate the binary file.
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyShaderBuffer(verifier)) {
+          std::cerr << "Invalid Shader Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
 
-      // Validate Shader Data
-      const yengine_data::Shader* shader =
-          yengine_data::GetShader(command_arg.arg_binary.data());
+        // Validate Shader Data
+        const yengine_data::Shader* shader =
+            yengine_data::GetShader(command_arg.arg_binary.data());
 
-      if (shader->variants()->size() == 0) {
-        std::cerr << "Shader \"" << shader_name << "\""
-                  << " does not contain any shader variants."
-                  << std::endl;
-        return false;
-      }
-
-      for (const yengine_data::Variant* variant : *shader->variants()) {
-        if (!mVertexDecls.count(variant->vertex_decl()->c_str())) {
+        if (shader->variants()->size() == 0) {
           std::cerr << "Shader \"" << shader_name << "\""
-                    << " uses unknown vertex declaration: "
-                    << variant->vertex_decl()->c_str()
+                    << " does not contain any shader variants."
                     << std::endl;
           return false;
         }
+
+        for (const yengine_data::Variant* variant : *shader->variants()) {
+          if (!mVertexDecls.count(variant->vertex_decl()->c_str())) {
+            std::cerr << "Shader \"" << shader_name << "\""
+                      << " uses unknown vertex declaration: "
+                      << variant->vertex_decl()->c_str()
+                      << std::endl;
+            return false;
+          }
+        }
+
+        mShaders.insert(shader_name);
       }
 
-      mShaders.insert(shader_name);
       return true;
     }
 

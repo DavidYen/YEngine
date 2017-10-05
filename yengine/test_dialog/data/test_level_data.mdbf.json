@@ -1,17 +1,13 @@
 {
   "name": "test_level",
   "module_commands": [{
-    "command_type": "RegisterVertexDecl",
+    "command_type": "RegisterVertexDecls",
     "command_args": [
       "position-vertex",
-    ],
-  }, {
-    "command_type": "RegisterVertexDecl",
-    "command_args": [
       "position_texcoord-vertex",
     ],
-  },{
-    "command_type": "RegisterShader",
+  }, {
+    "command_type": "RegisterShaders",
     "command_args": [
       "full_screen",
     ],

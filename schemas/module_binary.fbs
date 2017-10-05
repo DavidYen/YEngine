@@ -10,11 +10,11 @@ enum ModuleCommandType : byte {
 
   // RegisterVertexDecl(vertex_decl_name)
   //   Registers a vertex declaration and makes it available.
-  RegisterVertexDecl,
+  RegisterVertexDecls,
 
   // RegisterShader(shader_name)
   //   Registers a shader and makes the shader available.
-  RegisterShader,
+  RegisterShaders,
 }
 
 table BinaryData {
