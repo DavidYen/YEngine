@@ -1,0 +1,31 @@
+include "vertex_member_types.fbs";
+include "vertex_usage_types.fbs";
+
+namespace yengine_data;
+
+file_identifier "MDEL";
+file_extension "mdel";
+
+enum DrawFormat : ubyte {
+  kTriangleList,
+}
+
+table VertexData {
+  members:[float];
+}
+
+table VertexList {
+  data_usage:VertexUsageType;
+  data_type:VertexMemberType;
+  format:DrawFormat;
+  indexed:bool = false;
+  vertices:[VertexData];
+  indices:[uint];
+}
+
+table Model {
+  name:string;
+  vertex_datas:[VertexList];
+}
+
+root_type Model;

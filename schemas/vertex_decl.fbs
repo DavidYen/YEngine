@@ -1,28 +1,20 @@
+include "vertex_member_types.fbs";
+include "vertex_usage_types.fbs";
+
 namespace yengine_data;
 
 file_identifier "VTXD";
 file_extension "vtxd";
-
-enum VertexMemberTypes : byte {
-  kFloat,
-  kFloat2,
-  kFloat3,
-}
-
-enum VertexMemberUsage : byte {
-  kPosition,
-  kTexCoord,
-}
 
 table VertexMember {
   // Offset from the vertex structure. Calculated if empty.
   offset:byte = 0;
 
   // Member type.
-  type:VertexMemberTypes;
+  type:VertexMemberType;
 
   // Usage Data for the member.
-  usage:VertexMemberUsage;
+  usage:VertexUsageType;
   usage_index:byte = 0;
 }
 

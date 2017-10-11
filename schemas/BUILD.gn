@@ -76,6 +76,16 @@ template("compile_schema") {
   }
 }
 
+compile_schema("model_schema") {
+  schema = "model"
+  schema_class = "Model"
+
+  data_deps_cpp = [
+    ":vertex_member_types_schema_cpp",
+    ":vertex_usage_types_schema_cpp",
+  ]
+}
+
 compile_schema("module_binary_schema") {
   schema = "module_binary"
   schema_class = "ModuleBinary"
@@ -87,7 +97,7 @@ compile_schema("module_binary_schema") {
 
 compile_schema("module_binary_types_schema") {
   schema = "module_binary_types"
-  schema_class = "BinaryTypes"
+  schema_class = "BinaryType"
 }
 
 compile_schema("sampler_schema") {
@@ -103,4 +113,19 @@ compile_schema("shader_schema") {
 compile_schema("vertex_decl_schema") {
   schema = "vertex_decl"
   schema_class = "VertexDecl"
+
+  data_deps_cpp = [
+    ":vertex_member_types_schema_cpp",
+    ":vertex_usage_types_schema_cpp",
+  ]
+}
+
+compile_schema("vertex_member_types_schema") {
+  schema = "vertex_member_types"
+  schema_class = "VertexMemberType"
+}
+
+compile_schema("vertex_usage_types_schema") {
+  schema = "vertex_usage_types"
+  schema_class = "VertexUsageType"
 }

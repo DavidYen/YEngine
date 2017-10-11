@@ -1,6 +1,6 @@
 namespace yengine_data;
 
-enum BinaryType : byte {
+enum BinaryType : ubyte {
   kShader,
   kVertexDecl,
   kSampler,

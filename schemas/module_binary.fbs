@@ -5,7 +5,7 @@ namespace yengine_data;
 file_identifier "MDBF";
 file_extension "mdbf";
 
-enum ModuleCommandType : byte {
+enum ModuleCommandType : ubyte {
   kInvalidModuleCommandType,
 
   // RegisterVertexDecl(vertex_decl_name1, [vertex_decl_name2]...)
