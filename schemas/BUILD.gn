@@ -76,9 +76,9 @@ template("compile_schema") {
   }
 }
 
-compile_schema("model_schema") {
-  schema = "model"
-  schema_class = "Model"
+compile_schema("mesh_schema") {
+  schema = "mesh"
+  schema_class = "Mesh"
 
   data_deps_cpp = [
     ":vertex_member_types_schema_cpp",

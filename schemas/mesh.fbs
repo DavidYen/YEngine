@@ -3,8 +3,8 @@ include "vertex_usage_types.fbs";
 
 namespace yengine_data;
 
-file_identifier "MDEL";
-file_extension "mdel";
+file_identifier "MESH";
+file_extension "mesh";
 
 enum DrawFormat : ubyte {
   kTriangleList,
@@ -23,9 +23,9 @@ table VertexList {
   indices:[uint];
 }
 
-table Model {
+table Mesh {
   name:string;
   vertex_datas:[VertexList];
 }
 
-root_type Model;
+root_type Mesh;
