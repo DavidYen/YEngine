@@ -5,7 +5,9 @@
 #include <unordered_set>
 
 #include <rapidjson/document.h>
+#include <schemas/mesh_generated.h>
 #include <schemas/module_binary_generated.h>
+#include <schemas/render_targets_generated.h>
 #include <schemas/sampler_generated.h>
 #include <schemas/shader_generated.h>
 #include <schemas/vertex_decl_generated.h>
@@ -57,6 +59,12 @@ namespace {
 
       case yengine_data::ModuleCommandType::RegisterShaders:
         return ValidateRegisterShaders(command_args);
+
+      case yengine_data::ModuleCommandType::RegisterMeshes:
+        return ValidateRegisterMeshes(command_args);
+
+      case yengine_data::ModuleCommandType::RegisterRenderTargets:
+        return ValidateRegisterRenderTargets(command_args);
 
       default:
         std::cerr << "Unimplemented Command Type:" << command_type_name
@@ -205,9 +213,157 @@ namespace {
       return true;
     }
 
+    bool ValidateRegisterMeshes(const std::vector<CommandArg>& command_args) {
+      if (command_args.empty()) {
+        std::cerr << "Register Mesh command expected mesh arguments."
+                  << std::endl;
+        return false;
+      }
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& mesh_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& mesh_asset =
+            command_arg.arg_data;
+
+        if (mesh_asset.binary_type != yengine_data::BinaryType::kMesh) {
+          std::cerr << "Mesh Registration expected Mesh type, got \""
+                    << yengine_data::EnumNameBinaryType(mesh_asset.binary_type)
+                    << "\": " << mesh_name << std::endl;
+          return false;
+        }
+
+        if (mMeshes.count(mesh_name)) {
+          std::cerr << "Mesh \"" << mesh_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file.
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyMeshBuffer(verifier)) {
+          std::cerr << "Invalid Mesh Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        // Validate Mesh Data
+        const yengine_data::Mesh* mesh =
+            yengine_data::GetMesh(command_arg.arg_binary.data());
+
+        mMeshes.insert(mesh->name()->c_str());
+      }
+
+      return true;
+    }
+
+    bool ValidateRegisterRenderTargets(
+        const std::vector<CommandArg>& command_args) {
+      if (command_args.empty()) {
+        std::cerr << "Register Render Targets command expected render"
+                  << " target arguments."
+                  << std::endl;
+        return false;
+      }
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& render_targets_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& render_targets_asset =
+            command_arg.arg_data;
+
+        if (render_targets_asset.binary_type !=
+            yengine_data::BinaryType::kRenderTargets) {
+          std::cerr << "Render Targets Registration got unexpected type \""
+                    << yengine_data::EnumNameBinaryType(
+                           render_targets_asset.binary_type)
+                    << "\": " << render_targets_name << std::endl;
+          return false;
+        }
+
+        if (mRenderTargets.count(render_targets_name)) {
+          std::cerr << "Render Targets \"" << render_targets_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file.
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyRenderTargetsBuffer(verifier)) {
+          std::cerr << "Invalid Render Targets Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        // Validate Mesh Data
+        const yengine_data::RenderTargets* render_targets =
+            yengine_data::GetRenderTargets(command_arg.arg_binary.data());
+
+        // Validate the render target definition.
+        std::unordered_set<std::string> render_target_names;
+        for (const auto& render_target : *render_targets->render_targets()) {
+          // Make sure names are unique within the list of targets.
+          std::string render_target_name(render_target->name()->c_str());
+          if (render_target_names.count(render_target_name)) {
+            std::cerr << "Render Targets \"" << render_target_name
+                      << "\" declared multiple times." << std::endl;
+            return false;
+          }
+          
+
+          // Make sure the width/height percentages are valid.
+          // 10x is arbitrary, but I don't see any reason why someone would need
+          // a 10x width or height...
+          if (render_target->width_percent() <= 0.0f ||
+              render_target->width_percent() >= 10.0f) {
+            std::cerr << "Render Target (" << render_target_name
+                      << ") has an invalid width percentage: "
+                      << render_target->width_percent() << std::endl;
+            return false;
+          }
+
+          if (render_target->height_percent() <= 0.0f ||
+              render_target->height_percent() >= 10.0f) {
+            std::cerr << "Render Target (" << render_target_name
+                      << ") has an invalid height percentage: "
+                      << render_target->height_percent() << std::endl;
+            return false;
+          }
+
+          // Make sure the render format is valid.
+          if (render_target->render_format() ==
+                  yengine_data::RenderFormat::kInvalid ||
+              static_cast<int>(render_target->render_format()) < 
+                  static_cast<int>(yengine_data::RenderFormat::MIN) ||
+              static_cast<int>(render_target->render_format()) > 
+                  static_cast<int>(yengine_data::RenderFormat::MAX)) {
+            std::cerr << "Render Target (" << render_target_name
+                      << ") has an invalid render format."
+                      << std::endl;
+            return false;
+          }
+
+          render_target_names.insert(std::move(render_target_name));
+        }
+
+        // Make sure render targets are actually defined.
+        if (render_target_names.empty()) {
+          std::cerr << "Render Targets ("
+                    << render_targets->name()->c_str()
+                    << ") has no render target definitions."
+                    << std::endl;
+          return false;
+        }
+
+        mRenderTargets.insert(render_targets->name()->c_str());
+      }
+
+      return true;
+    }
+
     std::unordered_set<std::string> mVertexDecls;
     std::unordered_set<std::string> mSamplers;
     std::unordered_set<std::string> mShaders;
+    std::unordered_set<std::string> mMeshes;
+    std::unordered_set<std::string> mRenderTargets;
   };
 }
 

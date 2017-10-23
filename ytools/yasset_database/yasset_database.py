@@ -10,6 +10,7 @@ import sys
 DATA_CLASS_MAP = {
   # File Extension: (Binary Type Enum, Root Class Name)
   ".mesh": ("kMesh", "Mesh"),
+  ".rtgs": ("kRenderTargets", "RenderTargets"),
   ".shdr": ("kShader", "Shader"),
   ".smpl": ("kSampler", "Sampler"),
   ".vtxd": ("kVertexDecl", "VertexDecl"),

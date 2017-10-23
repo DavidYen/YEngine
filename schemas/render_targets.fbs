@@ -1,0 +1,24 @@
+namespace yengine_data;
+
+file_identifier "RTGS";
+file_extension "rtgs";
+
+enum RenderFormat : ubyte {
+  kInvalid,
+  kA8R8G8B8,
+  kFloat32,
+}
+
+table RenderTarget {
+  name:string;
+  width_percent:float = 1.0;
+  height_percent:float = 1.0;
+  render_format:RenderFormat = kA8R8G8B8;
+}
+
+table RenderTargets {
+  name:string;
+  render_targets:[RenderTarget];
+}
+
+root_type RenderTargets;

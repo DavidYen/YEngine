@@ -3,6 +3,7 @@ import("//build/build_asset.gni")
 compile_asset_database("test_dialog_asset_database") {
   sources = [
     "${target_gen_dir}/mesh/unit_cube.mesh",
+    "${target_gen_dir}/render_targets/deferred_render_targets.rtgs",
     "${target_gen_dir}/samplers/point_sampler.smpl",
     "${target_gen_dir}/shaders/full_screen.shdr",
     "${target_gen_dir}/vertex_types/position.vtxd",
@@ -13,6 +14,7 @@ compile_asset_database("test_dialog_asset_database") {
 
   deps = [
     "mesh:unit_cube",
+    "render_targets:deferred_render_targets",
     "samplers:point_sampler",
     "shaders:full_screen",
     "vertex_types:position",

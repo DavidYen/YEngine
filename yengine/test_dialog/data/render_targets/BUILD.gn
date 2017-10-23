@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_render_targets("deferred_render_targets") {
+  render_targets_json = "deferred_render_targets.json"
+}

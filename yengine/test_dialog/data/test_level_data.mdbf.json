@@ -14,7 +14,17 @@
   }, {
     "command_type": "RegisterShaders",
     "command_args": [
-      "full_screen",
+      "full-screen",
+    ],
+  }, {
+    "command_type": "RegisterMeshes",
+    "command_args": [
+      "unit-cube",
+    ],
+  }, {
+    "command_type": "RegisterRenderTargets",
+    "command_args": [
+      "deferred-gbuffer",
     ],
   }]
 }

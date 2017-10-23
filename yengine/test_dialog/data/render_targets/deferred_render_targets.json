@@ -1,0 +1,24 @@
+{
+  "name": "deferred-gbuffer",
+  "render_targets": [{
+    "name": "gbuffer.color",
+    "width_percent": 1.0,
+    "height_percent": 1.0,
+    "render_format": "kA8R8G8B8"
+  }, {
+    "name": "gbuffer.normal",
+    "width_percent": 1.0,
+    "height_percent": 1.0,
+    "render_format": "kA8R8G8B8"
+  }, {
+    "name": "gbuffer.depth",
+    "width_percent": 1.0,
+    "height_percent": 1.0,
+    "render_format": "kFloat32"
+  }, {
+    "name": "gbuffer.lightmap",
+    "width_percent": 1.0,
+    "height_percent": 1.0,
+    "render_format": "kA8R8G8B8"
+  }]
+}

@@ -9,16 +9,24 @@ enum ModuleCommandType : ubyte {
   kInvalidModuleCommandType,
 
   // RegisterVertexDecl(vertex_decl_name1, [vertex_decl_name2]...)
-  //   Registers a vertex declaration and makes it available.
+  //   Registers vertex declarations and makes the declaration names available.
   RegisterVertexDecls,
 
   // RegisterSamplers(sampler_name1, [sampler_name2]...)
-  //   Registers a sampler and makes it available.
+  //   Registers samplers and makes the sampler names available.
   RegisterSamplers,
 
   // RegisterShader(shader_name1, [shader_name2]...)
-  //   Registers a shader and makes the shader available.
+  //   Registers shaders and makes the shader names available.
   RegisterShaders,
+
+  // RegisterMeshes(mesh_name1, [mesh_name2]...)
+  //   Registers meshes and makes the mesh names available.
+  RegisterMeshes,
+
+  // RegisterRenderTargets(render_target_name1, [render_target_name2]...)
+  //   Registers render targets and makes the render target names available.
+  RegisterRenderTargets,
 }
 
 table BinaryData {

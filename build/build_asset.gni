@@ -30,6 +30,15 @@ template("compile_flatbuffer_json") {
   }
 }
 
+template("compile_render_targets") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.render_targets_json
+
+    schema_file = "//schemas/render_targets.fbs"
+    output_extension = "rtgs"
+  }
+}
+
 template("compile_vertex_declaration") {
   compile_flatbuffer_json(target_name) {
     input_json = invoker.vertex_decl_json
