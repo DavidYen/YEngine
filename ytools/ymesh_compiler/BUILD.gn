@@ -1,0 +1,19 @@
+
+tool_executable("ymesh_compiler") {
+  sources = [
+    "main.cpp",
+    "mesh_data.cpp",
+    "mesh_data.h",
+    "mesh_data_inline.cpp",
+    "mesh_data_inline.h",
+  ]
+
+  deps = [
+    "//schemas:mesh_schema_cpp",
+    "//third_party/build/google/gflags",
+    "//third_party/build/google/flatbuffers",
+    "//third_party/build/rapidjson",
+    "//ytools/file_utils",
+    "//ytools/report_utils",
+  ]
+}

@@ -7,24 +7,21 @@ file_identifier "MESH";
 file_extension "mesh";
 
 enum DrawFormat : ubyte {
+  kInvalid,
   kTriangleList,
-}
-
-table VertexData {
-  members:[float];
 }
 
 table VertexList {
   data_usage:VertexUsageType;
   data_type:VertexMemberType;
-  format:DrawFormat;
   indexed:bool = false;
-  vertices:[VertexData];
+  vertices:[float];
   indices:[uint];
 }
 
 table Mesh {
   name:string;
+  format:DrawFormat;
   vertex_datas:[VertexList];
 }
 

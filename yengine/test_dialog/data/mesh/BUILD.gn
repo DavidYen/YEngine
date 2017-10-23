@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_mesh("unit_cube") {
+  mesh_file = "unit_cube.mesh.json"
+}

@@ -1,6 +1,8 @@
 namespace yengine_data;
 
 enum VertexUsageType : ubyte {
+  kInvalid,
+
   kPosition,
   kNormal,
   kTangent,

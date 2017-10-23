@@ -48,6 +48,27 @@ template("compile_sampler_declaration") {
   }
 }
 
+template("compile_mesh") {
+  action(target_name) {
+    script = "//build/cmd_wrapper.py"
+    mesh_file = invoker.mesh_file
+    mesh_output = "${target_gen_dir}/${target_name}.mesh"
+
+    sources = [ mesh_file ]
+    outputs = [ mesh_output ]
+    depfile = "${target_gen_dir}/${target_name}.d"
+
+    args = [ "--", "ymesh_compiler",
+             "--input_file", rebase_path(mesh_file, root_build_dir),
+             "--output_file", rebase_path(mesh_output, root_build_dir),
+             "--dep_file", rebase_path(depfile, root_build_dir) ]
+
+    deps = [
+      "//ytools/ymesh_compiler",
+    ]
+  }
+}
+
 template("compile_shader") {
   action(target_name) {
     script = "//build/cmd_wrapper.py"

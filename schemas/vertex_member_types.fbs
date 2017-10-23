@@ -1,6 +1,8 @@
 namespace yengine_data;
 
 enum VertexMemberType : ubyte {
+  kInvalid,
+
   kFloat,
   kFloat2,
   kFloat3,

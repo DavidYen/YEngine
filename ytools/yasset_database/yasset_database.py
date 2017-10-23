@@ -9,9 +9,10 @@ import sys
 # This map must be kept up to date with module_binary_types.fbs.
 DATA_CLASS_MAP = {
   # File Extension: (Binary Type Enum, Root Class Name)
+  ".mesh": ("kMesh", "Mesh"),
   ".shdr": ("kShader", "Shader"),
-  ".vtxd": ("kVertexDecl", "VertexDecl"),
   ".smpl": ("kSampler", "Sampler"),
+  ".vtxd": ("kVertexDecl", "VertexDecl"),
 }
 
 def do_main(argv):

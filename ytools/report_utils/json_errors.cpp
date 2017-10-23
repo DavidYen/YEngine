@@ -64,4 +64,32 @@ bool JsonErrors::ParseJsonFile(const char* file_path,
   return true;
 }
 
+const char* JsonErrors::StringifyValueType(const rapidjson::Value& value) {
+  switch (value.GetType()) {
+    case rapidjson::kNullType:
+      return "null";
+
+    case rapidjson::kFalseType:
+      return "false";
+
+    case rapidjson::kTrueType:
+      return "true";
+
+    case rapidjson::kObjectType:
+      return "object";
+
+    case rapidjson::kArrayType:
+      return "array";
+
+    case rapidjson::kStringType:
+      return "string";
+
+    case rapidjson::kNumberType:
+      return "number";
+
+    default:
+      return "Unknown Value";
+  }
+}
+
 }} // namespace ytools { namespace report_utils {
