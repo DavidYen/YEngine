@@ -1,0 +1,7 @@
+{
+  "name": "point_light_render_type",
+  "shader": "point_light",
+  "render_passes": [
+    "LightPass",
+  ],
+}

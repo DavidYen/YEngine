@@ -27,6 +27,14 @@ enum ModuleCommandType : ubyte {
   // RegisterRenderTargets(render_target_name1, [render_target_name2]...)
   //   Registers render targets and makes the render target names available.
   RegisterRenderTargets,
+
+  // RegisterRenderPasses(render_passes1, [render_passes2]...)
+  //   Registers render passes making it available to activate.
+  RegisterRenderPasses,
+
+  // RegisterRenderType(render_type1, [render_type2]...)
+  //   Registers render type making it available to assign to objects.
+  RegisterRenderType,
 }
 
 table BinaryData {

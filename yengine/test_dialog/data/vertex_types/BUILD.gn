@@ -4,6 +4,14 @@ compile_vertex_declaration("position") {
   vertex_decl_json = "position.json"
 }
 
+compile_vertex_declaration("position_depth") {
+  vertex_decl_json = "position_depth.json"
+}
+
+compile_vertex_declaration("position_normal_tangent_texcoord") {
+  vertex_decl_json = "position_normal_tangent_texcoord.json"
+}
+
 compile_vertex_declaration("position_texcoord") {
   vertex_decl_json = "position_texcoord.json"
 }

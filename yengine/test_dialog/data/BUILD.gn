@@ -3,10 +3,20 @@ import("//build/build_asset.gni")
 compile_asset_database("test_dialog_asset_database") {
   sources = [
     "${target_gen_dir}/mesh/unit_cube.mesh",
+    "${target_gen_dir}/render_passes/deferred_render_passes.rpas",
     "${target_gen_dir}/render_targets/deferred_render_targets.rtgs",
+    "${target_gen_dir}/render_types/directional_light_render_type.rtyp",
+    "${target_gen_dir}/render_types/full_screen_render_type.rtyp",
+    "${target_gen_dir}/render_types/point_light_render_type.rtyp",
+    "${target_gen_dir}/render_types/render_object_render_type.rtyp",
     "${target_gen_dir}/samplers/point_sampler.smpl",
+    "${target_gen_dir}/shaders/diffuse.shdr",
+    "${target_gen_dir}/shaders/directional_light.shdr",
     "${target_gen_dir}/shaders/full_screen.shdr",
+    "${target_gen_dir}/shaders/point_light.shdr",
     "${target_gen_dir}/vertex_types/position.vtxd",
+    "${target_gen_dir}/vertex_types/position_depth.vtxd",
+    "${target_gen_dir}/vertex_types/position_normal_tangent_texcoord.vtxd",
     "${target_gen_dir}/vertex_types/position_texcoord.vtxd",
   ]
 
@@ -14,10 +24,20 @@ compile_asset_database("test_dialog_asset_database") {
 
   deps = [
     "mesh:unit_cube",
+    "render_passes:deferred_render_passes",
     "render_targets:deferred_render_targets",
+    "render_types:directional_light_render_type",
+    "render_types:full_screen_render_type",
+    "render_types:point_light_render_type",
+    "render_types:render_object_render_type",
     "samplers:point_sampler",
+    "shaders:diffuse",
+    "shaders:directional_light",
     "shaders:full_screen",
+    "shaders:point_light",
     "vertex_types:position",
+    "vertex_types:position_depth",
+    "vertex_types:position_normal_tangent_texcoord",
     "vertex_types:position_texcoord",
   ]
 }

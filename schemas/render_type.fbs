@@ -1,0 +1,12 @@
+namespace yengine_data;
+
+file_identifier "RTYP";
+file_extension "rtyp";
+
+table RenderType {
+  name:string;
+  shader:string;
+  render_passes:[string];
+}
+
+root_type RenderType;

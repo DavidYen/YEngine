@@ -1,0 +1,69 @@
+{
+  "name": "diffuse",
+  "file": "diffuse.hlsl",
+  "variants": [{
+    "name": "diffuse",
+    "vertex_declaration": "position_normal_tangent_texcoord-vertex",
+    "vertex_shader": "DiffuseVertexShader",
+    "pixel_shader": "DiffusePixelShader",
+    "target": "5.1",
+    "debug": false,
+    "opt_level": 3,
+    "defines": [],
+
+    "ZEnable": true,
+    "CullMode": null,
+
+    "pixel_parameters": [{
+      "name": "world",
+      "type": "kFloat4x4",
+      "register": { "index": 0 },
+    }, {
+      "name": "view_proj",
+      "type": "kFloat4x4",
+      "register": { "index": 4 },
+    }, {
+      "name": "specular_intensity_power",
+      "type": "kFloat2",
+      "register": { "index": 5 },
+    }, {
+      "name": "texture_map",
+      "type": "kTexture",
+      "register": { "index": 0 },
+    }, {
+      "name": "texture_sampler",
+      "type": "kSampler",
+      "register": { "index": 0 },
+    }, {
+      "name": "normal_map",
+      "type": "kTexture",
+      "register": { "index": 1 },
+    }, {
+      "name": "normal_sampler",
+      "type": "kSampler",
+      "register": { "index": 1 },
+    }],
+  }, {
+    "name": "depthmap",
+    "vertex_declaration": "position_depth-vertex",
+    "vertex_shader": "DepthVertexShader",
+    "pixel_shader": "DepthPixelShader",
+    "target": "5.1",
+    "debug": false,
+    "opt_level": 3,
+    "defines": [],
+
+    "ZEnable": true,
+    "CullMode": null,
+
+    "pixel_parameters": [{
+      "name": "world",
+      "type": "kFloat4x4",
+      "register": { "index": 0 },
+    }, {
+      "name": "view_proj",
+      "type": "kFloat4x4",
+      "register": { "index": 4 },
+    }],
+  }]
+}

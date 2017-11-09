@@ -1,0 +1,17 @@
+import("//build/build_asset.gni")
+
+compile_render_type("directional_light_render_type") {
+  render_type_json = "directional_light_render_type.json"
+}
+
+compile_render_type("full_screen_render_type") {
+  render_type_json = "full_screen_render_type.json"
+}
+
+compile_render_type("point_light_render_type") {
+  render_type_json = "point_light_render_type.json"
+}
+
+compile_render_type("render_object_render_type") {
+  render_type_json = "render_object_render_type.json"
+}

@@ -100,9 +100,19 @@ compile_schema("module_binary_types_schema") {
   schema_class = "BinaryType"
 }
 
+compile_schema("render_passes_schema") {
+  schema = "render_passes"
+  schema_class = "RenderPasses"
+}
+
 compile_schema("render_targets_schema") {
   schema = "render_targets"
   schema_class = "RenderTargets"
+}
+
+compile_schema("render_type_schema") {
+  schema = "render_type"
+  schema_class = "RenderType"
 }
 
 compile_schema("sampler_schema") {

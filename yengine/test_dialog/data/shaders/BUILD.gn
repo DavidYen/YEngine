@@ -1,6 +1,21 @@
 import("//build/build_asset.gni")
 
+compile_shader("diffuse") {
+  shader_file = "diffuse.shdr.json"
+  inputs = [ "diffuse.hlsl" ]
+}
+
+compile_shader("directional_light") {
+  shader_file = "directional_light.shdr.json"
+  inputs = [ "directional_light.hlsl" ]
+}
+
 compile_shader("full_screen") {
   shader_file = "full_screen.shdr.json"
   inputs = [ "full_screen.hlsl" ]
+}
+
+compile_shader("point_light") {
+  shader_file = "point_light.shdr.json"
+  inputs = [ "point_light.hlsl" ]
 }

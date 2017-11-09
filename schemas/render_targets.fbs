@@ -9,10 +9,17 @@ enum RenderFormat : ubyte {
   kFloat32,
 }
 
+enum RenderTargetType : ubyte {
+  kInvalid,
+  kBackBuffer,
+  kCustom,
+}
+
 table RenderTarget {
   name:string;
-  width_percent:float = 1.0;
-  height_percent:float = 1.0;
+  type:RenderTargetType;
+  custom_width_percent:float = 1.0;
+  custom_height_percent:float = 1.0;
   render_format:RenderFormat = kA8R8G8B8;
 }
 

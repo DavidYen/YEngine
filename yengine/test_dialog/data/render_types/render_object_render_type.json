@@ -1,0 +1,8 @@
+{
+  "name": "render_object_render_type",
+  "shader": "diffuse",
+  "render_passes": [
+    "DiffusePass",
+    "ShadowMapPass",
+  ],
+}

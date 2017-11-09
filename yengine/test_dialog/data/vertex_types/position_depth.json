@@ -1,0 +1,12 @@
+{
+  "name": "position_depth-vertex",
+  "vertex_streams": [{
+    "vertex_members": [{
+      "type": "kFloat3",
+      "usage": "kPosition",
+    }, {
+      "type": "kFloat2",
+      "usage": "kDepth",
+    }],
+  }],
+}

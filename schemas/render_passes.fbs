@@ -1,0 +1,17 @@
+namespace yengine_data;
+
+file_identifier "RPAS";
+file_extension "rpas";
+
+table RenderPass {
+  name:string;
+  shader_variation:string;
+  render_targets:[string];
+}
+
+table RenderPasses {
+  name:string;
+  render_passes:[RenderPass];
+}
+
+root_type RenderPasses;

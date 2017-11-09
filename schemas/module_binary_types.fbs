@@ -2,7 +2,9 @@ namespace yengine_data;
 
 enum BinaryType : ubyte {
   kMesh,
+  kRenderPasses,
   kRenderTargets,
+  kRenderType,
   kSampler,
   kShader,
   kVertexDecl,

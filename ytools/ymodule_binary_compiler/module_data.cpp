@@ -7,7 +7,9 @@
 #include <rapidjson/document.h>
 #include <schemas/mesh_generated.h>
 #include <schemas/module_binary_generated.h>
+#include <schemas/render_passes_generated.h>
 #include <schemas/render_targets_generated.h>
+#include <schemas/render_type_generated.h>
 #include <schemas/sampler_generated.h>
 #include <schemas/shader_generated.h>
 #include <schemas/vertex_decl_generated.h>
@@ -65,6 +67,12 @@ namespace {
 
       case yengine_data::ModuleCommandType::RegisterRenderTargets:
         return ValidateRegisterRenderTargets(command_args);
+
+      case yengine_data::ModuleCommandType::RegisterRenderPasses:
+        return ValidateRegisterRenderPasses(command_args);
+
+      case yengine_data::ModuleCommandType::RegisterRenderType:
+        return ValidateRegisterRenderType(command_args);
 
       default:
         std::cerr << "Unimplemented Command Type:" << command_type_name
@@ -293,7 +301,7 @@ namespace {
           return false;
         }
 
-        // Validate Mesh Data
+        // Validate Render Targets Data
         const yengine_data::RenderTargets* render_targets =
             yengine_data::GetRenderTargets(command_arg.arg_binary.data());
 
@@ -312,19 +320,19 @@ namespace {
           // Make sure the width/height percentages are valid.
           // 10x is arbitrary, but I don't see any reason why someone would need
           // a 10x width or height...
-          if (render_target->width_percent() <= 0.0f ||
-              render_target->width_percent() >= 10.0f) {
+          if (render_target->custom_width_percent() <= 0.0f ||
+              render_target->custom_width_percent() >= 10.0f) {
             std::cerr << "Render Target (" << render_target_name
                       << ") has an invalid width percentage: "
-                      << render_target->width_percent() << std::endl;
+                      << render_target->custom_width_percent() << std::endl;
             return false;
           }
 
-          if (render_target->height_percent() <= 0.0f ||
-              render_target->height_percent() >= 10.0f) {
+          if (render_target->custom_height_percent() <= 0.0f ||
+              render_target->custom_height_percent() >= 10.0f) {
             std::cerr << "Render Target (" << render_target_name
                       << ") has an invalid height percentage: "
-                      << render_target->height_percent() << std::endl;
+                      << render_target->custom_height_percent() << std::endl;
             return false;
           }
 
@@ -341,7 +349,8 @@ namespace {
             return false;
           }
 
-          render_target_names.insert(std::move(render_target_name));
+          render_target_names.insert(render_target_name);
+          mRenderTargetNames.insert(render_target_name);
         }
 
         // Make sure render targets are actually defined.
@@ -359,11 +368,148 @@ namespace {
       return true;
     }
 
+    bool ValidateRegisterRenderPasses(
+        const std::vector<CommandArg>& command_args) {
+      if (command_args.empty()) {
+        std::cerr << "Register Render Passes command expected render"
+                  << " passees arguments."
+                  << std::endl;
+        return false;
+      }
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& render_passes_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& render_passes_asset =
+            command_arg.arg_data;
+
+        if (render_passes_asset.binary_type !=
+            yengine_data::BinaryType::kRenderPasses) {
+          std::cerr << "Render Passes Registration got unexpected type \""
+                    << yengine_data::EnumNameBinaryType(
+                           render_passes_asset.binary_type)
+                    << "\": " << render_passes_name << std::endl;
+          return false;
+        }
+
+        if (mRenderPasses.count(render_passes_name)) {
+          std::cerr << "Render Passes \"" << render_passes_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file.
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyRenderPassesBuffer(verifier)) {
+          std::cerr << "Invalid Render Passes Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        // Validate Render Passes Data
+        const yengine_data::RenderPasses* render_passes =
+            yengine_data::GetRenderPasses(command_arg.arg_binary.data());
+
+        // Validate the render targets actually exist.
+        std::unordered_set<std::string> render_pass_names;
+        for (const auto& render_pass : *render_passes->render_passes()) {
+          // Make sure names are unique within the list of targets.
+          std::string render_pass_name(render_pass->name()->c_str());
+          if (render_pass_names.count(render_pass_name)) {
+            std::cerr << "Render Passes \"" << render_pass_name
+                      << "\" declared multiple times." << std::endl;
+            return false;
+          }
+          render_pass_names.insert(render_pass_name);
+
+          // Make sure all the render targets actually exist.
+          for (const auto& render_target : *render_pass->render_targets()) {
+            if (0 == mRenderTargetNames.count(render_target->c_str())) {
+              std::cerr << "Render Pass references unknown Render Target \""
+                        << render_target->c_str() << "\"" << std::endl;
+              return false;
+            }
+          }
+        }
+
+        mRenderPasses.insert(render_passes->name()->c_str());
+      }
+
+      return true;
+    }
+
+    bool ValidateRegisterRenderType(
+        const std::vector<CommandArg>& command_args) {
+      if (command_args.empty()) {
+        std::cerr << "Register Render Type command expected render"
+                  << " passees arguments."
+                  << std::endl;
+        return false;
+      }
+      for (const CommandArg& command_arg : command_args) {
+        const std::string& render_type_name = command_arg.arg_name;
+        const ytools::ymodule_binary_compiler::AssetData& render_type_asset =
+            command_arg.arg_data;
+
+        if (render_type_asset.binary_type !=
+            yengine_data::BinaryType::kRenderType) {
+          std::cerr << "Render Type Registration got unexpected type \""
+                    << yengine_data::EnumNameBinaryType(
+                           render_type_asset.binary_type)
+                    << "\": " << render_type_name << std::endl;
+          return false;
+        }
+
+        const auto render_type_result = mRenderTypes.insert(render_type_name);
+        if (!render_type_result.second) {
+          std::cerr << "Render Type \"" << render_type_name
+                    << "\" has already been registered." << std::endl;
+          return false;
+        }
+
+        // Validate the binary file.
+        flatbuffers::Verifier verifier(command_arg.arg_binary.data(),
+                                       command_arg.arg_binary.size());
+        if (!yengine_data::VerifyRenderTypeBuffer(verifier)) {
+          std::cerr << "Invalid Render Type Binary: "
+                    << command_arg.arg_data.file_path << std::endl;
+          return false;
+        }
+
+        // Validate Render Type Data
+        const yengine_data::RenderType* render_type =
+            yengine_data::GetRenderType(command_arg.arg_binary.data());
+
+        // Validate the Shader.
+        std::string render_type_shader = render_type->shader()->c_str();
+        if (0 == mShaders.count(render_type_shader)) {
+          std::cerr << "Unknown Shader: " << render_type_shader << std::endl;
+          return false;
+        }
+
+        // Validate the Render Passes.
+        std::unordered_set<std::string> render_pass_names;
+        for (const auto& render_pass : *render_type->render_passes()) {
+          // Make sure names are unique within the list of targets.
+          const auto result = render_pass_names.insert(render_pass->c_str());
+          if (!result.second) {
+            std::cerr << "Render Pass name \"" << render_pass->c_str()
+                      << "\" used multiple times." << std::endl;
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
     std::unordered_set<std::string> mVertexDecls;
     std::unordered_set<std::string> mSamplers;
     std::unordered_set<std::string> mShaders;
     std::unordered_set<std::string> mMeshes;
     std::unordered_set<std::string> mRenderTargets;
+    std::unordered_set<std::string> mRenderTargetNames;
+    std::unordered_set<std::string> mRenderPasses;
+    std::unordered_set<std::string> mRenderTypes;
   };
 }
 

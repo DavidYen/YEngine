@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_render_passes("deferred_render_passes") {
+  render_passes_json = "deferred_render_passes.json"
+}

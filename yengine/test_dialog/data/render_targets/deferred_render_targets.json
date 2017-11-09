@@ -1,24 +1,31 @@
 {
   "name": "deferred-gbuffer",
   "render_targets": [{
-    "name": "gbuffer.color",
-    "width_percent": 1.0,
-    "height_percent": 1.0,
+    "name" : "BackBuffer",
+    "type" : "kBackBuffer",
+  }, {
+    "name": "GBuffer.Color",
+    "type" : "kCustom",
+    "custom_width_percent": 1.0,
+    "custom_height_percent": 1.0,
     "render_format": "kA8R8G8B8"
   }, {
-    "name": "gbuffer.normal",
-    "width_percent": 1.0,
-    "height_percent": 1.0,
+    "name": "GBuffer.Normal",
+    "type" : "kCustom",
+    "custom_width_percent": 1.0,
+    "custom_height_percent": 1.0,
     "render_format": "kA8R8G8B8"
   }, {
-    "name": "gbuffer.depth",
-    "width_percent": 1.0,
-    "height_percent": 1.0,
+    "name": "GBuffer.Depth",
+    "type" : "kCustom",
+    "custom_width_percent": 1.0,
+    "custom_height_percent": 1.0,
     "render_format": "kFloat32"
   }, {
-    "name": "gbuffer.lightmap",
-    "width_percent": 1.0,
-    "height_percent": 1.0,
+    "name": "GBuffer.LightMap",
+    "type" : "kCustom",
+    "custom_width_percent": 1.0,
+    "custom_height_percent": 1.0,
     "render_format": "kA8R8G8B8"
   }]
 }

@@ -8,6 +8,7 @@ enum ParamType : ubyte {
   kFloat,
   kFloat2,
   kFloat3,
+  kFloat4x4,
   kTexture,
   kSampler,
 }

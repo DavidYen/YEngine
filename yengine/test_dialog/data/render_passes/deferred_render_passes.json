@@ -1,0 +1,33 @@
+{
+  "name": "deferred_render_passes",
+  "render_passes": [{
+    "name": "ClearGBuffer",
+      "shader_variation": "clear",
+      "render_targets": [
+        "GBuffer.Color",
+        "GBuffer.Normal",
+        "GBuffer.Depth",
+        "GBuffer.LightMap",
+      ],
+    }, {
+      "name": "DiffusePass",
+      "shader_variation": "diffuse",
+      "render_targets": [
+        "GBuffer.Color",
+        "GBuffer.Normal",
+        "GBuffer.Depth",
+      ],
+    }, {
+      "name": "ShadowMapPass",
+      "shader_variation": "depthmap",
+      "render_targets": [],
+    }, {
+      "name": "LightPass",
+      "shader_variation": "lightmap",
+      "render_targets": ["GBuffer.LightMap"],
+    }, {
+      "name": "Present",
+      "shader_variation": "present",
+      "render_targets": ["BackBuffer"],
+    }],
+}

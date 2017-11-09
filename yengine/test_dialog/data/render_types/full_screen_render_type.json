@@ -1,0 +1,8 @@
+{
+  "name": "full_screen_render_type",
+  "shader": "full_screen",
+  "render_passes": [
+    "ClearGBuffer",
+    "Present",
+  ],
+}

@@ -77,6 +77,7 @@ namespace {
     3, // kFloat,
     2, // kFloat2,
     1, // kFloat3,
+    0, // kFloat4x4,
     0, // kTexture,
     0, // kSampler,
   };

@@ -7,4 +7,5 @@ enum VertexUsageType : ubyte {
   kNormal,
   kTangent,
   kTexCoord,
+  kDepth,
 }

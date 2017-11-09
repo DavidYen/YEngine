@@ -30,12 +30,30 @@ template("compile_flatbuffer_json") {
   }
 }
 
+template("compile_render_passes") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.render_passes_json
+
+    schema_file = "//schemas/render_passes.fbs"
+    output_extension = "rpas"
+  }
+}
+
 template("compile_render_targets") {
   compile_flatbuffer_json(target_name) {
     input_json = invoker.render_targets_json
 
     schema_file = "//schemas/render_targets.fbs"
     output_extension = "rtgs"
+  }
+}
+
+template("compile_render_type") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.render_type_json
+
+    schema_file = "//schemas/render_type.fbs"
+    output_extension = "rtyp"
   }
 }
 

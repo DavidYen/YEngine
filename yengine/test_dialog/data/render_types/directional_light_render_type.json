@@ -1,0 +1,7 @@
+{
+  "name": "directional_light_render_type",
+  "shader": "directional_light",
+  "render_passes": [
+    "LightPass",
+  ],
+}

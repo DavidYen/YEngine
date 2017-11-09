@@ -4,6 +4,8 @@
     "command_type": "RegisterVertexDecls",
     "command_args": [
       "position-vertex",
+      "position_depth-vertex",
+      "position_normal_tangent_texcoord-vertex",
       "position_texcoord-vertex",
     ],
   }, {
@@ -14,7 +16,10 @@
   }, {
     "command_type": "RegisterShaders",
     "command_args": [
-      "full-screen",
+      "diffuse",
+      "directional_light",
+      "full_screen",
+      "point_light",
     ],
   }, {
     "command_type": "RegisterMeshes",
@@ -25,6 +30,19 @@
     "command_type": "RegisterRenderTargets",
     "command_args": [
       "deferred-gbuffer",
+    ],
+  }, {
+    "command_type": "RegisterRenderPasses",
+    "command_args": [
+      "deferred_render_passes",
+    ],
+  }, {
+    "command_type": "RegisterRenderType",
+    "command_args": [
+      "directional_light_render_type",
+      "full_screen_render_type",
+      "point_light_render_type",
+      "render_object_render_type",
     ],
   }]
 }

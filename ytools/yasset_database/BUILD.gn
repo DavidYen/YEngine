@@ -1,7 +1,9 @@
 group("yasset_database") {
   deps = [
     "//schemas:mesh_schema_python",
+    "//schemas:render_passes_schema_python",
     "//schemas:render_targets_schema_python",
+    "//schemas:render_type_schema_python",
     "//schemas:sampler_schema_python",
     "//schemas:shader_schema_python",
     "//schemas:vertex_decl_schema_python",

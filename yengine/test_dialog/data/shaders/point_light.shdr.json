@@ -1,0 +1,68 @@
+{
+  "name": "point_light",
+  "file": "point_light.hlsl",
+  "variants": [{
+    "name": "lightmap",
+    "vertex_declaration": "position-vertex",
+    "vertex_shader": "PointLightVS",
+    "pixel_shader": "PointLightPS",
+    "target": "5.1",
+    "debug": false,
+    "opt_level": 3,
+    "defines": [],
+
+    "pixel_parameters": [{
+      "name": "world_view_proj",
+      "type": "kFloat4x4",
+      "register": { "index": 0 },
+    }, {
+      "name": "inverse_view_proj",
+      "type": "kFloat4x4",
+      "register": { "index": 4 },
+    }, {
+      "name": "camera_pos",
+      "type": "kFloat3",
+      "register": { "index": 5 },
+    }, {
+      "name": "light_color",
+      "type": "kFloat3",
+      "register": { "index": 6 },
+    }, {
+      "name": "light_pos",
+      "type": "kFloat3",
+      "register": { "index": 7 },
+    }, {
+      "name": "light_radius",
+      "type": "kFloat",
+      "register": { "index": 8 },
+    }, {
+      "name": "light_intensity",
+      "type": "kFloat",
+      "register": { "index": 9 },
+    }, {
+      "name": "diffuse_map",
+      "type": "kTexture",
+      "register": { "index": 0 },
+    }, {
+      "name": "diffuse_sampler",
+      "type": "kSampler",
+      "register": { "index": 0 },
+    }, {
+      "name": "normal_map",
+      "type": "kTexture",
+      "register": { "index": 1 },
+    }, {
+      "name": "normal_sampler",
+      "type": "kSampler",
+      "register": { "index": 1 },
+    }, {
+      "name": "depth_map",
+      "type": "kTexture",
+      "register": { "index": 2 },
+    }, {
+      "name": "depth_sampler",
+      "type": "kSampler",
+      "register": { "index": 2 },
+    }],
+  }]
+}
