@@ -3,6 +3,7 @@ group("ytools") {
   deps = [
     "file_utils",
     "report_utils",
+    "ymaterial_compiler",
     "ymesh_compiler",
     "ymodule_binary_compiler",
     "yshader_compiler",

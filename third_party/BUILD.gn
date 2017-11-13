@@ -1,9 +1,0 @@
-group("third_party") {
-  deps = [
-    "build/google/cityhash",
-    "build/google/flatbuffers",
-    "build/google/gflags",
-    "build/google/gmock",
-    "build/google/gtest",
-  ]
-}

@@ -1,0 +1,30 @@
+
+config("stb_config") {
+  include_dirs = [
+    "//third_party/stb",
+  ]
+
+  if (is_win) {
+    cflags = [
+      "/wd4100", # Unreferenced formal parameter
+      "/wd4244", # Conversion from uint64 to uint
+      "/wd4201", # Nonstandard extension: nameless struct/union.
+      "/wd4204", # Nonstandrad extension: non-constant aggregate initializer
+      "/wd4053", # One void operand for "?:"
+      "/wd4456", # Declaration hides previous local declaration
+      "/wd4477", # Printf variadic argument mismatch
+      "/wd4267", # Size_t to int16
+      "/wd4047", # function indirection difference
+      "/wd4024", # _swprintf has different types for formal parameter
+      "/wd4701", # Uninitialized local variable
+    ]
+  }
+}
+
+static_library("stb") {
+  sources = [
+    "stb_define.c",
+  ]
+
+  all_dependent_configs = [ ":stb_config" ]
+}

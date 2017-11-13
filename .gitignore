@@ -1,11 +1,13 @@
 
 # Ignore Dependency Repos
 buildtools/
+third_party/crunch
 third_party/google/gflags
 third_party/google/gmock
 third_party/google/gtest
 third_party/google/flatbuffers
 third_party/rapidjson
+third_party/stb
 
 # Ignore Output Directory
 out/

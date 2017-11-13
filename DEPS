@@ -16,11 +16,19 @@ vars = {
 
   "flatbuffers_git": "https://github.com/google/flatbuffers.git",
   "flatbuffers_revision": "v1.7.1",
+
+  "crunch_git": "https://github.com/BinomialLLC/crunch.git",
+  "crunch_revision": "ea9b8d8c00c8329791256adafa8cf11e4e7942a2",
+
+  "stb_git": "https://github.com/nothings/stb.git",
+  "stb_revision": "9d9f75eb682dd98b34de08bb5c489c6c561c9fa6",
 }
 
 deps = {
   "yengine/buildtools":
     Var("buildtools_git") + "@" + Var("buildtools_revision"),
+  "yengine/third_party/crunch":
+    Var("crunch_git") + "@" + Var("crunch_revision"),
   "yengine/third_party/google/flatbuffers":
     Var("flatbuffers_git") + "@" + Var("flatbuffers_revision"),
   "yengine/third_party/google/gflags":
@@ -31,6 +39,8 @@ deps = {
     Var("gtest_git") + "@" + Var("gtest_revision"),
   "yengine/third_party/rapidjson":
     Var("rapidjson_git") + "@" + Var("rapidjson_revision"),
+  "yengine/third_party/stb":
+    Var("stb_git") + "@" + Var("stb_revision"),
 }
 
 hooks = [

@@ -1,0 +1,16 @@
+
+tool_executable("ymaterial_compiler") {
+  sources = [
+    "main.cpp",
+  ]
+
+  deps = [
+    "//third_party/build/crunch",
+    "//third_party/build/google/gflags",
+    "//third_party/build/google/flatbuffers",
+    "//third_party/build/rapidjson",
+    "//third_party/build/stb",
+    "//ytools/file_utils",
+    "//ytools/report_utils",
+  ]
+}

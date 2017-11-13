@@ -1,0 +1,117 @@
+
+config("crunch_config") {
+  include_dirs = [
+    "//third_party/crunch/inc",
+  ]
+
+  defines = [
+    "NDEBUG",
+    "_CONSOLE",
+  ]
+
+  if (is_win) {
+    defines += [
+      "WIN32",
+    ]
+  }
+}
+
+static_library("crunch") {
+  if (is_win) {
+    cflags = [
+      "/wd4456", # Declaration hides previous local declaration.
+      "/wd4457", # Declaration hides function parameter
+      "/wd4458", # Declaration hides class member
+      "/wd4838", # Conversion from const char to mz_unit8
+      "/wd4244", # Conversion from uint64 to uint
+      "/wd4005", # Macro Redefinition
+      "/wd4245", # Conversion from int to unsigned int
+    ]
+  }
+
+  sources = [
+    "//third_party/crunch/crnlib/crn_arealist.cpp",
+    "//third_party/crunch/crnlib/crn_assert.cpp",
+    "//third_party/crunch/crnlib/crn_checksum.cpp",
+    "//third_party/crunch/crnlib/crn_colorized_console.cpp",
+    "//third_party/crunch/crnlib/crn_command_line_params.cpp",
+    "//third_party/crunch/crnlib/crn_comp.cpp",
+    "//third_party/crunch/crnlib/crn_console.cpp",
+    "//third_party/crunch/crnlib/crn_core.cpp",
+    "//third_party/crunch/crnlib/crn_data_stream.cpp",
+    "//third_party/crunch/crnlib/crn_mipmapped_texture.cpp",
+    "//third_party/crunch/crnlib/crn_decomp.cpp",
+    "//third_party/crunch/crnlib/crn_dxt1.cpp",
+    "//third_party/crunch/crnlib/crn_dxt5a.cpp",
+    "//third_party/crunch/crnlib/crn_dxt.cpp",
+    "//third_party/crunch/crnlib/crn_dxt_endpoint_refiner.cpp",
+    "//third_party/crunch/crnlib/crn_dxt_fast.cpp",
+    "//third_party/crunch/crnlib/crn_dxt_hc_common.cpp",
+    "//third_party/crunch/crnlib/crn_dxt_hc.cpp",
+    "//third_party/crunch/crnlib/crn_dxt_image.cpp",
+    "//third_party/crunch/crnlib/crn_dynamic_string.cpp",
+    "//third_party/crunch/crnlib/crn_file_utils.cpp",
+    "//third_party/crunch/crnlib/crn_find_files.cpp",
+    "//third_party/crunch/crnlib/crn_hash.cpp",
+    "//third_party/crunch/crnlib/crn_hash_map.cpp",
+    "//third_party/crunch/crnlib/crn_huffman_codes.cpp",
+    "//third_party/crunch/crnlib/crn_image_utils.cpp",
+    "//third_party/crunch/crnlib/crnlib.cpp",
+    "//third_party/crunch/crnlib/crn_math.cpp",
+    "//third_party/crunch/crnlib/crn_mem.cpp",
+    "//third_party/crunch/crnlib/crn_pixel_format.cpp",
+    "//third_party/crunch/crnlib/crn_platform.cpp",
+    "//third_party/crunch/crnlib/crn_prefix_coding.cpp",
+    "//third_party/crunch/crnlib/crn_qdxt1.cpp",
+    "//third_party/crunch/crnlib/crn_qdxt5.cpp",
+    "//third_party/crunch/crnlib/crn_rand.cpp",
+    "//third_party/crunch/crnlib/crn_resample_filters.cpp",
+    "//third_party/crunch/crnlib/crn_resampler.cpp",
+    "//third_party/crunch/crnlib/crn_ryg_dxt.cpp",
+    "//third_party/crunch/crnlib/crn_sparse_bit_array.cpp",
+    "//third_party/crunch/crnlib/crn_stb_image.cpp",
+    "//third_party/crunch/crnlib/crn_strutils.cpp",
+    "//third_party/crunch/crnlib/crn_symbol_codec.cpp",
+    "//third_party/crunch/crnlib/crn_texture_file_types.cpp",
+    "//third_party/crunch/crnlib/crn_threaded_resampler.cpp",
+    "//third_party/crunch/crnlib/crn_threading_pthreads.cpp",
+    "//third_party/crunch/crnlib/crn_timer.cpp",
+    "//third_party/crunch/crnlib/crn_utils.cpp",
+    "//third_party/crunch/crnlib/crn_value.cpp",
+    "//third_party/crunch/crnlib/crn_vector.cpp",
+    "//third_party/crunch/crnlib/crn_zeng.cpp",
+    "//third_party/crunch/crnlib/crn_texture_comp.cpp",
+    "//third_party/crunch/crnlib/crn_texture_conversion.cpp",
+    "//third_party/crunch/crnlib/crn_dds_comp.cpp",
+    "//third_party/crunch/crnlib/crn_lzma_codec.cpp",
+    "//third_party/crunch/crnlib/crn_ktx_texture.cpp",
+    "//third_party/crunch/crnlib/crn_etc.cpp",
+    "//third_party/crunch/crnlib/crn_rg_etc1.cpp",
+    "//third_party/crunch/crnlib/crn_miniz.cpp",
+    "//third_party/crunch/crnlib/crn_jpge.cpp",
+    "//third_party/crunch/crnlib/crn_jpgd.cpp",
+    "//third_party/crunch/crnlib/lzma_7zBuf2.cpp",
+    "//third_party/crunch/crnlib/lzma_7zBuf.cpp",
+    "//third_party/crunch/crnlib/lzma_7zCrc.cpp",
+    "//third_party/crunch/crnlib/lzma_7zFile.cpp",
+    "//third_party/crunch/crnlib/lzma_7zStream.cpp",
+    "//third_party/crunch/crnlib/lzma_Alloc.cpp",
+    "//third_party/crunch/crnlib/lzma_Bcj2.cpp",
+    "//third_party/crunch/crnlib/lzma_Bra86.cpp",
+    "//third_party/crunch/crnlib/lzma_Bra.cpp",
+    "//third_party/crunch/crnlib/lzma_BraIA64.cpp",
+    "//third_party/crunch/crnlib/lzma_LzFind.cpp",
+    "//third_party/crunch/crnlib/lzma_LzmaDec.cpp",
+    "//third_party/crunch/crnlib/lzma_LzmaEnc.cpp",
+    "//third_party/crunch/crnlib/lzma_LzmaLicpp",
+    "//third_party/crunch/crunch/crunch.cpp",
+    "//third_party/crunch/crunch/corpus_gen.cpp",
+    "//third_party/crunch/crunch/corpus_test.cpp",
+  ]
+
+  include_dirs = [
+    "//third_party/crunch/crnlib",
+  ]
+
+  all_dependent_configs = [ ":crunch_config" ]
+}
