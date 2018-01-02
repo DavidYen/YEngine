@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include <rapidjson/document.h>
-#include <schemas/model_generated.h>
+#include <schemas/mesh_generated.h>
 
 #include "ytools/file_utils/file_env.h"
 #include "ytools/file_utils/file_stream.h"

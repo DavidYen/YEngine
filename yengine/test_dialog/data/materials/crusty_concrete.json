@@ -1,0 +1,12 @@
+{
+  "name": "crusty_concrete",
+  "bind_params": [{
+    "name": "material_texture_map",
+    "type": "kTexture",
+    "param_ref": "crusty_concrete_color_map",
+  }, {
+    "name": "normal_map",
+    "type": "kTexture",
+    "param_ref": "crusty_concrete_normal_map",
+  }]
+}

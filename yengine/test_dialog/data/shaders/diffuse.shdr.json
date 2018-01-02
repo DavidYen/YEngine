@@ -18,30 +18,44 @@
       "name": "world",
       "type": "kFloat4x4",
       "register": { "index": 0 },
+      "binding_type": "kAssetBindParam",
+      "binding_name": "world",
     }, {
       "name": "view_proj",
       "type": "kFloat4x4",
       "register": { "index": 4 },
+      "binding_type": "kGlobalBindParam",
+      "binding_name": "view_proj",
     }, {
       "name": "specular_intensity_power",
       "type": "kFloat2",
       "register": { "index": 5 },
+      "binding_type": "kMaterial",
+      "binding_name": "material_specular_intensity_power",
     }, {
       "name": "texture_map",
       "type": "kTexture",
       "register": { "index": 0 },
+      "binding_type": "kMaterial",
+      "binding_name": "material_texture_map",
     }, {
       "name": "texture_sampler",
       "type": "kSampler",
       "register": { "index": 0 },
+      "binding_type": "kSampler",
+      "binding_name": "point_sampler",
     }, {
       "name": "normal_map",
       "type": "kTexture",
       "register": { "index": 1 },
+      "binding_type": "kMaterial",
+      "binding_name": "material_normal_map",
     }, {
       "name": "normal_sampler",
       "type": "kSampler",
       "register": { "index": 1 },
+      "binding_type": "kSampler",
+      "binding_name": "point_sampler",
     }],
   }, {
     "name": "depthmap",
@@ -60,10 +74,14 @@
       "name": "world",
       "type": "kFloat4x4",
       "register": { "index": 0 },
+      "binding_type": "kAssetBindParam",
+      "binding_name": "world",
     }, {
       "name": "view_proj",
       "type": "kFloat4x4",
       "register": { "index": 4 },
+      "binding_type": "kGlobalBindParam",
+      "binding_name": "view_proj",
     }],
   }]
 }

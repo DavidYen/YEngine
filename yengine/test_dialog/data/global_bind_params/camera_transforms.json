@@ -1,0 +1,28 @@
+{
+  "name": "camera_transforms",
+  "params": [{
+    "name": "view_proj",
+    "type": "kFloat4x4",
+    "param_data": [
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0, 1.0,
+    ],
+  }, {
+    "name": "inverse_view_proj",
+    "type": "kFloat4x4",
+    "param_data": [
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0, 1.0,
+    ],
+  }, {
+    "name": "camera_position",
+    "type": "kFloat3",
+    "param_data": [
+      0.0, 0.0, 0.0,
+    ],
+  }],
+}

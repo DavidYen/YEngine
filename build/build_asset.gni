@@ -30,6 +30,15 @@ template("compile_flatbuffer_json") {
   }
 }
 
+template("compile_material") {
+  compile_flatbuffer_json(target_name) {
+    input_json = invoker.material_json
+
+    schema_file = "//schemas/material.fbs"
+    output_extension = "matr"
+  }
+}
+
 template("compile_render_passes") {
   compile_flatbuffer_json(target_name) {
     input_json = invoker.render_passes_json
@@ -114,6 +123,47 @@ template("compile_shader") {
 
     deps = [
       "//ytools/yshader_compiler",
+    ]
+  }
+}
+
+template("compile_texture") {
+  action(target_name) {
+    script = "//build/cmd_wrapper.py"
+    texture_file = invoker.texture_file
+    texture_output = "${target_gen_dir}/${target_name}.txtr"
+
+    sources = [ texture_file ]
+    outputs = [ texture_output ]
+    depfile = "${target_gen_dir}/${target_name}.d"
+
+    args = [ "--", "ytexture_compiler",
+             "--input_file", rebase_path(texture_file, root_build_dir),
+             "--output_file", rebase_path(texture_output, root_build_dir),
+             "--dep_file", rebase_path(depfile, root_build_dir) ]
+
+    deps = [
+      "//ytools/ytexture_compiler",
+    ]
+  }
+}
+
+template("compile_bind_params") {
+  action(target_name) {
+    script =  "//build/cmd_wrapper.py"
+    input_params_file = invoker.bind_params_file
+    output_params_file = "${target_gen_dir}/${target_name}.bndp"
+
+    outputs = [ output_params_file ]
+    depfile = "${target_gen_dir}/${target_name}.d"
+
+    args = [ "--", "yparam_data_compiler",
+             "--input_file", rebase_path(input_params_file, root_build_dir),
+             "--output_file", rebase_path(output_params_file, root_build_dir),
+             "--dep_file", rebase_path(depfile, root_build_dir) ]
+
+    deps = [
+      "//ytools/yparam_data_compiler",
     ]
   }
 }

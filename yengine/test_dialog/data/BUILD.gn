@@ -2,6 +2,10 @@ import("//build/build_asset.gni")
 
 compile_asset_database("test_dialog_asset_database") {
   sources = [
+    "${target_gen_dir}/asset_bind_params/world_transformation.bndp",
+    "${target_gen_dir}/global_bind_params/ambient_light.bndp",
+    "${target_gen_dir}/global_bind_params/camera_transforms.bndp",
+    "${target_gen_dir}/materials/crusty_concrete.matr",
     "${target_gen_dir}/mesh/unit_cube.mesh",
     "${target_gen_dir}/render_passes/deferred_render_passes.rpas",
     "${target_gen_dir}/render_targets/deferred_render_targets.rtgs",
@@ -14,6 +18,8 @@ compile_asset_database("test_dialog_asset_database") {
     "${target_gen_dir}/shaders/directional_light.shdr",
     "${target_gen_dir}/shaders/full_screen.shdr",
     "${target_gen_dir}/shaders/point_light.shdr",
+    "${target_gen_dir}/textures/crusty_concrete_color_map.txtr",
+    "${target_gen_dir}/textures/crusty_concrete_normal_map.txtr",
     "${target_gen_dir}/vertex_types/position.vtxd",
     "${target_gen_dir}/vertex_types/position_depth.vtxd",
     "${target_gen_dir}/vertex_types/position_normal_tangent_texcoord.vtxd",
@@ -23,6 +29,10 @@ compile_asset_database("test_dialog_asset_database") {
   output = "${target_gen_dir}/${target_name}.json"
 
   deps = [
+    "asset_bind_params:world_transformation",
+    "global_bind_params:ambient_light",
+    "global_bind_params:camera_transforms",
+    "materials:crusty_concrete",
     "mesh:unit_cube",
     "render_passes:deferred_render_passes",
     "render_targets:deferred_render_targets",
@@ -35,6 +45,8 @@ compile_asset_database("test_dialog_asset_database") {
     "shaders:directional_light",
     "shaders:full_screen",
     "shaders:point_light",
+    "textures:crusty_concrete_color_map",
+    "textures:crusty_concrete_normal_map",
     "vertex_types:position",
     "vertex_types:position_depth",
     "vertex_types:position_normal_tangent_texcoord",

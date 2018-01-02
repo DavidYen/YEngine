@@ -1,17 +1,10 @@
+include "binding_type.fbs";
+include "param_type.fbs";
+
 namespace yengine_data;
 
 file_identifier "SHDR";
 file_extension "shdr";
-
-enum ParamType : ubyte {
-  kInvalid,
-  kFloat,
-  kFloat2,
-  kFloat3,
-  kFloat4x4,
-  kTexture,
-  kSampler,
-}
 
 struct RegisterOffset {
   index:ubyte;
@@ -22,6 +15,8 @@ table ParamData {
   name:string;
   param_type:ParamType;
   param_register:RegisterOffset;
+  binding_type:BindingType;
+  binding_name:string;
 }
 
 table Variant {

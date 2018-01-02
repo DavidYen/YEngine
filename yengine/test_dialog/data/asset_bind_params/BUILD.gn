@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_bind_params("world_transformation") {
+  bind_params_file = "world_transformation.json"
+}

@@ -1,0 +1,9 @@
+import("//build/build_asset.gni")
+
+compile_texture("crusty_concrete_color_map") {
+  texture_file = "crusty_concrete_color_map.txtr.json"
+}
+
+compile_texture("crusty_concrete_normal_map") {
+  texture_file = "crusty_concrete_normal_map.txtr.json"
+}

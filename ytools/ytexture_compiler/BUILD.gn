@@ -1,10 +1,11 @@
 
-tool_executable("ymaterial_compiler") {
+tool_executable("ytexture_compiler") {
   sources = [
     "main.cpp",
   ]
 
   deps = [
+    "//schemas:texture_schema_cpp",
     "//third_party/build/crunch",
     "//third_party/build/google/gflags",
     "//third_party/build/google/flatbuffers",

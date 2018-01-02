@@ -15,6 +15,16 @@ bool FileEnv::WriteDependencyFile(const std::string& output_file) {
     return false;
   }
 
+  if (mWrittenFiles.empty()) {
+    std::cerr << "No files were written." << std::endl;
+    return false;
+  }
+
+  if (mReadFiles.empty()) {
+    std::cerr << "No dependency files were read." << std::endl;
+    return false;
+  }
+
   FileStream file(output_file, FileStream::kFileMode_Write,
                   FileStream::kFileType_Binary);
 

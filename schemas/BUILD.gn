@@ -76,14 +76,46 @@ template("compile_schema") {
   }
 }
 
-compile_schema("mesh_schema") {
-  schema = "mesh"
-  schema_class = "Mesh"
+compile_schema("binding_type_schema") {
+  schema = "binding_type"
+  schema_class = "BindingType"
+}
+
+compile_schema("param_type_schema") {
+  schema = "param_type"
+  schema_class = "ParamType"
+}
+
+compile_schema("bind_param_schema") {
+  schema = "bind_param"
+  schema_class = "BindParam"
 
   data_deps_cpp = [
-    ":vertex_member_types_schema_cpp",
-    ":vertex_usage_types_schema_cpp",
+    ":param_type_schema_cpp",
   ]
+}
+
+compile_schema("bind_params_schema") {
+  schema = "bind_params"
+  schema_class = "BindParams"
+
+  data_deps_cpp = [
+    ":bind_param_schema_cpp",
+  ]
+}
+
+compile_schema("material_schema") {
+  schema = "material"
+  schema_class = "Material"
+
+  data_deps_cpp = [
+    ":bind_param_schema_cpp",
+  ]
+}
+
+compile_schema("module_binary_types_schema") {
+  schema = "module_binary_types"
+  schema_class = "BinaryType"
 }
 
 compile_schema("module_binary_schema") {
@@ -93,11 +125,6 @@ compile_schema("module_binary_schema") {
   data_deps_cpp = [
     ":module_binary_types_schema_cpp",
   ]
-}
-
-compile_schema("module_binary_types_schema") {
-  schema = "module_binary_types"
-  schema_class = "BinaryType"
 }
 
 compile_schema("render_passes_schema") {
@@ -123,6 +150,26 @@ compile_schema("sampler_schema") {
 compile_schema("shader_schema") {
   schema = "shader"
   schema_class = "Shader"
+
+  data_deps_cpp = [
+    ":binding_type_schema_cpp",
+    ":param_type_schema_cpp",
+  ]
+}
+
+compile_schema("texture_schema") {
+  schema = "texture"
+  schema_class = "Texture"
+}
+
+compile_schema("vertex_member_types_schema") {
+  schema = "vertex_member_types"
+  schema_class = "VertexMemberType"
+}
+
+compile_schema("vertex_usage_types_schema") {
+  schema = "vertex_usage_types"
+  schema_class = "VertexUsageType"
 }
 
 compile_schema("vertex_decl_schema") {
@@ -135,12 +182,12 @@ compile_schema("vertex_decl_schema") {
   ]
 }
 
-compile_schema("vertex_member_types_schema") {
-  schema = "vertex_member_types"
-  schema_class = "VertexMemberType"
-}
+compile_schema("mesh_schema") {
+  schema = "mesh"
+  schema_class = "Mesh"
 
-compile_schema("vertex_usage_types_schema") {
-  schema = "vertex_usage_types"
-  schema_class = "VertexUsageType"
+  data_deps_cpp = [
+    ":vertex_member_types_schema_cpp",
+    ":vertex_usage_types_schema_cpp",
+  ]
 }

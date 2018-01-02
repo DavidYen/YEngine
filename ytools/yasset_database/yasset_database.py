@@ -9,12 +9,15 @@ import sys
 # This map must be kept up to date with module_binary_types.fbs.
 DATA_CLASS_MAP = {
   # File Extension: (Binary Type Enum, Root Class Name)
+  ".bndp": ("kBindParams", "BindParams"),
+  ".matr": ("kMaterial", "Material"),
   ".mesh": ("kMesh", "Mesh"),
   ".rpas": ("kRenderPasses", "RenderPasses"),
   ".rtgs": ("kRenderTargets", "RenderTargets"),
   ".rtyp": ("kRenderType", "RenderType"),
   ".shdr": ("kShader", "Shader"),
   ".smpl": ("kSampler", "Sampler"),
+  ".txtr": ("kTexture", "Texture"),
   ".vtxd": ("kVertexDecl", "VertexDecl"),
 }
 

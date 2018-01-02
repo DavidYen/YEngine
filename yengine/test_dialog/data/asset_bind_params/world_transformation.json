@@ -1,0 +1,19 @@
+{
+  "name": "world_transformation",
+  "params": [{
+    "name": "world_transform",
+    "type": "kFloat4x4",
+    "param_data": [
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0, 1.0,
+    ],
+  }, {
+    "name": "world_position",
+    "type": "kFloat3",
+    "param_data": [
+      0.0, 0.0, 0.0
+    ],
+  }],
+}

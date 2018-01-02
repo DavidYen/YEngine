@@ -1,0 +1,13 @@
+include "bind_param.fbs";
+
+namespace yengine_data;
+
+file_identifier "MATR";
+file_extension "matr";
+
+table Material {
+  name:string;
+  bind_params:[BindParam];
+}
+
+root_type Material;

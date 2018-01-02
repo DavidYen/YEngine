@@ -1,0 +1,13 @@
+include "bind_param.fbs";
+
+namespace yengine_data;
+
+file_identifier "BNDP";
+file_extension "bndp";
+
+table BindParams {
+  name:string;
+  params:[BindParam];
+}
+
+root_type BindParams;

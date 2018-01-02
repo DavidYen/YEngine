@@ -1,0 +1,5 @@
+import("//build/build_asset.gni")
+
+compile_material("crusty_concrete") {
+  material_json = "crusty_concrete.json"
+}

@@ -22,6 +22,12 @@
     "custom_height_percent": 1.0,
     "render_format": "kFloat32"
   }, {
+    "name": "GBuffer.ShadowMap",
+    "type" : "kCustom",
+    "custom_width_percent": 1.0,
+    "custom_height_percent": 1.0,
+    "render_format": "kA8R8G8B8"
+  }, {
     "name": "GBuffer.LightMap",
     "type" : "kCustom",
     "custom_width_percent": 1.0,

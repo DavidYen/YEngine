@@ -1,0 +1,18 @@
+namespace yengine_data;
+
+file_identifier "TXTR";
+file_extension "txtr";
+
+enum TextureFormat : ubyte {
+  kInvalid,
+  kA8R8G8B8,
+  kDXT1,
+}
+
+table Texture {
+  name:string;
+  format:TextureFormat;
+  data:[ubyte];
+}
+
+root_type Texture;

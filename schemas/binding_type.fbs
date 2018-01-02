@@ -1,0 +1,20 @@
+namespace yengine_data;
+
+enum BindingType : ubyte {
+  kInvalid,
+
+  // Material binding types are common bindings shared between similar assets.
+  kMaterial,
+
+  // Asset bind params are ones uniquely used for each asset.
+  kAssetBindParam,
+
+  // Global bind params are ones shared across all assets by name.
+  kGlobalBindParam,
+
+  // Render Target binding types are textures which are bound to a render target.
+  kRenderTarget,
+
+  // Sampler binding types are special in that shaders specify the sampler.
+  kSampler,
+}

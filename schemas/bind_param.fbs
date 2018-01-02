@@ -1,0 +1,10 @@
+include "param_type.fbs";
+
+namespace yengine_data;
+
+table BindParam {
+  name:string;
+  type:ParamType;
+  param_ref:string;
+  param_data:[ubyte];
+}

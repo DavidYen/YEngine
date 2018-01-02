@@ -1,0 +1,16 @@
+{
+  "name": "ambient_light",
+  "params": [{
+    "name": "color",
+    "type": "kFloat3",
+    "param_data": [
+      1.0, 1.0, 1.0,
+    ],
+  }, {
+    "name": "amount",
+    "type": "kFloat",
+    "param_data": [
+      0.2,
+    ],
+  }],
+}

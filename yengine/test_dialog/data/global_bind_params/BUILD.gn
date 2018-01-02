@@ -1,0 +1,9 @@
+import("//build/build_asset.gni")
+
+compile_bind_params("ambient_light") {
+  bind_params_file = "ambient_light.json"
+}
+
+compile_bind_params("camera_transforms") {
+  bind_params_file = "camera_transforms.json"
+}

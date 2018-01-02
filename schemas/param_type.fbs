@@ -1,0 +1,11 @@
+namespace yengine_data;
+
+enum ParamType : ubyte {
+  kInvalid,
+  kFloat,
+  kFloat2,
+  kFloat3,
+  kFloat4x4,
+  kTexture,
+  kSampler,
+}
